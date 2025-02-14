@@ -1,224 +1,243 @@
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- Criação do efeito de desfoque para o fundo
+-- Configuração
+local BLUR_INTENSITY = 24
+local UI_COLOR_SCHEME = {
+    Primary = Color3.fromRGB(0, 150, 255),
+    Secondary = Color3.fromRGB(0, 200, 200),
+    Background = Color3.fromRGB(15, 15, 15),
+    Text = Color3.fromRGB(240, 240, 240),
+    Error = Color3.fromRGB(255, 50, 50),
+    Warning = Color3.fromRGB(255, 150, 0)
+}
+
+-- Blur
 local blur = Instance.new("BlurEffect")
-blur.Size = 24  -- Tamanho inicial do desfoque
+blur.Size = BLUR_INTENSITY
 blur.Parent = Lighting
 
--- Criação da ScreenGui e elementos principais
+-- Interface Principal
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
+-- Bloqueador de Input
+local InputBlocker = Instance.new("Frame")
+InputBlocker.Size = UDim2.new(1,0,1,0)
+InputBlocker.BackgroundTransparency = 1
+InputBlocker.Active = true
+InputBlocker.Parent = ScreenGui
+
+-- Container Principal
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0.4, 0, 0.4, 0)
-MainFrame.Position = UDim2.new(0.3, 0, 0.3, 0)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-MainFrame.BorderSizePixel = 0
+MainFrame.Size = UDim2.new(0.35,0,0.4,0)
+MainFrame.Position = UDim2.new(0.5,0,0.5,0)
+MainFrame.AnchorPoint = Vector2.new(0.5,0.5)
+MainFrame.BackgroundColor3 = UI_COLOR_SCHEME.Background
 MainFrame.Parent = ScreenGui
 
--- Gradiente de fundo
-local UIGradient = Instance.new("UIGradient")
-UIGradient.Color = ColorSequence.new{
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 128, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 128))
-}
-UIGradient.Rotation = 45
-UIGradient.Parent = MainFrame
-
--- Cantos arredondados
+-- UICorner e UIStroke
 local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0.1, 0)
+UICorner.CornerRadius = UDim.new(0.03,0)
 UICorner.Parent = MainFrame
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Color = UI_COLOR_SCHEME.Primary
+UIStroke.Thickness = 2
+UIStroke.Parent = MainFrame
 
--- Cabeçalho
+-- Header
 local Header = Instance.new("Frame")
-Header.Size = UDim2.new(1, 0, 0.2, 0)
-Header.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
-Header.BorderSizePixel = 0
+Header.Size = UDim2.new(1,0,0.15,0)
+Header.BackgroundColor3 = UI_COLOR_SCHEME.Primary
 Header.Parent = MainFrame
 
-local HeaderCorner = Instance.new("UICorner")
-HeaderCorner.CornerRadius = UDim.new(0.1, 0)
-HeaderCorner.Parent = Header
-
--- Título
 local Title = Instance.new("TextLabel")
-Title.Text = "TekScripts Pack Emote"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 24
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.Size = UDim2.new(1, -20, 1, 0)
-Title.Position = UDim2.new(0, 10, 0, 0)
+Title.Text = "TEKSCRIPTS V2"
+Title.Font = Enum.Font.GothamBlack
+Title.TextSize = 22
+Title.TextColor3 = UI_COLOR_SCHEME.Text
+Title.Size = UDim2.new(1,-40,1,0)
+Title.Position = UDim2.new(0,20,0,0)
 Title.BackgroundTransparency = 1
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = Header
 
--- Frame de logs
-local LogFrame = Instance.new("ScrollingFrame")
-LogFrame.Size = UDim2.new(1, -20, 0.6, 0)
-LogFrame.Position = UDim2.new(0, 10, 0.25, 0)
-LogFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-LogFrame.BorderSizePixel = 0
-LogFrame.ScrollBarThickness = 6
-LogFrame.Parent = MainFrame
+-- Status de Rede
+local NetworkStats = Instance.new("Frame")
+NetworkStats.Size = UDim2.new(0.4,0,1,0)
+NetworkStats.Position = UDim2.new(0.6,0,0,0)
+NetworkStats.BackgroundTransparency = 1
+NetworkStats.Parent = Header
 
-local LogCorner = Instance.new("UICorner")
-LogCorner.CornerRadius = UDim.new(0.1, 0)
-LogCorner.Parent = LogFrame
+local PingLabel = Instance.new("TextLabel")
+PingLabel.Text = "Ping: 0ms"
+PingLabel.Font = Enum.Font.GothamMedium
+PingLabel.TextSize = 14
+PingLabel.TextColor3 = UI_COLOR_SCHEME.Text
+PingLabel.Size = UDim2.new(0.5,0,1,0)
+PingLabel.BackgroundTransparency = 1
+PingLabel.TextXAlignment = Enum.TextXAlignment.Right
+PingLabel.Parent = NetworkStats
 
--- Texto de log
-local LogText = Instance.new("TextLabel")
-LogText.Text = "Inicializando..."
-LogText.Font = Enum.Font.Gotham
-LogText.TextSize = 18
-LogText.TextColor3 = Color3.fromRGB(200, 200, 200)
-LogText.Size = UDim2.new(1, -10, 1, 0)
-LogText.Position = UDim2.new(0, 5, 0, 0)
-LogText.TextWrapped = true
-LogText.TextYAlignment = Enum.TextYAlignment.Top
-LogText.BackgroundTransparency = 1
-LogText.Parent = LogFrame
+local FPSLabel = Instance.new("TextLabel")
+FPSLabel.Text = "FPS: 0"
+FPSLabel.Font = Enum.Font.GothamMedium
+FPSLabel.TextSize = 14
+FPSLabel.TextColor3 = UI_COLOR_SCHEME.Text
+FPSLabel.Size = UDim2.new(0.5,0,1,0)
+FPSLabel.Position = UDim2.new(0.5,0,0,0)
+FPSLabel.BackgroundTransparency = 1
+FPSLabel.TextXAlignment = Enum.TextXAlignment.Right
+FPSLabel.Parent = NetworkStats
 
--- Barra de carregamento
-local LoadingBar = Instance.new("Frame")
-LoadingBar.Size = UDim2.new(1, -20, 0.05, 0)
-LoadingBar.Position = UDim2.new(0, 10, 0.87, 0)
-LoadingBar.BackgroundColor3 = Color3.fromRGB(0, 128, 255)
-LoadingBar.BorderSizePixel = 0
-LoadingBar.Parent = MainFrame
+-- Sistema de Logs
+local LogsContainer = Instance.new("ScrollingFrame")
+LogsContainer.Size = UDim2.new(0.95,0,0.65,0)
+LogsContainer.Position = UDim2.new(0.025,0,0.2,0)
+LogsContainer.BackgroundTransparency = 1
+LogsContainer.ScrollBarThickness = 4
+LogsContainer.Parent = MainFrame
 
-local LoadingCorner = Instance.new("UICorner")
-LoadingCorner.CornerRadius = UDim.new(0.1, 0)
-LoadingCorner.Parent = LoadingBar
+local LogsLayout = Instance.new("UIListLayout")
+LogsLayout.Padding = UDim.new(0,5)
+LogsLayout.Parent = LogsContainer
 
--- Progresso da barra de carregamento
-local LoadingProgress = Instance.new("Frame")
-LoadingProgress.Size = UDim2.new(0, 0, 1, 0)
-LoadingProgress.BackgroundColor3 = Color3.fromRGB(0, 255, 128)
-LoadingProgress.BorderSizePixel = 0
-LoadingProgress.Parent = LoadingBar
+-- Barra de Progresso
+local ProgressContainer = Instance.new("Frame")
+ProgressContainer.Size = UDim2.new(0.9,0,0.08,0)
+ProgressContainer.Position = UDim2.new(0.05,0,0.88,0)
+ProgressContainer.BackgroundColor3 = Color3.fromRGB(30,30,30)
+ProgressContainer.Parent = MainFrame
 
-local ProgressCorner = Instance.new("UICorner")
-ProgressCorner.CornerRadius = UDim.new(0.1, 0)
-ProgressCorner.Parent = LoadingProgress
+local ProgressBar = Instance.new("Frame")
+ProgressBar.Size = UDim2.new(0,0,1,0)
+ProgressBar.BackgroundColor3 = UI_COLOR_SCHEME.Secondary
+ProgressBar.Parent = ProgressContainer
 
--- Funções auxiliares
-local function updateLog(message)
-    LogText.Text = LogText.Text .. "\n" .. message
-    LogFrame.CanvasSize = UDim2.new(0, 0, 0, LogText.TextBounds.Y)
-end
+-- Créditos
+local CreditsLabel = Instance.new("TextLabel")
+CreditsLabel.Text = "Desenvolvido por: FXZGHS1"
+CreditsLabel.Font = Enum.Font.GothamMedium
+CreditsLabel.TextSize = 12
+CreditsLabel.TextColor3 = Color3.fromRGB(150,150,150)
+CreditsLabel.Size = UDim2.new(0.3,0,0.04,0)
+CreditsLabel.Position = UDim2.new(0.7,0,0.96,0)
+CreditsLabel.BackgroundTransparency = 1
+CreditsLabel.TextXAlignment = Enum.TextXAlignment.Right
+CreditsLabel.Visible = false
+CreditsLabel.Parent = ScreenGui
 
-local function isSecureEnvironment()
-    local isSafe = pcall(function()
-        return game.PlaceId
-    end)
-    return isSafe
-end
+-- Função para criar logs
+local function createLog(message, logType)
+    local logEntry = Instance.new("TextLabel")
+    logEntry.Text = "  • " .. message
+    logEntry.Font = Enum.Font.GothamMedium
+    logEntry.TextSize = 14
+    logEntry.TextXAlignment = Enum.TextXAlignment.Left
+    logEntry.Size = UDim2.new(1,0,0,20)
+    logEntry.BackgroundTransparency = 1
+    logEntry.TextColor3 = UI_COLOR_SCHEME.Text
 
-local function simulateLoading()
-    for i = 1, 100 do
-        LoadingProgress:TweenSize(
-            UDim2.new(i / 100, 0, 1, 0),
-            Enum.EasingDirection.Out,
-            Enum.EasingStyle.Quad,
-            0.02,  -- Tempo reduzido para carregamento mais rápido
-            true
-        )
-        task.wait(0.02)
+    if logType == "warn" then
+        logEntry.TextColor3 = UI_COLOR_SCHEME.Warning
+        logEntry.Text = "  ⚠ " .. message
+    elseif logType == "error" then
+        logEntry.TextColor3 = UI_COLOR_SCHEME.Error
+        logEntry.Text = "  ✖ " .. message
+    elseif logType == "success" then
+        logEntry.TextColor3 = UI_COLOR_SCHEME.Secondary
+        logEntry.Text = "  ✔ " .. message
     end
+
+    logEntry.Parent = LogsContainer
+    LogsContainer.CanvasSize = UDim2.new(0,0,0,LogsLayout.AbsoluteContentSize.Y)
+    LogsContainer.CanvasPosition = Vector2.new(0, LogsContainer.CanvasSize.Y.Offset)
 end
 
-local scriptsExecuted = false
-
-local function checkCharacterModel()
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Torso") then
-        updateLog("Estrutura do personagem pode não ser compatível. Altere para R16 para evitar problemas.")
+-- Monitoramento de FPS
+local lastTick = tick()
+local frameCount = 0
+RunService.Heartbeat:Connect(function()
+    frameCount = frameCount + 1
+    local currentTime = tick()
+    if currentTime - lastTick >= 1 then
+        local fps = math.floor(frameCount / (currentTime - lastTick))
+        FPSLabel.Text = "FPS: " .. fps
+        frameCount = 0
+        lastTick = currentTime
     end
-end
+end)
 
+-- Execução dos Scripts
 local function executeScripts()
-    updateLog("Executando: Emotes Pack")
-    local success, errorMessage = pcall(function()
-        loadstring(game:HttpGet("https://pastebin.com/raw/eCpipCTH"))()
-    end)
-    if success then
-        updateLog("Emotes Pack executado com sucesso!")
-    else
-        updateLog("Erro ao executar Emotes Pack: " .. errorMessage)
+    local scripts = {
+        {Name = "Emotes Pack", Url = "https://pastebin.com/raw/eCpipCTH"},
+        {Name = "Animated", Url = "https://raw.githubusercontent.com/Gazer-Ha/Animated/main/G"}
+    }
+    local finishedCount = 0  -- Conta scripts finalizados
+    local totalScripts = #scripts
+
+    for _, scriptData in pairs(scripts) do
+        task.spawn(function()
+            createLog("Iniciando: " .. scriptData.Name, "info")
+            local success, result = pcall(function()
+                return loadstring(game:HttpGet(scriptData.Url))()
+            end)
+            if success then
+                createLog(scriptData.Name .. " carregado!", "success")
+            else
+                createLog("Erro em " .. scriptData.Name .. ": " .. result, "error")
+            end
+            finishedCount = finishedCount + 1
+            TweenService:Create(ProgressBar, TweenInfo.new(0.5), {
+                Size = UDim2.new(finishedCount/totalScripts, 0, 1, 0)
+            }):Play()
+        end)
     end
 
-    updateLog("Executando: Animated")
-    local success2, errorMessage2 = pcall(function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/Gazer-Ha/Animated/main/G"))()
-    end)
-    if success2 then
-        updateLog("Animated executado com sucesso!")
-    else
-        updateLog("Erro ao executar Animated: " .. errorMessage2)
+    while finishedCount < totalScripts do
+        task.wait()
     end
 end
 
--- Execução inicial do script
+-- Fluxo Principal
 task.spawn(function()
-    if scriptsExecuted then
-        updateLog("Tek detectou que já tem scripts iniciados.")
-        return
-    end
+    -- Animação de entrada
+    MainFrame.Size = UDim2.new(0,0,0,0)
+    TweenService:Create(MainFrame, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {
+        Size = UDim2.new(0.35,0,0.4,0)
+    }):Play()
 
-    scriptsExecuted = true
-
-    if not isSecureEnvironment() then
-        updateLog("Ambiente inseguro! Execução interrompida.")
-        return
-    end
-
-    checkCharacterModel()
-
-    updateLog("Iniciando...")
-    simulateLoading()
-
-    -- Executando os scripts
-    executeScripts()
-
-    task.wait(1)
-
-    -- Transição de remoção da interface e do efeito de desfoque
-    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local mainFrameTween = TweenService:Create(MainFrame, tweenInfo, {Position = UDim2.new(0.3, 0, -0.5, 0)})
-    mainFrameTween:Play()
-
-    -- Tween para reduzir o blur simultaneamente
-    local blurTween = TweenService:Create(blur, tweenInfo, {Size = 0})
-    blurTween:Play()
-    blurTween.Completed:Connect(function()
-        blur:Destroy()
+    -- Atualização de Ping (simulado)
+    task.spawn(function()
+        while true do
+            local ping = math.random(50,150)
+            PingLabel.Text = "Ping: " .. ping .. "ms"
+            task.wait(1)
+        end
     end)
 
-    mainFrameTween.Completed:Connect(function()
-        MainFrame:Destroy()
+    -- Execução dos scripts
+    local success, err = pcall(executeScripts)
 
-        -- Exibição do texto final
-        local RGBText = Instance.new("TextLabel")
-        RGBText.Text = "Tek Scripts v1"
-        RGBText.Font = Enum.Font.GothamBold
-        RGBText.TextSize = 18
-        RGBText.Size = UDim2.new(0.3, 0, 0.05, 0)
-        RGBText.Position = UDim2.new(0.7, 0, 0.95, 0)
-        RGBText.BackgroundTransparency = 1
-        RGBText.Parent = ScreenGui
+    -- Animação de fechamento
+    local closeTween = TweenService:Create(MainFrame, TweenInfo.new(1, Enum.EasingStyle.Quad), {
+        Position = UDim2.new(0.5,0,1.5,0),
+        BackgroundTransparency = 1
+    })
+    TweenService:Create(blur, TweenInfo.new(1), {Size = 0}):Play()
+    closeTween:Play()
 
-        -- Animação de cor RGB
-        task.spawn(function()
-            while true do
-                for i = 0, 1, 0.01 do
-                    RGBText.TextColor3 = Color3.fromHSV(i, 1, 1)
-                    task.wait(0.05)
-                end
-            end
-        end)
-    end)
+    closeTween.Completed:Wait()
+    CreditsLabel.Visible = true
+    TweenService:Create(CreditsLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+    
+    -- Remove a interface
+    InputBlocker:Destroy()
+    ScreenGui:Destroy()
+    blur:Destroy()
 end)
