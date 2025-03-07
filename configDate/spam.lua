@@ -7,13 +7,13 @@ local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
 -- Variável para exibir ou não o botão flutuante
-local showFloatingButton = true
+local showFloatingButton = false
 
 -- Variável de controle do script (ativa/desativa)
-getgenv().scriptEnabled = true
+getgenv().scriptEnabled = false
 
 local weapon
-local debugMode = true
+local debugMode = false
 local guiButton
 
 -- Função de depuração
