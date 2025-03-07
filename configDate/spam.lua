@@ -1,35 +1,36 @@
--- Inicialização do jogador e personagem
+-- Módulo de configuração persistente de armas.
+-- Pode ser ativado e desativado por outros scripts.
+
+local WeaponModule = {}
+
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
-
-local showFloatingButton = false         -- Controla exibição do botão flutuante
-getgenv().scriptEnabled = false            -- Controla a execução do script
-
 local weapon
-local debugMode = false
+local debugMode = true
 local guiButton
+local running = false
 
--- Função de depuração
+-- Log simples
 local function log(msg)
     if debugMode then
         print("[DEBUG] " .. msg)
     end
 end
 
--- Atribuição segura de valor
+-- Define o valor de forma segura
 local function trySetValue(obj, value)
     pcall(function()
         if obj:IsA("NumberValue") or obj:IsA("IntValue") then
             obj.Value = value
         elseif obj:IsA("BoolValue") then
-            obj.Value = (value ~= 0)
+            obj.Value = value ~= 0
         elseif obj:IsA("StringValue") and tonumber(obj.Value) then
             obj.Value = tostring(value)
         end
     end)
 end
 
--- Força a persistência dos valores
+-- Força a persistência dos valores da arma
 local function enforceWeaponProperties(weapon, desiredProperties)
     for property, value in pairs(desiredProperties) do
         local propObj = weapon:FindFirstChild(property)
@@ -40,7 +41,7 @@ local function enforceWeaponProperties(weapon, desiredProperties)
     end
 end
 
--- Recarrega automaticamente a arma se necessário
+-- Autoreload da arma
 local function autoReloadWeapon(weapon)
     local ammo = weapon:FindFirstChild("Ammo")
     local clipSizeObj = weapon:FindFirstChild("ClipSize")
@@ -52,10 +53,8 @@ local function autoReloadWeapon(weapon)
     end
 end
 
--- Detecta e configura a arma; executa se o script estiver ativo
+-- Detecta e configura a arma conforme seu tipo
 local function locateAndConfigureWeapon()
-    if not getgenv().scriptEnabled then return end
-
     weapon = character:FindFirstChildOfClass("Tool")
     if weapon then
         log("Arma detectada: " .. weapon.Name)
@@ -71,74 +70,71 @@ local function locateAndConfigureWeapon()
 
         local weaponType = weapon.Name:lower()
         local knownProperties = {}
-        if weaponType:find("pistol") then
-            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("rifle") then
-            knownProperties = {FireRate = 12000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("shotgun") then
-            knownProperties = {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 50, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("smg") then
-            knownProperties = {FireRate = 15000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("sniper") then
-            knownProperties = {FireRate = 6000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 20, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("machinegun") then
-            knownProperties = {FireRate = 14000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("bazooka") then
-            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("crossbow") then
-            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("grenadelauncher") then
-            knownProperties = {FireRate = 15000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 9999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("laser") then
-            knownProperties = {FireRate = 11000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("flamethrower") then
-            knownProperties = {FireRate = 12000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 2000, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("minigun") then
-            knownProperties = {FireRate = 16000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 2000, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("rocketlauncher") then
-            knownProperties = {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("dartgun") then
-            knownProperties = {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 50, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("chaingun") then
-            knownProperties = {FireRate = 14000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        else
-            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 9999, Recoil = 0, Kickback = 0}
-        end
 
-        for property, value in pairs(knownProperties) do
-            if weapon:FindFirstChild(property) then
+        if weaponType:find("pistol") then  
+            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("rifle") then  
+            knownProperties = {FireRate = 12000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("shotgun") then  
+            knownProperties = {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 50, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("smg") then  
+            knownProperties = {FireRate = 15000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("sniper") then  
+            knownProperties = {FireRate = 6000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 20, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("machinegun") then  
+            knownProperties = {FireRate = 14000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("bazooka") then  
+            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("crossbow") then  
+            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("grenadelauncher") then  
+            knownProperties = {FireRate = 15000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 9999, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("laser") then  
+            knownProperties = {FireRate = 11000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("flamethrower") then  
+            knownProperties = {FireRate = 12000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 2000, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("minigun") then  
+            knownProperties = {FireRate = 16000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 2000, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("rocketlauncher") then  
+            knownProperties = {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("dartgun") then  
+            knownProperties = {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 50, Recoil = 0, Kickback = 0}
+        elseif weaponType:find("chaingun") then  
+            knownProperties = {FireRate = 14000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+        else  
+            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 9999, Recoil = 0, Kickback = 0}
+        end  
+
+        for property, value in pairs(knownProperties) do  
+            if weapon:FindFirstChild(property) then  
                 log("Configurando " .. property .. " para " .. tostring(value))
                 trySetValue(weapon[property], value)
-            end
-        end
+            end  
+        end  
 
-        if not weapon:FindFirstChild("EnforceLoop") then
+        if not weapon:FindFirstChild("EnforceLoop") then  
             local enforceLoop = Instance.new("BoolValue")
             enforceLoop.Name = "EnforceLoop"
             enforceLoop.Parent = weapon
             spawn(function()
-                while weapon and weapon.Parent do
-                    if getgenv().scriptEnabled then
-                        enforceWeaponProperties(weapon, knownProperties)
-                        autoReloadWeapon(weapon)
-                    end
+                while weapon and weapon.Parent and running do
+                    enforceWeaponProperties(weapon, knownProperties)
+                    autoReloadWeapon(weapon)
                     wait(0.001)
                 end
             end)
-        end
-    else
+        end  
+    else  
         log("Nenhuma arma encontrada.")
-    end
+    end  
 end
 
--- Cria GUI com botão flutuante para detectar a arma (se habilitado)
+-- Cria a GUI com botão para detectar a arma
 local function createGuiButton()
-    if not showFloatingButton then return end
-
     guiButton = Instance.new("ScreenGui")
     guiButton.Name = "PersistentUI"
     guiButton.ResetOnSpawn = false
-    guiButton.Parent = player:WaitForChild("PlayerGui")
+    guiButton.Parent = player.PlayerGui
 
     local button = Instance.new("TextButton", guiButton)
     button.Size = UDim2.new(0, 200, 0, 50)
@@ -177,7 +173,7 @@ local function createGuiButton()
     end)
 end
 
--- Configura o personagem e detecta novas ferramentas
+-- Configura o personagem para detectar novas ferramentas
 local function setupCharacter()
     character = player.Character or player.CharacterAdded:Wait()
     character.ChildAdded:Connect(function(child)
@@ -188,22 +184,24 @@ local function setupCharacter()
     locateAndConfigureWeapon()
 end
 
-player.CharacterAdded:Connect(setupCharacter)
-setupCharacter()
-createGuiButton()
-
--- Função global para alternar a execução do script
-getgenv().toggleScript = function()
-    getgenv().scriptEnabled = not getgenv().scriptEnabled
-    print("Script ativado: " .. tostring(getgenv().scriptEnabled))
-    if not getgenv().scriptEnabled then
-        if guiButton then
-            guiButton:Destroy()
-        end
-    else
-        setupCharacter()
-        if showFloatingButton and not guiButton then
-            createGuiButton()
-        end
-    end
+-- Ativa o módulo
+function WeaponModule.Enable()
+    if running then return end
+    running = true
+    player.CharacterAdded:Connect(setupCharacter)
+    setupCharacter()
+    createGuiButton()
+    log("WeaponModule ativado")
 end
+
+-- Desativa o módulo e remove a GUI
+function WeaponModule.Disable()
+    running = false
+    if guiButton then
+        guiButton:Destroy()
+        guiButton = nil
+    end
+    log("WeaponModule desativado")
+end
+
+return WeaponModule
