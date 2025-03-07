@@ -1,16 +1,9 @@
---[[
-Script para detecção e configuração persistente de armas no personagem.
-Realiza detecção, configuração e autoreload instantâneo para diferentes sistemas.
-]]--
-
+-- Inicialização do jogador e personagem
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 
--- Variável para exibir ou não o botão flutuante
-local showFloatingButton = false
-
--- Variável de controle do script (ativa/desativa)
-getgenv().scriptEnabled = false
+local showFloatingButton = false         -- Controla exibição do botão flutuante
+getgenv().scriptEnabled = false            -- Controla a execução do script
 
 local weapon
 local debugMode = false
@@ -29,7 +22,7 @@ local function trySetValue(obj, value)
         if obj:IsA("NumberValue") or obj:IsA("IntValue") then
             obj.Value = value
         elseif obj:IsA("BoolValue") then
-            obj.Value = value ~= 0
+            obj.Value = (value ~= 0)
         elseif obj:IsA("StringValue") and tonumber(obj.Value) then
             obj.Value = tostring(value)
         end
@@ -40,11 +33,9 @@ end
 local function enforceWeaponProperties(weapon, desiredProperties)
     for property, value in pairs(desiredProperties) do
         local propObj = weapon:FindFirstChild(property)
-        if propObj then
-            if propObj.Value ~= value then
-                log("Reaplicando " .. property .. " (" .. tostring(propObj.Value) .. " -> " .. tostring(value) .. ")")
-                trySetValue(propObj, value)
-            end
+        if propObj and propObj.Value ~= value then
+            log("Reaplicando " .. property .. " (" .. tostring(propObj.Value) .. " -> " .. tostring(value) .. ")")
+            trySetValue(propObj, value)
         end
     end
 end
@@ -61,9 +52,10 @@ local function autoReloadWeapon(weapon)
     end
 end
 
--- Detecta e configura a arma; só executa se o script estiver ativo
+-- Detecta e configura a arma; executa se o script estiver ativo
 local function locateAndConfigureWeapon()
     if not getgenv().scriptEnabled then return end
+
     weapon = character:FindFirstChildOfClass("Tool")
     if weapon then
         log("Arma detectada: " .. weapon.Name)
@@ -79,7 +71,6 @@ local function locateAndConfigureWeapon()
 
         local weaponType = weapon.Name:lower()
         local knownProperties = {}
-
         if weaponType:find("pistol") then
             knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
         elseif weaponType:find("rifle") then
@@ -140,13 +131,14 @@ local function locateAndConfigureWeapon()
     end
 end
 
--- Cria GUI com botão para detectar a arma, se permitido
+-- Cria GUI com botão flutuante para detectar a arma (se habilitado)
 local function createGuiButton()
     if not showFloatingButton then return end
+
     guiButton = Instance.new("ScreenGui")
     guiButton.Name = "PersistentUI"
     guiButton.ResetOnSpawn = false
-    guiButton.Parent = player.PlayerGui
+    guiButton.Parent = player:WaitForChild("PlayerGui")
 
     local button = Instance.new("TextButton", guiButton)
     button.Size = UDim2.new(0, 200, 0, 50)
@@ -158,7 +150,7 @@ local function createGuiButton()
     button.BorderSizePixel = 2
 
     local dragging = false
-    local dragInput, dragStart, startPos
+    local dragStart, startPos
 
     button.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -185,7 +177,7 @@ local function createGuiButton()
     end)
 end
 
--- Configura o personagem e conecta a detecção de novas ferramentas
+-- Configura o personagem e detecta novas ferramentas
 local function setupCharacter()
     character = player.Character or player.CharacterAdded:Wait()
     character.ChildAdded:Connect(function(child)
@@ -200,7 +192,7 @@ player.CharacterAdded:Connect(setupCharacter)
 setupCharacter()
 createGuiButton()
 
--- Função global para ativar/desativar o script via getgenv
+-- Função global para alternar a execução do script
 getgenv().toggleScript = function()
     getgenv().scriptEnabled = not getgenv().scriptEnabled
     print("Script ativado: " .. tostring(getgenv().scriptEnabled))
