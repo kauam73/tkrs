@@ -1,0 +1,782 @@
+[
+    {
+        "idCatalogo": "6869813008",
+        "nome": "Samba",
+        "idEmote": "10714386947",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-28367b02628abd4445375458e581fe57/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "14022978026",
+        "nome": "ybv3",
+        "idEmote": "14022936101",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-ab5f717a820a4148ff83b0dbb292a670/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5104374556",
+        "nome": "Piti",
+        "idEmote": "10714340558",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-bcc5fd88c8ce3f034c90d61202295e32/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4940597758",
+        "nome": "Encolhendo de Medo",
+        "idEmote": "4940563117",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-957db4217924b43720314667f812d438/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "10214406616",
+        "nome": "Talento gelado Tommy Hilfiger",
+        "idEmote": "10214311282",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-aa45256eb1bcf4537948be630393d095/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "10214418283",
+        "nome": "Pose V Tommy Hilfiger",
+        "idEmote": "10214319518",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-12a60e3dd6592abd0a79f1c72369f7a0/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4391211308",
+        "nome": "Y",
+        "idEmote": "10714164866",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-ef878f172037b49f9429ee450289c537/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "17000058939",
+        "nome": "Mini Kong",
+        "idEmote": "17000021306",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-de20e99c42fed7f0d3f9e010e47f7097/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "16126526506",
+        "nome": "Paris Hilton Sanasa",
+        "idEmote": "16126469463",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-949b03650517f02aa9891f783858db1d/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4272351660",
+        "nome": "M os R pidas",
+        "idEmote": "10714100539",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f63576ba33fd0217450fbb3be91e728a/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15694504637",
+        "nome": "d4vd Backflip",
+        "idEmote": "15693621070",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f6d1af72f3550bebad4d1416396c40a5/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3576717965",
+        "nome": "Timidez",
+        "idEmote": "10714369325",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-12e97e3c9487ffbd7ca3b3755aad991b/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "120642514156293",
+        "nome": "Secret Handshake Dance",
+        "idEmote": "71243990877913",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-28bdd0a2eab6b9aae473f329fa9b51cc/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5915773992",
+        "nome": "Breake dance",
+        "idEmote": "10714003221",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-3abea37f8b4d82015f76110552678a53/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4689362868",
+        "nome": "Dormindo",
+        "idEmote": "10714360343",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-308141b5d0bcc56ef36c83baacff62e9/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3934984583",
+        "nome": "Ah Sai Daqui",
+        "idEmote": "10714345862",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-ecc7021ef434df667a5872146b643b50/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "16392120020",
+        "nome": "Jawny Stomp",
+        "idEmote": "16392075853",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-1fdb219a12e0d4a6b67e6751bb610bef/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "10275057230",
+        "nome": "Uprise Tommy Hilfiger",
+        "idEmote": "10275008655",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-d016ca1de49b9369cdea225fa6472c64/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "14353421343",
+        "nome": "Baby Queen - Face Frame",
+        "idEmote": "14352340648",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-ba950fe656255c392e26a227c9f9ed89/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "17370797454",
+        "nome": "Wisp air guitar",
+        "idEmote": "17370775305",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-e80b689f1d20be05cb939bfb9df2be08/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "11309263077",
+        "nome": "Elton John Pulo do cora o",
+        "idEmote": "11309255148",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f4c70d4cb0e944108dba995425bda38e/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5104377791",
+        "nome": "Pouso do Her i",
+        "idEmote": "10714360164",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-9a57251d1af65b0243bbe9356f4fc058/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4940602656",
+        "nome": "Pulando Onda",
+        "idEmote": "10714378156",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-28cd388b2c5545d56b9fad571d9df0c1/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15679955281",
+        "nome": "Festive Dance",
+        "idEmote": "15679621440",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-7e81b5354927472238b0379a99200b13/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "16256253954",
+        "nome": "TWICE I GOT YOU part 2",
+        "idEmote": "16256203246",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-05f2f0e6311a6f84401bd6d0b2ab8e69/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3576968026",
+        "nome": "Shrug",
+        "idEmote": "10714374484",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-d84dab708e5a94fb59bcbbeaa4a2dda6/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15392927897",
+        "nome": "Paris Hilton Sliving For The Groove",
+        "idEmote": "15392759696",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-a1176d6fbb40ce0afbd9e90a64aa5708/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3716636630",
+        "nome": "Macaco",
+        "idEmote": "10714388352",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-34b27fcef12dcb47b36500db2da153d5/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "16553249658",
+        "nome": "Mae Stephens Piano Hands",
+        "idEmote": "16553163212",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-2cd10b21e7a142bb579d36d3dfc50134/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5230661597",
+        "nome": "Entediado",
+        "idEmote": "10713992055",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-0b7e9716ee3bbc7bc5ea1a8bcbd5f053/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15123050663",
+        "nome": "Bone Chillin Bop",
+        "idEmote": "15122972413",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-6dcf70fe39ff512d5c03fe741739804e/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15506496093",
+        "nome": "Rock n Roll",
+        "idEmote": "15505458452",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-c82020456254633b711e2c56eff8ca73/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15698510244",
+        "nome": "ericdoa dance",
+        "idEmote": "15698402762",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f351146c780499b146bfc999b079adcb/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15689315657",
+        "nome": "GloRilla Tomorrow Dance",
+        "idEmote": "15689278184",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-510d49b9d5ab2cfd3b72a0dc0877a03b/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4212496830",
+        "nome": "Zumbi",
+        "idEmote": "10714089137",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-1387667c096500abe9bc7ba2998ed98e/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3576823880",
+        "nome": "Apontando2",
+        "idEmote": "10714395441",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-1d9b61e01bcaf3fca03c86e87fe6d68d/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "92859581691366",
+        "nome": "ALT GO Couldn t Care Less",
+        "idEmote": "107875941017127",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-d186150c8ef5c14a96a18383cb63141d/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "14353419229",
+        "nome": "bow float",
+        "idEmote": "14352337694",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-2c1ce2cee8d5b86f969a2f5e0a467dba/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "14900151704",
+        "nome": "TWICE LIKEY",
+        "idEmote": "14899979575",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-a3b6bf47c25363cd39f71c39826316c3/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "7466046574",
+        "nome": "Ondas quietas",
+        "idEmote": "10714390497",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-ce689f2e01eabb9de4ac7df32ba586ca/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "73683655527605",
+        "nome": "Fashion Roadkill",
+        "idEmote": "136831243854748",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-727373271801f2bf4295328120b6b646/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3360686498",
+        "nome": "Est dio",
+        "idEmote": "10714356920",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-3f214a17e49cb17f0e3ac6a3ec8539b9/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4102315500",
+        "nome": "Haha",
+        "idEmote": "10714350889",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-b300d215b86bc5f24c64252ea08bd8f0/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4646306583",
+        "nome": "Rever ncia",
+        "idEmote": "10714061912",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f908ca2da27915b608f022fb6f0e3aca/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3994127840",
+        "nome": "Comemorando",
+        "idEmote": "10714016223",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-d3d15d49080413ec40558bd13888a2d3/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5915776835",
+        "nome": "Onda",
+        "idEmote": "10714362852",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-a69a8c758816e13078d2a9bba4c5dc70/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "14353423348",
+        "nome": "freespirit",
+        "idEmote": "14352343065",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-a6be5f2e474a4da80a1feff34c920d8c/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15610015346",
+        "nome": "Yungblud Happier Jump",
+        "idEmote": "15609995579",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f61282693cffdc83a87ab9ce67dd9da8/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "14900153406",
+        "nome": "TWICE Feel Special",
+        "idEmote": "14899980745",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-d804bd9199b64483a794b64d8f147e1b/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4849487550",
+        "nome": "Concordar",
+        "idEmote": "10713954623",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-cfd1d9a567520463c908416d9ceb56a4/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "16572756230",
+        "nome": "HIPMOTION - Amaarae",
+        "idEmote": "16572740012",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-bf299539dc8d2429114392b1d4de51ff/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15554016057",
+        "nome": "Olivia Rodrigo Fall Back to Float",
+        "idEmote": "15549124879",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f8db54adf3f4b2016b8602a3e09a6829/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "17748346932",
+        "nome": "Elton John Heart Shuffle",
+        "idEmote": "17748314784",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-7b61e0bd2bf210d041d63731ebf1efd7/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3360692915",
+        "nome": "Inclina o",
+        "idEmote": "10714338461",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-0c72e2f4a8573874ed4cda0105fbaf2b/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5915779043",
+        "nome": "Aplauso",
+        "idEmote": "10713966026",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-23dbd4099fb54b6fd8115e43d57aace8/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15698511500",
+        "nome": "Cuco Levitate",
+        "idEmote": "15698404340",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-22fe9299e1cc99c9de319bef8ecbdb12/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "12507097350",
+        "nome": "Alo Yoga Pose - Lotus Position",
+        "idEmote": "12507085924",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-e92c14ab269f1316b8787e7c56f2149f/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "7202900159",
+        "nome": "Alarme despertador KSI",
+        "idEmote": "10714168145",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-28388de5d0be5f9308fb6c7df80689a8/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "17360720445",
+        "nome": "HUGO Lets Drive",
+        "idEmote": "17360699557",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-00767d462de39fd09793fd3126c09778/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "14353425085",
+        "nome": "walkcircle",
+        "idEmote": "14352362059",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f93cc5ab41a22dce44da20a5e5a20cf4/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15506503658",
+        "nome": "Victory Dance",
+        "idEmote": "15505456446",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-c3971b4b8ca90e894370f0a908d8aa7d/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3762654854",
+        "nome": "O M ximo",
+        "idEmote": "10714349037",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-e9bf865d23c0d864337b71aac6c2aad5/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5917570207",
+        "nome": "Dan a do fio dental",
+        "idEmote": "10714340543",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-7d00feb10ad30f51629afa83563c3e51/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15571540519",
+        "nome": "Nicki Minaj Starships",
+        "idEmote": "15571453761",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f638c1fb8e889ad97199540e59841c16/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3934986896",
+        "nome": "Tontinho",
+        "idEmote": "10714066964",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-c9a7f8a7af57a0a09c61e8253dfcf249/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3994130516",
+        "nome": "Fisiculturista",
+        "idEmote": "10713990381",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-ea97fc805f0b0295d6dad31a05666a9e/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "17746270218",
+        "nome": "Sturdy Dance - Ice Spice",
+        "idEmote": "17746180844",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-ece3d8d7dd4a6b6dbd3aace7d0293135/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "14353417553",
+        "nome": "air guitar",
+        "idEmote": "14352335202",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-c864e03317ba202446074e8bf7be50c0/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "16584496781",
+        "nome": "Mae Stephens Arm Wave",
+        "idEmote": "16584481352",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-d99cedbdb2c549502e197160f6c20e73/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "7202898984",
+        "nome": "Mostre os pulsos KSI",
+        "idEmote": "10714377090",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-5cd44ec30d8fde403335df434142823a/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "18526338976",
+        "nome": "Team USA Breaking Emote",
+        "idEmote": "18526288497",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-e7b6adca7090d3ecbe5574f2a96fda5c/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3823158750",
+        "nome": "Divino",
+        "idEmote": "10714347256",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-91d4cce84831b271cf74c71ada957297/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15571538346",
+        "nome": "Nicki Minaj Boom Boom Boom",
+        "idEmote": "15571448688",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-9cc30e7175f3d266024b06d3c840607f/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5938365243",
+        "nome": "Dolphin Dance",
+        "idEmote": "10714068222",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-9137fac715864f20469e1ef988db1b0d/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4940592718",
+        "nome": "Confuso",
+        "idEmote": "4940561610",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-1aa1341e2b4c517f2806df5f641d2acb/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5230615437",
+        "nome": "Sinaliza o",
+        "idEmote": "10713984554",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-054e4a0d5bfafe97fb7a7e540dac4b5d/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "7466047578",
+        "nome": "Brisa fluindo",
+        "idEmote": "10714342957",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-2ab904763d6cbfb1373f3819c62ab627/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "16276506814",
+        "nome": "Sol de Janeiro Samba",
+        "idEmote": "16270690701",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f247f82b40a793ad010923e00369006f/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15554010118",
+        "nome": "Olivia Rodrigo Head Bop",
+        "idEmote": "15517864808",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-1848e979ca018d9d395564b83944a313/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4272484885",
+        "nome": "Baby Dance",
+        "idEmote": "10713983178",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-ade15d7a4f9ae6147fc8b1485d4949c8/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4049646104",
+        "nome": "Contradan a",
+        "idEmote": "10714383856",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-64d89279eb023216ce30228305ff2b83/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "11753545334",
+        "nome": "Elton John Rock Out",
+        "idEmote": "11753474067",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-2254e83451bddc9ea10e107a9e707c49/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5938394742",
+        "nome": "Dan a Old Town Road Lil Nas X LNX",
+        "idEmote": "10714391240",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-24d481f076bc2bdb3da115f4e68ed2ef/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3762641826",
+        "nome": "Gingado pros Lados",
+        "idEmote": "10714366910",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-bf480ea260461cdbb1b4292faa776d79/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "79312439851071",
+        "nome": "Chappell Roan HOT TO GO!",
+        "idEmote": "85267023718407",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-224952359c995353329347173e72c7d5/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3716633898",
+        "nome": "Pirueta",
+        "idEmote": "10714293450",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f0dcea750352bc5be027db3dbbba6015/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5938396308",
+        "nome": "Dan a HOLIDAY Lil Nas X LNX",
+        "idEmote": "10714365721",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-ed1536bdeb9b5e49ebc40ff9120d66c9/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3576747102",
+        "nome": "Around Town",
+        "idEmote": "10713981723",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-d168b638dbf649e5bc3371fd0495b8f0/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3576745472",
+        "nome": "Requintado",
+        "idEmote": "10714091938",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-1a768658d3703489f5ef4397219b7983/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3570535774",
+        "nome": "Estrela da Dan a",
+        "idEmote": "10714336041",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-d9110b4551dc80901b842e12d857014c/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3821527813",
+        "nome": "Swish",
+        "idEmote": "10714349738",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-092152a3bf9ffeab9c717c1318b6a581/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4102317848",
+        "nome": "dolo",
+        "idEmote": "10714372526",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-52955a84c3ab26cb16fb9473a779d98f/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "11453096488",
+        "nome": "Elton John Pulo do piano",
+        "idEmote": "11453082181",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-aa20fd31be22cb136133c254d55d6987/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3934988903",
+        "nome": "P s de Dan arino",
+        "idEmote": "10714076981",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-36b7ac5ab800c687f5a3ab5d5fb109a9/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3576754235",
+        "nome": "Sorrateiro",
+        "idEmote": "10714358528",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-aeb5a1b39e07eb57ee55171e447dba18/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "10370929905",
+        "nome": "Estrelinha George Ezra",
+        "idEmote": "10370351535",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-bdd83c28f37e858f845dc271faf9ed27/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "10478368365",
+        "nome": "Supercarga",
+        "idEmote": "10478338114",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-619b7a0a8359c88de554e47ae1242d97/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "11394056822",
+        "nome": "Elton John Elevate",
+        "idEmote": "11394033602",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-7a16dc9e90934d195ba602cab394666a/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "13071993910",
+        "nome": "Rise Above The Chainsmokers",
+        "idEmote": "12992262118",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-641dfdf4842311282b6669ef47b73164/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3576721660",
+        "nome": "Robot",
+        "idEmote": "10714392151",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-93dbc694a56356f07e8a73d1c13c4066/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "11435177473",
+        "nome": "Elton John Still Standing",
+        "idEmote": "11444443576",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-2d134ef5a36a41f6883019c8e153a16d/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "11435175895",
+        "nome": "Elton John Homem gato",
+        "idEmote": "11444441914",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-3d5093eae2e5c1e7e3a02d554d291650/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4212499637",
+        "nome": "Dancinha Besta",
+        "idEmote": "10714069471",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-b8753ba578fae2af26d894faef6f6128/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4391208058",
+        "nome": "Dancinha Shuffle",
+        "idEmote": "10714371274",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-dc136d17cdbefefd5dfd61741218465d/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "117511481049460",
+        "nome": "NBA Monster Dunk",
+        "idEmote": "132748833449150",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-403625d6a154dde7cd06003c8217b7ca/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5915781665",
+        "nome": "Dan a Panini Lil Nas X LNX",
+        "idEmote": "10714394082",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-a82cc93288c441bcea88b741d9254d78/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "5938397555",
+        "nome": "Dan a Rodeo Lil Nas X LNX",
+        "idEmote": "10714395175",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-c46febbb2526b3d4fc15c6ecfe38a56c/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "6797948622",
+        "nome": "It Aint My Fault Zara Larsson",
+        "idEmote": "10714374267",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-e6518ad62e394da13f32257f1facbd0c/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "6531538868",
+        "nome": "Drum Master - Royal Blood",
+        "idEmote": "10714070681",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-87c20e47c75e4035cb6f4f4746db4e32/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "15506506103",
+        "nome": "Flex Walk",
+        "idEmote": "15505459811",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-06e5c1e91cb0aa0afc8230f5b3d57754/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "13823339506",
+        "nome": "Tommy Arqueiro",
+        "idEmote": "13823324057",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-fa83e5b93b018896599609869526b3d9/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "10214415687",
+        "nome": "Mean Mug Tommy Hilfiger",
+        "idEmote": "10214317325",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-c1946d7e44a92924150afbcba9e70e45/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "7422833723",
+        "nome": "Dan a Saturday Twenty One Pilots",
+        "idEmote": "10714382522",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-4af48c59343684289933ad4facc37907/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "10214411646",
+        "nome": "Congelamento do ch o de rocha Tommy Hilfiger",
+        "idEmote": "10214314957",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-410a2a347fcb91c8add91599e45b400c/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "7202896732",
+        "nome": "Soco de boxe KSI",
+        "idEmote": "10717116749",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-b2b2d033bcb8525602537fcbe64e37d9/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "6532844183",
+        "nome": "Solo de bateria Royal Blood",
+        "idEmote": "10714074218",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-0ba7c3975291219bb153d0d430f6bb0b/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "6797919579",
+        "nome": "Hips Poppin Zara Larsson",
+        "idEmote": "10714364213",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-08848b6885629e4db504925580692132/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "7422841700",
+        "nome": "On The Outside - Twenty One Pilots",
+        "idEmote": "10714392953",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-dc86948d20f7959bcf7e9209cdbb529c/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "4646302011",
+        "nome": "Bonec o do Posto",
+        "idEmote": "10713957138",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-f625741f4e7ad8ed862bfb5e95994e2b/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "12259888240",
+        "nome": "Passo de dan a Chute NCT 127",
+        "idEmote": "12259826609",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-9d246873856908ed0678257f182ba0c9/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "6865011755",
+        "nome": "Festeiro a de rua",
+        "idEmote": "10713988674",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-a11cdb041c5d3217f6a0884f8d0173f9/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "18443268949",
+        "nome": "SpongeBob Imaginaaation",
+        "idEmote": "18443237526",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-3daf8394f76f24027702479be8c358e4/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "18665886405",
+        "nome": "TMNT Dance",
+        "idEmote": "18665811005",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-56b2edc61abc244deb19796945ef83dc/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "6797938823",
+        "nome": "Take Me Under Zara Larsson",
+        "idEmote": "10714345459",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-caf11bb5746faf324b1015fac2d05589/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "10370918044",
+        "nome": "Vibes tranquilas George Ezra",
+        "idEmote": "10370353969",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-d38b7f7b6f4c30587e899eaba2a90874/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "3576719440",
+        "nome": "T",
+        "idEmote": "10714347453",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-87f568d77550e40459a855e2515456a8/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "12259890638",
+        "nome": "Passo de dan a 2 Baddies NCT 127",
+        "idEmote": "12259828678",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-0dc5ff01daf7d1a026d2099636cd8ce9/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "7422843994",
+        "nome": "Para cima e para baixo Twenty One Pilots",
+        "idEmote": "10714174918",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-fa0d1fd1cf5f47aa88106205a2035361/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "6532155086",
+        "nome": "Rock Guitar - Royal Blood",
+        "idEmote": "10714393929",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-d9849ac037f6cd07cc56407079e78036/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "12804173616",
+        "nome": "Dan a Ay Yo NCT 127",
+        "idEmote": "12804157977",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-9a33b23e79fa1f6a6010250af2e87504/420/420/EmoteAnimation/Png/noFilter"
+    }
+]
