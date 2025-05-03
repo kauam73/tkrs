@@ -110,5 +110,1205 @@
         "thumbnail": "N/A",
         "bundleId": "1601900",
         "bundleNome": "Catwalk Glam Animation Pack by e.l.f."
+    },
+    {
+        "idAnimacao": "10921286911",
+        "nome": "Climb",
+        "idAsset": "619527470",
+        "thumbnail": "N/A",
+        "bundleId": "81",
+        "bundleNome": "Superhero Animation Pack"
+    },
+    {
+        "idAnimacao": "10921293373",
+        "nome": "Fall",
+        "idAsset": "619527817",
+        "thumbnail": "N/A",
+        "bundleId": "81",
+        "bundleNome": "Superhero Animation Pack"
+    },
+    {
+        "idAnimacao": "10921288909",
+        "nome": "Idle",
+        "idAsset": "619528125",
+        "thumbnail": "N/A",
+        "bundleId": "81",
+        "bundleNome": "Superhero Animation Pack"
+    },
+    {
+        "idAnimacao": "10921294559",
+        "nome": "Jump",
+        "idAsset": "619528412",
+        "thumbnail": "N/A",
+        "bundleId": "81",
+        "bundleNome": "Superhero Animation Pack"
+    },
+    {
+        "idAnimacao": "10921291831",
+        "nome": "Run",
+        "idAsset": "619528716",
+        "thumbnail": "N/A",
+        "bundleId": "81",
+        "bundleNome": "Superhero Animation Pack"
+    },
+    {
+        "idAnimacao": "10921295495",
+        "nome": "Swim",
+        "idAsset": "619529095",
+        "thumbnail": "N/A",
+        "bundleId": "81",
+        "bundleNome": "Superhero Animation Pack"
+    },
+    {
+        "idAnimacao": "10921298616",
+        "nome": "Walk",
+        "idAsset": "619529601",
+        "thumbnail": "N/A",
+        "bundleId": "81",
+        "bundleNome": "Superhero Animation Pack"
+    },
+    {
+        "idAnimacao": "131326830509784",
+        "nome": "Climb",
+        "idAsset": "135810009801094",
+        "thumbnail": "N/A",
+        "bundleId": "1189398",
+        "bundleNome": "Wicked Popular Animation Pack"
+    },
+    {
+        "idAnimacao": "121152442762481",
+        "nome": "Fall",
+        "idAsset": "83937116921114",
+        "thumbnail": "N/A",
+        "bundleId": "1189398",
+        "bundleNome": "Wicked Popular Animation Pack"
+    },
+    {
+        "idAnimacao": "104325245285198",
+        "nome": "Jump",
+        "idAsset": "130373407996664",
+        "thumbnail": "N/A",
+        "bundleId": "1189398",
+        "bundleNome": "Wicked Popular Animation Pack"
+    },
+    {
+        "idAnimacao": "118832222982049",
+        "nome": "Idle",
+        "idAsset": "101839542383818",
+        "thumbnail": "N/A",
+        "bundleId": "1189398",
+        "bundleNome": "Wicked Popular Animation Pack"
+    },
+    {
+        "idAnimacao": "72301599441680",
+        "nome": "Run",
+        "idAsset": "136276875045281",
+        "thumbnail": "N/A",
+        "bundleId": "1189398",
+        "bundleNome": "Wicked Popular Animation Pack"
+    },
+    {
+        "idAnimacao": "99384245425157",
+        "nome": "Swim",
+        "idAsset": "128475661806875",
+        "thumbnail": "N/A",
+        "bundleId": "1189398",
+        "bundleNome": "Wicked Popular Animation Pack"
+    },
+    {
+        "idAnimacao": "92072849924640",
+        "nome": "Walk",
+        "idAsset": "133304526526319",
+        "thumbnail": "N/A",
+        "bundleId": "1189398",
+        "bundleNome": "Wicked Popular Animation Pack"
+    },
+    {
+        "idAnimacao": "18747060903",
+        "nome": "Climb",
+        "idAsset": "18755919175",
+        "thumbnail": "N/A",
+        "bundleId": "455003",
+        "bundleNome": "No Boundaries Animation Pack by Walmart"
+    },
+    {
+        "idAnimacao": "18747062535",
+        "nome": "Fall",
+        "idAsset": "18755922352",
+        "thumbnail": "N/A",
+        "bundleId": "455003",
+        "bundleNome": "No Boundaries Animation Pack by Walmart"
+    },
+    {
+        "idAnimacao": "18747067405",
+        "nome": "Idle",
+        "idAsset": "18755930927",
+        "thumbnail": "N/A",
+        "bundleId": "455003",
+        "bundleNome": "No Boundaries Animation Pack by Walmart"
+    },
+    {
+        "idAnimacao": "18747069148",
+        "nome": "Jump",
+        "idAsset": "18755925411",
+        "thumbnail": "N/A",
+        "bundleId": "455003",
+        "bundleNome": "No Boundaries Animation Pack by Walmart"
+    },
+    {
+        "idAnimacao": "18747070484",
+        "nome": "Run",
+        "idAsset": "18755933883",
+        "thumbnail": "N/A",
+        "bundleId": "455003",
+        "bundleNome": "No Boundaries Animation Pack by Walmart"
+    },
+    {
+        "idAnimacao": "18747073181",
+        "nome": "Swim",
+        "idAsset": "18755938274",
+        "thumbnail": "N/A",
+        "bundleId": "455003",
+        "bundleNome": "No Boundaries Animation Pack by Walmart"
+    },
+    {
+        "idAnimacao": "18747074203",
+        "nome": "Walk",
+        "idAsset": "18755942776",
+        "thumbnail": "N/A",
+        "bundleId": "455003",
+        "bundleNome": "No Boundaries Animation Pack by Walmart"
+    },
+    {
+        "idAnimacao": "10921148209",
+        "nome": "Run",
+        "idAsset": "754635032",
+        "thumbnail": "N/A",
+        "bundleId": "63",
+        "bundleNome": "Mage Animation Package"
+    },
+    {
+        "idAnimacao": "10921152678",
+        "nome": "Walk",
+        "idAsset": "754636298",
+        "thumbnail": "N/A",
+        "bundleId": "63",
+        "bundleNome": "Mage Animation Package"
+    },
+    {
+        "idAnimacao": "10921148939",
+        "nome": "Fall",
+        "idAsset": "754636589",
+        "thumbnail": "N/A",
+        "bundleId": "63",
+        "bundleNome": "Mage Animation Package"
+    },
+    {
+        "idAnimacao": "10921149743",
+        "nome": "Jump",
+        "idAsset": "754637084",
+        "thumbnail": "N/A",
+        "bundleId": "63",
+        "bundleNome": "Mage Animation Package"
+    },
+    {
+        "idAnimacao": "10921144709",
+        "nome": "Idle",
+        "idAsset": "754637456",
+        "thumbnail": "N/A",
+        "bundleId": "63",
+        "bundleNome": "Mage Animation Package"
+    },
+    {
+        "idAnimacao": "10921150788",
+        "nome": "Swim",
+        "idAsset": "754638471",
+        "thumbnail": "N/A",
+        "bundleId": "63",
+        "bundleNome": "Mage Animation Package"
+    },
+    {
+        "idAnimacao": "10921143404",
+        "nome": "Climb",
+        "idAsset": "754639239",
+        "thumbnail": "N/A",
+        "bundleId": "63",
+        "bundleNome": "Mage Animation Package"
+    },
+    {
+        "idAnimacao": "10921343576",
+        "nome": "Climb",
+        "idAsset": "619535091",
+        "thumbnail": "N/A",
+        "bundleId": "80",
+        "bundleNome": "Zombie Animation Pack"
+    },
+    {
+        "idAnimacao": "10921350320",
+        "nome": "Fall",
+        "idAsset": "619535616",
+        "thumbnail": "N/A",
+        "bundleId": "80",
+        "bundleNome": "Zombie Animation Pack"
+    },
+    {
+        "idAnimacao": "10921344533",
+        "nome": "Idle",
+        "idAsset": "619535834",
+        "thumbnail": "N/A",
+        "bundleId": "80",
+        "bundleNome": "Zombie Animation Pack"
+    },
+    {
+        "idAnimacao": "10921351278",
+        "nome": "Jump",
+        "idAsset": "619536283",
+        "thumbnail": "N/A",
+        "bundleId": "80",
+        "bundleNome": "Zombie Animation Pack"
+    },
+    {
+        "idAnimacao": "616163682",
+        "nome": "Run",
+        "idAsset": "619536621",
+        "thumbnail": "N/A",
+        "bundleId": "80",
+        "bundleNome": "Zombie Animation Pack"
+    },
+    {
+        "idAnimacao": "10921352344",
+        "nome": "Swim",
+        "idAsset": "619537096",
+        "thumbnail": "N/A",
+        "bundleId": "80",
+        "bundleNome": "Zombie Animation Pack"
+    },
+    {
+        "idAnimacao": "10921355261",
+        "nome": "Walk",
+        "idAsset": "619537468",
+        "thumbnail": "N/A",
+        "bundleId": "80",
+        "bundleNome": "Zombie Animation Pack"
+    },
+    {
+        "idAnimacao": "10921247141",
+        "nome": "Climb",
+        "idAsset": "619521311",
+        "thumbnail": "N/A",
+        "bundleId": "82",
+        "bundleNome": "Robot Animation Pack"
+    },
+    {
+        "idAnimacao": "10921251156",
+        "nome": "Fall",
+        "idAsset": "619521521",
+        "thumbnail": "N/A",
+        "bundleId": "82",
+        "bundleNome": "Robot Animation Pack"
+    },
+    {
+        "idAnimacao": "10921248039",
+        "nome": "Idle",
+        "idAsset": "619521748",
+        "thumbnail": "N/A",
+        "bundleId": "82",
+        "bundleNome": "Robot Animation Pack"
+    },
+    {
+        "idAnimacao": "10921252123",
+        "nome": "Jump",
+        "idAsset": "619522088",
+        "thumbnail": "N/A",
+        "bundleId": "82",
+        "bundleNome": "Robot Animation Pack"
+    },
+    {
+        "idAnimacao": "10921250460",
+        "nome": "Run",
+        "idAsset": "619522386",
+        "thumbnail": "N/A",
+        "bundleId": "82",
+        "bundleNome": "Robot Animation Pack"
+    },
+    {
+        "idAnimacao": "10921253142",
+        "nome": "Swim",
+        "idAsset": "619522642",
+        "thumbnail": "N/A",
+        "bundleId": "82",
+        "bundleNome": "Robot Animation Pack"
+    },
+    {
+        "idAnimacao": "10921255446",
+        "nome": "Walk",
+        "idAsset": "619522849",
+        "thumbnail": "N/A",
+        "bundleId": "82",
+        "bundleNome": "Robot Animation Pack"
+    },
+    {
+        "idAnimacao": "10921063569",
+        "nome": "Swim",
+        "idAsset": "1018554245",
+        "thumbnail": "N/A",
+        "bundleId": "39",
+        "bundleNome": "Bubbly Animation Package"
+    },
+    {
+        "idAnimacao": "10921054344",
+        "nome": "Idle",
+        "idAsset": "1018553897",
+        "thumbnail": "N/A",
+        "bundleId": "39",
+        "bundleNome": "Bubbly Animation Package"
+    },
+    {
+        "idAnimacao": "10921062673",
+        "nome": "Jump",
+        "idAsset": "1018553240",
+        "thumbnail": "N/A",
+        "bundleId": "39",
+        "bundleNome": "Bubbly Animation Package"
+    },
+    {
+        "idAnimacao": "10921061530",
+        "nome": "Fall",
+        "idAsset": "1018552770",
+        "thumbnail": "N/A",
+        "bundleId": "39",
+        "bundleNome": "Bubbly Animation Package"
+    },
+    {
+        "idAnimacao": "10980888364",
+        "nome": "Walk",
+        "idAsset": "1018549681",
+        "thumbnail": "N/A",
+        "bundleId": "39",
+        "bundleNome": "Bubbly Animation Package"
+    },
+    {
+        "idAnimacao": "10921057244",
+        "nome": "Run",
+        "idAsset": "1018548665",
+        "thumbnail": "N/A",
+        "bundleId": "39",
+        "bundleNome": "Bubbly Animation Package"
+    },
+    {
+        "idAnimacao": "10921053544",
+        "nome": "Climb",
+        "idAsset": "1018554668",
+        "thumbnail": "N/A",
+        "bundleId": "39",
+        "bundleNome": "Bubbly Animation Package"
+    },
+    {
+        "idAnimacao": "10921271391",
+        "nome": "Climb",
+        "idAsset": "619509955",
+        "thumbnail": "N/A",
+        "bundleId": "83",
+        "bundleNome": "Stylish Animation Pack"
+    },
+    {
+        "idAnimacao": "10921278648",
+        "nome": "Fall",
+        "idAsset": "619511417",
+        "thumbnail": "N/A",
+        "bundleId": "83",
+        "bundleNome": "Stylish Animation Pack"
+    },
+    {
+        "idAnimacao": "10921272275",
+        "nome": "Idle",
+        "idAsset": "619511648",
+        "thumbnail": "N/A",
+        "bundleId": "83",
+        "bundleNome": "Stylish Animation Pack"
+    },
+    {
+        "idAnimacao": "10921279832",
+        "nome": "Jump",
+        "idAsset": "619511974",
+        "thumbnail": "N/A",
+        "bundleId": "83",
+        "bundleNome": "Stylish Animation Pack"
+    },
+    {
+        "idAnimacao": "10921276116",
+        "nome": "Run",
+        "idAsset": "619512153",
+        "thumbnail": "N/A",
+        "bundleId": "83",
+        "bundleNome": "Stylish Animation Pack"
+    },
+    {
+        "idAnimacao": "10921281000",
+        "nome": "Swim",
+        "idAsset": "619512450",
+        "thumbnail": "N/A",
+        "bundleId": "83",
+        "bundleNome": "Stylish Animation Pack"
+    },
+    {
+        "idAnimacao": "10921283326",
+        "nome": "Walk",
+        "idAsset": "619512767",
+        "thumbnail": "N/A",
+        "bundleId": "83",
+        "bundleNome": "Stylish Animation Pack"
+    },
+    {
+        "idAnimacao": "10921076136",
+        "nome": "Run",
+        "idAsset": "837009922",
+        "thumbnail": "N/A",
+        "bundleId": "56",
+        "bundleNome": "Cartoony Animation Package"
+    },
+    {
+        "idAnimacao": "10921082452",
+        "nome": "Walk",
+        "idAsset": "837010234",
+        "thumbnail": "N/A",
+        "bundleId": "56",
+        "bundleNome": "Cartoony Animation Package"
+    },
+    {
+        "idAnimacao": "10921077030",
+        "nome": "Fall",
+        "idAsset": "837010685",
+        "thumbnail": "N/A",
+        "bundleId": "56",
+        "bundleNome": "Cartoony Animation Package"
+    },
+    {
+        "idAnimacao": "10921078135",
+        "nome": "Jump",
+        "idAsset": "837011171",
+        "thumbnail": "N/A",
+        "bundleId": "56",
+        "bundleNome": "Cartoony Animation Package"
+    },
+    {
+        "idAnimacao": "10921071918",
+        "nome": "Idle",
+        "idAsset": "837011741",
+        "thumbnail": "N/A",
+        "bundleId": "56",
+        "bundleNome": "Cartoony Animation Package"
+    },
+    {
+        "idAnimacao": "10921079380",
+        "nome": "Swim",
+        "idAsset": "837012509",
+        "thumbnail": "N/A",
+        "bundleId": "56",
+        "bundleNome": "Cartoony Animation Package"
+    },
+    {
+        "idAnimacao": "10921070953",
+        "nome": "Climb",
+        "idAsset": "837013990",
+        "thumbnail": "N/A",
+        "bundleId": "56",
+        "bundleNome": "Cartoony Animation Package"
+    },
+    {
+        "idAnimacao": "10921320299",
+        "nome": "Run",
+        "idAsset": "1113740510",
+        "thumbnail": "N/A",
+        "bundleId": "33",
+        "bundleNome": "Vampire Animation Pack"
+    },
+    {
+        "idAnimacao": "10921326949",
+        "nome": "Walk",
+        "idAsset": "1113741192",
+        "thumbnail": "N/A",
+        "bundleId": "33",
+        "bundleNome": "Vampire Animation Pack"
+    },
+    {
+        "idAnimacao": "10921321317",
+        "nome": "Fall",
+        "idAsset": "1113742092",
+        "thumbnail": "N/A",
+        "bundleId": "33",
+        "bundleNome": "Vampire Animation Pack"
+    },
+    {
+        "idAnimacao": "10921322186",
+        "nome": "Jump",
+        "idAsset": "1113742359",
+        "thumbnail": "N/A",
+        "bundleId": "33",
+        "bundleNome": "Vampire Animation Pack"
+    },
+    {
+        "idAnimacao": "10921315373",
+        "nome": "Idle",
+        "idAsset": "1113742618",
+        "thumbnail": "N/A",
+        "bundleId": "33",
+        "bundleNome": "Vampire Animation Pack"
+    },
+    {
+        "idAnimacao": "10921324408",
+        "nome": "Swim",
+        "idAsset": "1113742944",
+        "thumbnail": "N/A",
+        "bundleId": "33",
+        "bundleNome": "Vampire Animation Pack"
+    },
+    {
+        "idAnimacao": "10921314188",
+        "nome": "Climb",
+        "idAsset": "1113743239",
+        "thumbnail": "N/A",
+        "bundleId": "33",
+        "bundleNome": "Vampire Animation Pack"
+    },
+    {
+        "idAnimacao": "10921132092",
+        "nome": "Climb",
+        "idAsset": "619541458",
+        "thumbnail": "N/A",
+        "bundleId": "79",
+        "bundleNome": "Levitation Animation Pack"
+    },
+    {
+        "idAnimacao": "10921136539",
+        "nome": "Fall",
+        "idAsset": "619541867",
+        "thumbnail": "N/A",
+        "bundleId": "79",
+        "bundleNome": "Levitation Animation Pack"
+    },
+    {
+        "idAnimacao": "10921132962",
+        "nome": "Idle",
+        "idAsset": "619542203",
+        "thumbnail": "N/A",
+        "bundleId": "79",
+        "bundleNome": "Levitation Animation Pack"
+    },
+    {
+        "idAnimacao": "10921137402",
+        "nome": "Jump",
+        "idAsset": "619542888",
+        "thumbnail": "N/A",
+        "bundleId": "79",
+        "bundleNome": "Levitation Animation Pack"
+    },
+    {
+        "idAnimacao": "10921135644",
+        "nome": "Run",
+        "idAsset": "619543231",
+        "thumbnail": "N/A",
+        "bundleId": "79",
+        "bundleNome": "Levitation Animation Pack"
+    },
+    {
+        "idAnimacao": "10921138209",
+        "nome": "Swim",
+        "idAsset": "619543721",
+        "thumbnail": "N/A",
+        "bundleId": "79",
+        "bundleNome": "Levitation Animation Pack"
+    },
+    {
+        "idAnimacao": "10921140719",
+        "nome": "Walk",
+        "idAsset": "619544080",
+        "thumbnail": "N/A",
+        "bundleId": "79",
+        "bundleNome": "Levitation Animation Pack"
+    },
+    {
+        "idAnimacao": "10921039308",
+        "nome": "Run",
+        "idAsset": "1090130630",
+        "thumbnail": "N/A",
+        "bundleId": "34",
+        "bundleNome": "Astronaut Animation Pack"
+    },
+    {
+        "idAnimacao": "10921046031",
+        "nome": "Walk",
+        "idAsset": "1090131576",
+        "thumbnail": "N/A",
+        "bundleId": "34",
+        "bundleNome": "Astronaut Animation Pack"
+    },
+    {
+        "idAnimacao": "10921040576",
+        "nome": "Fall",
+        "idAsset": "1090132063",
+        "thumbnail": "N/A",
+        "bundleId": "34",
+        "bundleNome": "Astronaut Animation Pack"
+    },
+    {
+        "idAnimacao": "10921042494",
+        "nome": "Jump",
+        "idAsset": "1090132507",
+        "thumbnail": "N/A",
+        "bundleId": "34",
+        "bundleNome": "Astronaut Animation Pack"
+    },
+    {
+        "idAnimacao": "10921034824",
+        "nome": "Idle",
+        "idAsset": "1090133099",
+        "thumbnail": "N/A",
+        "bundleId": "34",
+        "bundleNome": "Astronaut Animation Pack"
+    },
+    {
+        "idAnimacao": "10921044000",
+        "nome": "Swim",
+        "idAsset": "1090133583",
+        "thumbnail": "N/A",
+        "bundleId": "34",
+        "bundleNome": "Astronaut Animation Pack"
+    },
+    {
+        "idAnimacao": "10921032124",
+        "nome": "Climb",
+        "idAsset": "1090134016",
+        "thumbnail": "N/A",
+        "bundleId": "34",
+        "bundleNome": "Astronaut Animation Pack"
+    },
+    {
+        "idAnimacao": "10921306285",
+        "nome": "Run",
+        "idAsset": "973766674",
+        "thumbnail": "N/A",
+        "bundleId": "43",
+        "bundleNome": "Toy Animation Pack"
+    },
+    {
+        "idAnimacao": "10921312010",
+        "nome": "Walk",
+        "idAsset": "973767371",
+        "thumbnail": "N/A",
+        "bundleId": "43",
+        "bundleNome": "Toy Animation Pack"
+    },
+    {
+        "idAnimacao": "10921307241",
+        "nome": "Fall",
+        "idAsset": "973768058",
+        "thumbnail": "N/A",
+        "bundleId": "43",
+        "bundleNome": "Toy Animation Pack"
+    },
+    {
+        "idAnimacao": "10921308158",
+        "nome": "Jump",
+        "idAsset": "973770652",
+        "thumbnail": "N/A",
+        "bundleId": "43",
+        "bundleNome": "Toy Animation Pack"
+    },
+    {
+        "idAnimacao": "10921301576",
+        "nome": "Idle",
+        "idAsset": "973771666",
+        "thumbnail": "N/A",
+        "bundleId": "43",
+        "bundleNome": "Toy Animation Pack"
+    },
+    {
+        "idAnimacao": "10921309319",
+        "nome": "Swim",
+        "idAsset": "973772659",
+        "thumbnail": "N/A",
+        "bundleId": "43",
+        "bundleNome": "Toy Animation Pack"
+    },
+    {
+        "idAnimacao": "10921300839",
+        "nome": "Climb",
+        "idAsset": "973773170",
+        "thumbnail": "N/A",
+        "bundleId": "43",
+        "bundleNome": "Toy Animation Pack"
+    },
+    {
+        "idAnimacao": "10921240218",
+        "nome": "Run",
+        "idAsset": "5319900634",
+        "thumbnail": "N/A",
+        "bundleId": "667",
+        "bundleNome": "Oldschool Animation Pack"
+    },
+    {
+        "idAnimacao": "10921244891",
+        "nome": "Walk",
+        "idAsset": "5319909330",
+        "thumbnail": "N/A",
+        "bundleId": "667",
+        "bundleNome": "Oldschool Animation Pack"
+    },
+    {
+        "idAnimacao": "10921241244",
+        "nome": "Fall",
+        "idAsset": "5319914476",
+        "thumbnail": "N/A",
+        "bundleId": "667",
+        "bundleNome": "Oldschool Animation Pack"
+    },
+    {
+        "idAnimacao": "10921242013",
+        "nome": "Jump",
+        "idAsset": "5319917561",
+        "thumbnail": "N/A",
+        "bundleId": "667",
+        "bundleNome": "Oldschool Animation Pack"
+    },
+    {
+        "idAnimacao": "10921230744",
+        "nome": "Idle",
+        "idAsset": "5319922112",
+        "thumbnail": "N/A",
+        "bundleId": "667",
+        "bundleNome": "Oldschool Animation Pack"
+    },
+    {
+        "idAnimacao": "10921243048",
+        "nome": "Swim",
+        "idAsset": "5319927054",
+        "thumbnail": "N/A",
+        "bundleId": "667",
+        "bundleNome": "Oldschool Animation Pack"
+    },
+    {
+        "idAnimacao": "10921229866",
+        "nome": "Climb",
+        "idAsset": "5319931619",
+        "thumbnail": "N/A",
+        "bundleId": "667",
+        "bundleNome": "Oldschool Animation Pack"
+    },
+    {
+        "idAnimacao": "134630013742019",
+        "nome": "Climb",
+        "idAsset": "122757794615785",
+        "thumbnail": "N/A",
+        "bundleId": "932296",
+        "bundleNome": "NFL Animation Pack"
+    },
+    {
+        "idAnimacao": "129773241321032",
+        "nome": "Fall",
+        "idAsset": "123307994439772",
+        "thumbnail": "N/A",
+        "bundleId": "932296",
+        "bundleNome": "NFL Animation Pack"
+    },
+    {
+        "idAnimacao": "920808898614102",
+        "nome": "Idle",
+        "idAsset": "101094325978637",
+        "thumbnail": "N/A",
+        "bundleId": "932296",
+        "bundleNome": "NFL Animation Pack"
+    },
+    {
+        "idAnimacao": "119846112151352",
+        "nome": "Jump",
+        "idAsset": "140600227095432",
+        "thumbnail": "N/A",
+        "bundleId": "932296",
+        "bundleNome": "NFL Animation Pack"
+    },
+    {
+        "idAnimacao": "117333533048078",
+        "nome": "Run",
+        "idAsset": "84823630062362",
+        "thumbnail": "N/A",
+        "bundleId": "932296",
+        "bundleNome": "NFL Animation Pack"
+    },
+    {
+        "idAnimacao": "132697394189921",
+        "nome": "Swim",
+        "idAsset": "136750772888868",
+        "thumbnail": "N/A",
+        "bundleId": "932296",
+        "bundleNome": "NFL Animation Pack"
+    },
+    {
+        "idAnimacao": "110358958299415",
+        "nome": "Walk",
+        "idAsset": "120071305586627",
+        "thumbnail": "N/A",
+        "bundleId": "932296",
+        "bundleNome": "NFL Animation Pack"
+    },
+    {
+        "idAnimacao": "10921157929",
+        "nome": "Run",
+        "idAsset": "658830056",
+        "thumbnail": "N/A",
+        "bundleId": "75",
+        "bundleNome": "Ninja Animation Package"
+    },
+    {
+        "idAnimacao": "10921162768",
+        "nome": "Walk",
+        "idAsset": "658831143",
+        "thumbnail": "N/A",
+        "bundleId": "75",
+        "bundleNome": "Ninja Animation Package"
+    },
+    {
+        "idAnimacao": "10921159222",
+        "nome": "Fall",
+        "idAsset": "658831500",
+        "thumbnail": "N/A",
+        "bundleId": "75",
+        "bundleNome": "Ninja Animation Package"
+    },
+    {
+        "idAnimacao": "10921160088",
+        "nome": "Jump",
+        "idAsset": "658832070",
+        "thumbnail": "N/A",
+        "bundleId": "75",
+        "bundleNome": "Ninja Animation Package"
+    },
+    {
+        "idAnimacao": "10921155160",
+        "nome": "Idle",
+        "idAsset": "658832408",
+        "thumbnail": "N/A",
+        "bundleId": "75",
+        "bundleNome": "Ninja Animation Package"
+    },
+    {
+        "idAnimacao": "10921161002",
+        "nome": "Swim",
+        "idAsset": "658832807",
+        "thumbnail": "N/A",
+        "bundleId": "75",
+        "bundleNome": "Ninja Animation Package"
+    },
+    {
+        "idAnimacao": "10921154678",
+        "nome": "Climb",
+        "idAsset": "658833139",
+        "thumbnail": "N/A",
+        "bundleId": "75",
+        "bundleNome": "Ninja Animation Package"
+    },
+    {
+        "idAnimacao": "10921336997",
+        "nome": "Run",
+        "idAsset": "1113750642",
+        "thumbnail": "N/A",
+        "bundleId": "32",
+        "bundleNome": "Werewolf Animation Pack"
+    },
+    {
+        "idAnimacao": "10921342074",
+        "nome": "Walk",
+        "idAsset": "1113751657",
+        "thumbnail": "N/A",
+        "bundleId": "32",
+        "bundleNome": "Werewolf Animation Pack"
+    },
+    {
+        "idAnimacao": "10921337907",
+        "nome": "Fall",
+        "idAsset": "1113751889",
+        "thumbnail": "N/A",
+        "bundleId": "32",
+        "bundleNome": "Werewolf Animation Pack"
+    },
+    {
+        "idAnimacao": "1083218792",
+        "nome": "Jump",
+        "idAsset": "1113752285",
+        "thumbnail": "N/A",
+        "bundleId": "32",
+        "bundleNome": "Werewolf Animation Pack"
+    },
+    {
+        "idAnimacao": "10921330408",
+        "nome": "Idle",
+        "idAsset": "1113752682",
+        "thumbnail": "N/A",
+        "bundleId": "32",
+        "bundleNome": "Werewolf Animation Pack"
+    },
+    {
+        "idAnimacao": "10921340419",
+        "nome": "Swim",
+        "idAsset": "1113752975",
+        "thumbnail": "N/A",
+        "bundleId": "32",
+        "bundleNome": "Werewolf Animation Pack"
+    },
+    {
+        "idAnimacao": "10921329322",
+        "nome": "Climb",
+        "idAsset": "1113754738",
+        "thumbnail": "N/A",
+        "bundleId": "32",
+        "bundleNome": "Werewolf Animation Pack"
+    },
+    {
+        "idAnimacao": "10921121197",
+        "nome": "Run",
+        "idAsset": "734325948",
+        "thumbnail": "N/A",
+        "bundleId": "68",
+        "bundleNome": "Knight Animation Package"
+    },
+    {
+        "idAnimacao": "10921127095",
+        "nome": "Walk",
+        "idAsset": "734326330",
+        "thumbnail": "N/A",
+        "bundleId": "68",
+        "bundleNome": "Knight Animation Package"
+    },
+    {
+        "idAnimacao": "10921122579",
+        "nome": "Fall",
+        "idAsset": "734326679",
+        "thumbnail": "N/A",
+        "bundleId": "68",
+        "bundleNome": "Knight Animation Package"
+    },
+    {
+        "idAnimacao": "10921123517",
+        "nome": "Jump",
+        "idAsset": "734326930",
+        "thumbnail": "N/A",
+        "bundleId": "68",
+        "bundleNome": "Knight Animation Package"
+    },
+    {
+        "idAnimacao": "10921117521",
+        "nome": "Idle",
+        "idAsset": "734327140",
+        "thumbnail": "N/A",
+        "bundleId": "68",
+        "bundleNome": "Knight Animation Package"
+    },
+    {
+        "idAnimacao": "10921125160",
+        "nome": "Swim",
+        "idAsset": "734327363",
+        "thumbnail": "N/A",
+        "bundleId": "68",
+        "bundleNome": "Knight Animation Package"
+    },
+    {
+        "idAnimacao": "10921116196",
+        "nome": "Climb",
+        "idAsset": "734329002",
+        "thumbnail": "N/A",
+        "bundleId": "68",
+        "bundleNome": "Knight Animation Package"
+    },
+    {
+        "idAnimacao": "750783738",
+        "nome": "Run",
+        "idAsset": "837023444",
+        "thumbnail": "N/A",
+        "bundleId": "55",
+        "bundleNome": "Pirate Animation Package"
+    },
+    {
+        "idAnimacao": "750785693",
+        "nome": "Walk",
+        "idAsset": "837023892",
+        "thumbnail": "N/A",
+        "bundleId": "55",
+        "bundleNome": "Pirate Animation Package"
+    },
+    {
+        "idAnimacao": "750780242",
+        "nome": "Fall",
+        "idAsset": "837024147",
+        "thumbnail": "N/A",
+        "bundleId": "55",
+        "bundleNome": "Pirate Animation Package"
+    },
+    {
+        "idAnimacao": "750782230",
+        "nome": "Jump",
+        "idAsset": "837024350",
+        "thumbnail": "N/A",
+        "bundleId": "55",
+        "bundleNome": "Pirate Animation Package"
+    },
+    {
+        "idAnimacao": "750781874",
+        "nome": "Idle",
+        "idAsset": "837024662",
+        "thumbnail": "N/A",
+        "bundleId": "55",
+        "bundleNome": "Pirate Animation Package"
+    },
+    {
+        "idAnimacao": "885515365",
+        "nome": "Idle",
+        "idAsset": "837024662",
+        "thumbnail": "N/A",
+        "bundleId": "55",
+        "bundleNome": "Pirate Animation Package"
+    },
+    {
+        "idAnimacao": "750782770",
+        "nome": "Idle",
+        "idAsset": "837024662",
+        "thumbnail": "N/A",
+        "bundleId": "55",
+        "bundleNome": "Pirate Animation Package"
+    },
+    {
+        "idAnimacao": "750785176",
+        "nome": "Swim",
+        "idAsset": "837025054",
+        "thumbnail": "N/A",
+        "bundleId": "55",
+        "bundleNome": "Pirate Animation Package"
+    },
+    {
+        "idAnimacao": "750784579",
+        "nome": "Swim",
+        "idAsset": "837025054",
+        "thumbnail": "N/A",
+        "bundleId": "55",
+        "bundleNome": "Pirate Animation Package"
+    },
+    {
+        "idAnimacao": "750779899",
+        "nome": "Climb",
+        "idAsset": "837025325",
+        "thumbnail": "N/A",
+        "bundleId": "55",
+        "bundleNome": "Pirate Animation Package"
+    },
+    {
+        "idAnimacao": "18537384940",
+        "nome": "Run",
+        "idAsset": "18538133604",
+        "thumbnail": "N/A",
+        "bundleId": "427999",
+        "bundleNome": "adidas Sports Animation Pack"
+    },
+    {
+        "idAnimacao": "18537392113",
+        "nome": "Walk",
+        "idAsset": "18538146480",
+        "thumbnail": "N/A",
+        "bundleId": "427999",
+        "bundleNome": "adidas Sports Animation Pack"
+    },
+    {
+        "idAnimacao": "18537376492",
+        "nome": "Idle",
+        "idAsset": "18538150608",
+        "thumbnail": "N/A",
+        "bundleId": "427999",
+        "bundleNome": "adidas Sports Animation Pack"
+    },
+    {
+        "idAnimacao": "18537380791",
+        "nome": "Jump",
+        "idAsset": "18538153691",
+        "thumbnail": "N/A",
+        "bundleId": "427999",
+        "bundleNome": "adidas Sports Animation Pack"
+    },
+    {
+        "idAnimacao": "18537389531",
+        "nome": "Swim",
+        "idAsset": "18538158932",
+        "thumbnail": "N/A",
+        "bundleId": "427999",
+        "bundleNome": "adidas Sports Animation Pack"
+    },
+    {
+        "idAnimacao": "18537367238",
+        "nome": "Fall",
+        "idAsset": "18538164337",
+        "thumbnail": "N/A",
+        "bundleId": "427999",
+        "bundleNome": "adidas Sports Animation Pack"
+    },
+    {
+        "idAnimacao": "18537363391",
+        "nome": "Climb",
+        "idAsset": "18538170170",
+        "thumbnail": "N/A",
+        "bundleId": "427999",
+        "bundleNome": "adidas Sports Animation Pack"
+    },
+    {
+        "idAnimacao": "10921257536",
+        "nome": "Climb",
+        "idAsset": "2510230574",
+        "thumbnail": "N/A",
+        "bundleId": "356",
+        "bundleNome": "Rthro Animation Package"
+    },
+    {
+        "idAnimacao": "10921262864",
+        "nome": "Fall",
+        "idAsset": "2510233257",
+        "thumbnail": "N/A",
+        "bundleId": "356",
+        "bundleNome": "Rthro Animation Package"
+    },
+    {
+        "idAnimacao": "10921258489",
+        "nome": "Idle",
+        "idAsset": "2510235063",
+        "thumbnail": "N/A",
+        "bundleId": "356",
+        "bundleNome": "Rthro Animation Package"
+    },
+    {
+        "idAnimacao": "10921263860",
+        "nome": "Jump",
+        "idAsset": "2510236649",
+        "thumbnail": "N/A",
+        "bundleId": "356",
+        "bundleNome": "Rthro Animation Package"
+    },
+    {
+        "idAnimacao": "10921261968",
+        "nome": "Run",
+        "idAsset": "2510238627",
+        "thumbnail": "N/A",
+        "bundleId": "356",
+        "bundleNome": "Rthro Animation Package"
+    },
+    {
+        "idAnimacao": "10921264784",
+        "nome": "Swim",
+        "idAsset": "2510240941",
+        "thumbnail": "N/A",
+        "bundleId": "356",
+        "bundleNome": "Rthro Animation Package"
+    },
+    {
+        "idAnimacao": "10921269718",
+        "nome": "Walk",
+        "idAsset": "2510242378",
+        "thumbnail": "N/A",
+        "bundleId": "356",
+        "bundleNome": "Rthro Animation Package"
     }
 ]
