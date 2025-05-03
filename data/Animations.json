@@ -54,5 +54,61 @@
         "thumbnail": "N/A",
         "bundleId": "48",
         "bundleNome": "Elder Animation Package"
+    },
+    {
+        "idAnimacao": "119377220967554",
+        "nome": "Climb",
+        "idAsset": "104741822987331",
+        "thumbnail": "N/A",
+        "bundleId": "1601900",
+        "bundleNome": "Catwalk Glam Animation Pack by e.l.f."
+    },
+    {
+        "idAnimacao": "92294537340807",
+        "nome": "Fall",
+        "idAsset": "72706690305027",
+        "thumbnail": "N/A",
+        "bundleId": "1601900",
+        "bundleNome": "Catwalk Glam Animation Pack by e.l.f."
+    },
+    {
+        "idAnimacao": "116936326516985",
+        "nome": "Jump",
+        "idAsset": "138641066989023",
+        "thumbnail": "N/A",
+        "bundleId": "1601900",
+        "bundleNome": "Catwalk Glam Animation Pack by e.l.f."
+    },
+    {
+        "idAnimacao": "81024476153754",
+        "nome": "Run",
+        "idAsset": "75036746190467",
+        "thumbnail": "N/A",
+        "bundleId": "1601900",
+        "bundleNome": "Catwalk Glam Animation Pack by e.l.f."
+    },
+    {
+        "idAnimacao": "133806214992291",
+        "nome": "Idle",
+        "idAsset": "101279640971758",
+        "thumbnail": "N/A",
+        "bundleId": "1601900",
+        "bundleNome": "Catwalk Glam Animation Pack by e.l.f."
+    },
+    {
+        "idAnimacao": "134591743181628",
+        "nome": "Swim",
+        "idAsset": "112231179705221",
+        "thumbnail": "N/A",
+        "bundleId": "1601900",
+        "bundleNome": "Catwalk Glam Animation Pack by e.l.f."
+    },
+    {
+        "idAnimacao": "109168724482748",
+        "nome": "Walk",
+        "idAsset": "103190462987721",
+        "thumbnail": "N/A",
+        "bundleId": "1601900",
+        "bundleNome": "Catwalk Glam Animation Pack by e.l.f."
     }
 ]
