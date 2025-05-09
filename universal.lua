@@ -1,16 +1,3 @@
---[[
-    TekScripts - Universal Edition
-    Feito por Kauam
-    Super fácil de editar - só adicione módulos e eles funcionam sozinhos!
-
-    COMO ADICIONAR UM MÓDULO:
-    1. Copie o exemplo no final (MÓDULO EXEMPLO)
-    2. Cole na seção "MÓDULOS DO SCRIPT"
-    3. Adicione à tabela Modules com table.insert(Modules, SeuModulo)
-    4. Pronto! Ele já aparece no painel automaticamente
-]]
-
--- ==================== CONFIGURAÇÃO PRINCIPAL ====================
 local CONFIG = {
     UI = {
         Name = "TekScripts - Universal",
