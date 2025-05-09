@@ -711,7 +711,7 @@ local AutoPagarPlayerModule = {
     end
 }
 
-table.insert(Modules, AutoPagarPlayerModule) BY
+table.insert(Modules, AutoPagarPlayerModule)
 
 -- **MÓDULO AUTOREVIVER**
 local AutoReviveModule = {
