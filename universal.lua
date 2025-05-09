@@ -372,6 +372,347 @@ local InstaSaveModule = {
 }
 table.insert(Modules, InstaSaveModule)
 
+-- **MODULO AUTO CARRY PLAYER**
+local AutoPagarPlayerModule = {
+    Tab = "Evade",
+    Name = "Auto Pagar Player",
+    Dependencies = {
+        {"Workspace", "Game", "Players"}, -- Para localizar os modelos dos jogadores
+        {"ReplicatedStorage", "Events", "Character", "Interact"} -- Para o evento de "pegar"
+    },
+    Config = {
+        enabled = false, -- Controlado pelo toggle
+        distanceThreshold = 20, -- Raio para tentar pegar jogadores caídos
+        touchThreshold = 2, -- Distância para considerar "tocando" o jogador carregado
+        lastNotifiedPlayer = nil, -- Evita spam de notificações
+        ignoredPlayers = {}, -- Jogadores ignorados temporariamente
+        ignoreDuration = 5, -- Duração para ignorar após soltar
+        dropButton = nil, -- Referência ao botão de "soltar"
+        buttonCooldown = 1, -- Cooldown para cliques no botão
+        lastButtonClick = 0, -- Timestamp do último clique
+        dragThreshold = 10 -- Distância mínima para arrastar
+    },
+    Start = function(self)
+        -- Verificar dependências globais
+        if not Utils or not Cache or not Tabs then
+            warn("AutoPagarPlayerModule: Dependências globais não encontradas")
+            pcall(function()
+                Utils.Notify("Erro", "Auto Pagar Player não disponível", 5)
+            end)
+            return false
+        end
+
+        -- Verificar aba "Evade"
+        local tab = Tabs[self.Tab]
+        if not tab or not tab.CreateToggle then
+            warn("AutoPagarPlayerModule: Aba 'Evade' ou CreateToggle não encontrado")
+            pcall(function()
+                Utils.Notify("Erro", "Aba Evade incompatível", 5)
+            end)
+            return false
+        end
+
+        -- Obter dependências do jogo
+        local playersFolder = Utils.SafeGet(self.Dependencies[1], 5)
+        local interactEvent = Utils.SafeGet(self.Dependencies[2], 5)
+        if not playersFolder or not interactEvent then
+            warn("AutoPagarPlayerModule: Dependências do jogo não encontradas")
+            pcall(function()
+                Utils.Notify("Erro", "Dependências do jogo não encontradas", 5)
+            end)
+            return false
+        end
+
+        -- Criar toggle na aba "Evade"
+        local success, errorMsg = pcall(function()
+            tab:CreateToggle({
+                Name = "Auto Pagar Player",
+                CurrentValue = false,
+                Callback = function(value)
+                    self.Config.enabled = value
+                    self.Config.lastNotifiedPlayer = nil
+                    self.Config.ignoredPlayers = {}
+                    if self.Config.dropButton then
+                        self:DestroyDropButton()
+                    end
+                    pcall(function()
+                        Utils.Notify("Info", "Auto Pagar Player " .. (value and "ativado" or "desativado") .. "!", 3)
+                    end)
+                    warn("AutoPagarPlayerModule: Toggle alterado para " .. tostring(value))
+                end
+            })
+        end)
+
+        if not success then
+            warn("AutoPagarPlayerModule: Erro ao criar toggle: " .. tostring(errorMsg))
+            pcall(function()
+                Utils.Notify("Erro", "Falha ao criar toggle", 5)
+            end)
+            return false
+        end
+
+        -- Conectar ao evento CharacterAdded
+        if Cache.localPlayer then
+            Cache.localPlayer.CharacterAdded:Connect(function()
+                warn("AutoPagarPlayerModule: Personagem renascido")
+                self.Config.lastNotifiedPlayer = nil
+                self.Config.ignoredPlayers = {}
+                if self.Config.dropButton then
+                    self:DestroyDropButton()
+                end
+            end)
+        end
+
+        -- Loop para monitorar jogadores caídos
+        task.spawn(function()
+            while true do
+                if self.Config.enabled then
+                    self:MonitorFallenPlayers(playersFolder, interactEvent)
+                    self:UpdateDropButton(playersFolder, interactEvent)
+                end
+                task.wait(0.1)
+            end
+        end)
+
+        -- Loop para limpar jogadores ignorados
+        task.spawn(function()
+            while true do
+                local currentTime = tick()
+                for playerName, ignoreTime in pairs(self.Config.ignoredPlayers) do
+                    if currentTime - ignoreTime >= self.Config.ignoreDuration then
+                        self.Config.ignoredPlayers[playerName] = nil
+                        warn("AutoPagarPlayerModule: Jogador " .. playerName .. " voltou a ser válido")
+                    end
+                end
+                task.wait(1)
+            end
+        end)
+
+        warn("AutoPagarPlayerModule: Inicializado com sucesso")
+        return true
+    end,
+    MonitorFallenPlayers = function(self, playersFolder, interactEvent)
+        local localPlayer = Cache.localPlayer
+        if not localPlayer or not localPlayer.Character then
+            return
+        end
+
+        local localRoot = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not localRoot then
+            return
+        end
+
+        -- Encontrar jogador caído mais próximo
+        local closestPlayer, closestDistance = nil, math.huge
+        for _, model in ipairs(playersFolder:GetChildren()) do
+            if model:IsA("Model") and model.Name ~= localPlayer.Name and not self.Config.ignoredPlayers[model.Name] then
+                local isDowned = model:GetAttribute("Downed")
+                local isCarried = model:GetAttribute("Carried")
+                local rootPart = model:FindFirstChild("HumanoidRootPart")
+                if isDowned and not isCarried and rootPart then
+                    local distance = (localRoot.Position - rootPart.Position).Magnitude
+                    if distance < closestDistance then
+                        closestDistance = distance
+                        closestPlayer = model
+                    end
+                end
+            end
+        end
+
+        -- Tentar pegar jogador próximo
+        if closestPlayer and closestDistance <= self.Config.distanceThreshold then
+            self:CarryPlayer(closestPlayer.Name, interactEvent)
+            warn("AutoPagarPlayerModule: Tentando pegar " .. closestPlayer.Name .. " (" .. string.format("%.2f", closestDistance) .. " studs)")
+        else
+            self.Config.lastNotifiedPlayer = nil
+        end
+    end,
+    CarryPlayer = function(self, playerName, interactEvent)
+        local args = {"Carry", [3] = playerName}
+        local success, errorMsg = pcall(function()
+            interactEvent:FireServer(unpack(args))
+        end)
+        if success then
+            if playerName ~= self.Config.lastNotifiedPlayer then
+                pcall(function()
+                    Utils.Notify("Sucesso", "Tentando pegar " .. playerName .. "!", 3)
+                end)
+                self.Config.lastNotifiedPlayer = playerName
+            end
+            warn("AutoPagarPlayerModule: Evento Carry disparado para " .. playerName)
+        else
+            pcall(function()
+                Utils.Notify("Erro", "Falha ao pegar " .. playerName, 5)
+            end)
+            warn("AutoPagarPlayerModule: Erro ao disparar Carry: " .. tostring(errorMsg))
+        end
+    end,
+    UpdateDropButton = function(self, playersFolder, interactEvent)
+        local localPlayer = Cache.localPlayer
+        if not localPlayer or not localPlayer.Character then
+            if self.Config.dropButton then
+                self:DestroyDropButton()
+            end
+            return
+        end
+
+        local localRoot = localPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not localRoot then
+            return
+        end
+
+        -- Verificar se há um jogador carregado e próximo
+        local carriedPlayer = nil
+        for _, model in ipairs(playersFolder:GetChildren()) do
+            if model:IsA("Model") and model:GetAttribute("Carried") then
+                local rootPart = model:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    local distance = (localRoot.Position - rootPart.Position).Magnitude
+                    if distance <= self.Config.touchThreshold then
+                        carriedPlayer = model
+                        break
+                    end
+                end
+            end
+        end
+
+        -- Mostrar ou esconder botão com base na proximidade
+        if carriedPlayer and not self.Config.ignoredPlayers[carriedPlayer.Name] then
+            if not self.Config.dropButton then
+                self:ShowDropButton(carriedPlayer.Name, interactEvent)
+            end
+        elseif self.Config.dropButton then
+            self:DestroyDropButton()
+        end
+    end,
+    ShowDropButton = function(self, playerName, interactEvent)
+        local playerGui = Cache.localPlayer:FindFirstChild("PlayerGui")
+        if not playerGui then
+            warn("AutoPagarPlayerModule: PlayerGui não encontrado")
+            return
+        end
+
+        -- Limpar botões duplicados
+        for _, gui in ipairs(playerGui:GetChildren()) do
+            if gui.Name == "DropButtonGui" then
+                pcall(function()
+                    gui:Destroy()
+                end)
+            end
+        end
+
+        local UserInputService = game:GetService("UserInputService")
+
+        -- Criar botão
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "DropButtonGui"
+        screenGui.IgnoreGuiInset = true
+        screenGui.ResetOnSpawn = false
+        screenGui.Parent = playerGui
+
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(0, 150, 0, 50)
+        frame.Position = UDim2.new(0.5, -75, 0.7, 0)
+        frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        frame.BorderSizePixel = 2
+        frame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+        frame.ClipsDescendants = true
+        frame.Parent = screenGui
+
+        local uiCorner = Instance.new("UICorner")
+        uiCorner.CornerRadius = UDim.new(0, 8)
+        uiCorner.Parent = frame
+
+        local uiStroke = Instance.new("UIStroke")
+        uiStroke.Color = Color3.fromRGB(255, 0, 0)
+        uiStroke.Thickness = 1
+        uiStroke.Parent = frame
+
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, 0, 1, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "Soltar " .. playerName
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button.TextSize = 18
+        button.Font = Enum.Font.GothamBold
+        button.Parent = frame
+
+        -- Suporte a arrastar
+        local dragging, dragStart, startPos, canDrag = false, nil, nil, false
+        local function updatePosition(input)
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+
+        button.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragStart = input.Position
+                startPos = frame.Position
+            end
+        end)
+
+        button.InputChanged:Connect(function(input)
+            if dragStart and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local delta = input.Position - dragStart
+                if not canDrag and delta.Magnitude >= self.Config.dragThreshold then
+                    canDrag = true
+                    dragging = true
+                end
+                if dragging then
+                    updatePosition(input)
+                end
+            end
+        end)
+
+        button.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+                canDrag = false
+                dragStart = nil
+            end
+        end)
+
+        -- Ação do botão
+        button.Activated:Connect(function()
+            local currentTime = tick()
+            if currentTime - self.Config.lastButtonClick < self.Config.buttonCooldown then
+                return
+            end
+            self.Config.lastButtonClick = currentTime
+
+            local dropArgs = {"Drop", [3] = playerName}
+            local success, errorMsg = pcall(function()
+                interactEvent:FireServer(unpack(dropArgs))
+            end)
+            if success then
+                self.Config.ignoredPlayers[playerName] = tick()
+                self:DestroyDropButton()
+                pcall(function()
+                    Utils.Notify("Sucesso", "Jogador " .. playerName .. " solto! Ignorado por 5 segundos.", 3)
+                end)
+                warn("AutoPagarPlayerModule: Evento Drop disparado para " .. playerName)
+            else
+                pcall(function()
+                    Utils.Notify("Erro", "Falha ao soltar " .. playerName, 5)
+                end)
+                warn("AutoPagarPlayerModule: Erro ao disparar Drop: " .. tostring(errorMsg))
+            end
+        end)
+
+        self.Config.dropButton = screenGui
+    end,
+    DestroyDropButton = function(self)
+        if self.Config.dropButton then
+            pcall(function()
+                self.Config.dropButton:Destroy()
+            end)
+            self.Config.dropButton = nil
+        end
+    end
+}
+
+table.insert(Modules, AutoPagarPlayerModule) BY
+
 -- **MÓDULO AUTOREVIVER**
 local AutoReviveModule = {
     Tab = "Evade",
@@ -728,6 +1069,177 @@ local FakeGoodModule = {
     end,
 }
 table.insert(Modules, FakeGoodModule)
+
+-- **MÓDULO BUTTON ALEATÓRIO TP**
+local RandomSpawnTeleportModule = {
+    Tab = "Evade",
+    Name = "Random Spawn Teleport",
+    Dependencies = {
+        {"Workspace", "Game", "Map", "Parts", "Spawns"} -- Caminho para o modelo de spawns
+    },
+    Config = {
+        enabled = true -- Sempre ativo
+    },
+    Start = function(self)
+        -- Verificar dependências globais
+        if not Utils or not Cache or not Tabs then
+            warn("RandomSpawnTeleportModule: Dependências globais (Utils, Cache, Tabs) não encontradas")
+            pcall(function()
+                Utils.Notify("Erro", "Teleportador de Spawn não disponível (dependências não encontradas)", 5)
+            end)
+            return false
+        end
+
+        -- Verificar aba
+        local tab = Tabs[self.Tab]
+        if not tab then
+            warn("RandomSpawnTeleportModule: Aba 'Evade' não encontrada em Tabs")
+            pcall(function()
+                Utils.Notify("Erro", "Aba Evade não encontrada na interface", 5)
+            end)
+            return false
+        end
+
+        -- Verificar métodos Rayfield
+        if not tab.CreateButton then
+            warn("RandomSpawnTeleportModule: Método CreateButton não encontrado")
+            pcall(function()
+                Utils.Notify("Erro", "Interface Rayfield incompatível", 5)
+            end)
+            return false
+        end
+
+        -- Monitorar mudanças no mapa
+        local mapPath = {"Workspace", "Game", "Map"}
+        local function updateSpawnsModel()
+            local spawnsModel = Utils.SafeGet(self.Dependencies[1], 5)
+            if spawnsModel then
+                warn("RandomSpawnTeleportModule: Modelo Spawns atualizado com sucesso")
+            else
+                warn("RandomSpawnTeleportModule: Modelo Spawns não encontrado")
+            end
+            return spawnsModel
+        end
+
+        -- Observar mudanças no Map
+        local mapFolder = Utils.SafeGet(mapPath, 5)
+        if mapFolder then
+            mapFolder.ChildAdded:Connect(function(child)
+                if child.Name == "Parts" then
+                    warn("RandomSpawnTeleportModule: Novo mapa detectado, atualizando spawns")
+                    updateSpawnsModel()
+                end
+            end)
+            mapFolder.AncestryChanged:Connect(function()
+                warn("RandomSpawnTeleportModule: Mapa alterado, atualizando spawns")
+                updateSpawnsModel()
+            end)
+        end
+
+        -- Criar botão na interface
+        local success, errorMsg = pcall(function()
+            tab:CreateButton({
+                Name = "Teleportar para Spawn Aleatório",
+                Callback = function()
+                    warn("RandomSpawnTeleportModule: Botão Teleportar clicado")
+                    self:TeleportToRandomSpawn(Cache.localPlayer)
+                end
+            })
+        end)
+
+        if not success then
+            warn("RandomSpawnTeleportModule: Erro ao criar botão: " .. tostring(errorMsg))
+            pcall(function()
+                Utils.Notify("Erro", "Falha ao inicializar botão de teletransporte", 5)
+            end)
+            return false
+        end
+
+        -- Conectar ao evento CharacterAdded para lidar com renascimentos
+        if Cache.localPlayer then
+            Cache.localPlayer.CharacterAdded:Connect(function(character)
+                warn("RandomSpawnTeleportModule: Personagem renascido, pronto para teletransporte")
+                task.wait(0.5) -- Pequeno atraso para garantir que o personagem esteja carregado
+            end)
+        end
+
+        warn("RandomSpawnTeleportModule: Inicializado com sucesso")
+        return true
+    end,
+    -- Função para teletransportar o jogador para um SpawnLocation aleatório
+    TeleportToRandomSpawn = function(self, player)
+        -- Verificar jogador e personagem
+        if not player or not player.Character then
+            warn("RandomSpawnTeleportModule: Jogador ou personagem não encontrado")
+            pcall(function()
+                Utils.Notify("Erro", "Aguardando personagem carregar!", 5)
+            end)
+            return
+        end
+
+        local character = player.Character
+        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+        if not humanoidRootPart then
+            warn("RandomSpawnTeleportModule: HumanoidRootPart não encontrado")
+            pcall(function()
+                Utils.Notify("Erro", "Personagem não carregado corretamente!", 5)
+            end)
+            return
+        end
+
+        -- Obter modelo de spawns
+        local spawnsModel = Utils.SafeGet(self.Dependencies[1], 5)
+        if not spawnsModel then
+            warn("RandomSpawnTeleportModule: Modelo Spawns não encontrado")
+            pcall(function()
+                Utils.Notify("Erro", "Mapa não carregado ou spawns não encontrados!", 5)
+            end)
+            return
+        end
+
+        -- Obter SpawnLocations válidos
+        local spawnLocations = spawnsModel:GetChildren()
+        local validSpawns = {}
+        for _, spawn in ipairs(spawnLocations) do
+            if spawn:IsA("SpawnLocation") then
+                table.insert(validSpawns, spawn)
+            end
+        end
+
+        -- Verificar se há spawns válidos
+        if #validSpawns == 0 then
+            warn("RandomSpawnTeleportModule: Nenhum SpawnLocation válido encontrado")
+            pcall(function()
+                Utils.Notify("Erro", "Nenhum spawn encontrado no mapa!", 5)
+            end)
+            return
+        end
+
+        -- Escolher um spawn aleatoriamente
+        local randomSpawn = validSpawns[math.random(1, #validSpawns)]
+        warn("RandomSpawnTeleportModule: Spawn selecionado: " .. randomSpawn.Name)
+
+        -- Teletransportar o jogador
+        local success, errorMsg = pcall(function()
+            task.wait(0.1) -- Pequeno atraso para evitar conflitos com física
+            humanoidRootPart.CFrame = randomSpawn.CFrame + Vector3.new(0, 3, 0)
+        end)
+
+        if success then
+            pcall(function()
+                Utils.Notify("Sucesso", "Teletransportado para spawn aleatório!", 3)
+            end)
+            warn("RandomSpawnTeleportModule: Teletransporte realizado com sucesso")
+        else
+            warn("RandomSpawnTeleportModule: Erro ao teletransportar: " .. tostring(errorMsg))
+            pcall(function()
+                Utils.Notify("Erro", "Falha ao teletransportar: " .. tostring(errorMsg), 5)
+            end)
+        end
+    end
+}
+
+table.insert(Modules, RandomSpawnTeleportModule)
 
 -- ==================== INICIALIZAÇÃO AUTOMÁTICA ====================
 local function InitializeModules()
