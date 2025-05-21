@@ -759,7 +759,6 @@ local function criarCard(emote, scroll)
     local btn = Instance.new("ImageButton")
     btn.Name = emote.nome
     btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-    btn.ImageTransparency = 1
     btn.Size = UDim2.new(0, 120, 0, 140)
     btn.Parent = scroll
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 8)
@@ -768,56 +767,10 @@ local function criarCard(emote, scroll)
     btnStroke.Thickness = 1.5
     btnStroke.Parent = btn
 
-    local spinner = createLoadingSpinner(btn)
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Text = "Carregando..."
-    textLabel.Size = UDim2.new(1, 0, 0, 20)
-    textLabel.Position = UDim2.new(0, 0, 0.5, 0)
-    textLabel.BackgroundTransparency = 1
-    textLabel.TextColor3 = Color3.new(1, 1, 1)
-    textLabel.TextSize = 12
-    textLabel.TextXAlignment = Enum.TextXAlignment.Center
-    textLabel.Parent = btn
-
-    task.spawn(function()
-        local thumbUrl = string.format(
-            "https://thumbnails.roblox.com/v1/assets?assetIds=%s&returnPolicy=PlaceHolder&size=250x250&format=Png&isCircular=false",
-            emote.idCatalogo
-        )
-        
-        local tentativas = 0
-        local maxTentativas = 3
-        
-        while tentativas < maxTentativas do
-            local req = getRequest()
-            local success, response = pcall(function()
-                return req({Url = thumbUrl, Method = "GET"})
-            end)
-            
-            if success and response and response.Success then
-                local success2, thumbData = pcall(function()
-                    return HttpService:JSONDecode(response.Body)
-                end)
-                
-                if success2 and thumbData and thumbData.data and #thumbData.data > 0 and thumbData.data[1].imageUrl then
-                    btn.Image = thumbData.data[1].imageUrl
-                    textLabel:Destroy()
-                    spinner:Destroy()
-                    btn.ImageTransparency = 0
-                    return
-                end
-            end
-            
-            tentativas += 1
-            if tentativas < maxTentativas then
-                wait(1)
-            end
-        end
-        
-        textLabel.Text = "no image"
-        spinner.ImageColor3 = Color3.fromRGB(255, 50, 50)
-    end)
-
+    -- Usar diretamente o formato rbxthumb:// com o idCatalogo
+    btn.Image = "rbxthumb://type=Asset&id=" .. emote.idCatalogo .. "&w=420&h=420"
+    btn.ImageTransparency = 0
+    
     -- Container para o texto com clipping
     local txtContainer = Instance.new("Frame")
     txtContainer.Size = UDim2.new(1, 0, 0, 25)
