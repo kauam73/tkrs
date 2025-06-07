@@ -814,5 +814,17 @@
         "nome": "Katseye Touch",
         "idEmote": "135876612109535",
         "thumbnail": "https://tr.rbxcdn.com/180DAY-5a79080e6dc2c647263d239e05c76578/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "133765015173412",
+        "nome": "DearALICE - Ariana",
+        "idEmote": "134318425949290",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-7ef37774895ef670ba225145dcc99187/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "127271798262177",
+        "nome": "M3GAN's Dance",
+        "idEmote": "99649534578309",
+        "thumbnail": "https://tr.rbxcdn.com/180DAY-e3c4a8b587d0bcff73667ac97becb608/420/420/EmoteAnimation/Png/noFilter"
     }
 ]
