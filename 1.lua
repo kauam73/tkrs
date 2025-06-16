@@ -1,66 +1,149 @@
------------------------------------------------------------
 -- Carregamento da Biblioteca Rayfield
------------------------------------------------------------
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
------------------------------------------------------------
--- Serviços e variáveis iniciais
------------------------------------------------------------
+-- Serviços e Variáveis Iniciais
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+local MarketplaceService = game:GetService("MarketplaceService")
 local LocalPlayer = Players.LocalPlayer
 local FloatingButton
 
------------------------------------------------------------
 -- Tabela de Configurações Personalizáveis
------------------------------------------------------------
 local config = {
-    headPullDistance = 60,      -- Distância para puxar a cabeça do alvo
-    aimbotRange = 1000,          -- Alcance máximo do aimbot
-    fovSize = 60,               -- Tamanho do FOV (campo de visão) em graus
-    showFov = false,            -- Exibir círculo do FOV
-    ignoreWalls = false,        -- Ignorar obstáculos (walls) via raycast
-    teamCheck = true,           -- Desconsiderar alvos do mesmo time
     aimAssistEnabled = false,   -- Ativar/desativar o AimAssist
+    aimbotStrength = 0.5,       -- Força do aimbot (0 a 1)
+    aimbotRange = 1000,         -- Alcance máximo do aimbot
+    fovSize = 60,               -- Tamanho do FOV em graus
+    showFov = false,            -- Exibir círculo do FOV
+    ignoreWalls = false,        -- Ignorar obstáculos via raycast
+    teamCheck = true,           -- Desconsiderar alvos do mesmo time
+    headPullDistance = 60,      -- Distância para puxar a cabeça do alvo
     visualizarPlayers = false,  -- Ativar/desativar o ESP dos jogadores
+    visualizarInfo = false      -- Ativar/desativar informações detalhadas no ESP
 }
 
------------------------------------------------------------
 -- Criação da Janela Principal com Rayfield
------------------------------------------------------------
 local Window = Rayfield:CreateWindow({
     Name = "Tekscripts",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = "TekscriptsConfig", -- Pasta para salvar as configurações
+        FolderName = "TekscriptsConfig",
         FileName = "PainelConfig"
     }
 })
 
------------------------------------------------------------
 -- Criação das Abas (Categorias)
------------------------------------------------------------
 local AimAssistTab = Window:CreateTab("AimAssist", nil)
 local ESPTab = Window:CreateTab("ESP", nil)
+local OthersTab = Window:CreateTab("Outros", nil)
 
------------------------------------------------------------
--- Aba: AimAssist – Elementos de Configuração
------------------------------------------------------------
-AimAssistTab:CreateSlider({
-    Name = "Head Pull Distance",
-    Range = {0, 2000},
-    Increment = 1,
-    Suffix = " studs",
-    CurrentValue = config.headPullDistance,
-    Flag = "HeadPullDistance", -- Flag única para salvar as configurações
+-- ### Aba AimAssist ###
+-- Toggle Principal do AimAssist
+AimAssistTab:CreateToggle({
+    Name = "Ativar AimAssist",
+    CurrentValue = config.aimAssistEnabled,
+    Flag = "AimAssistEnabled",
     Callback = function(Value)
-        config.headPullDistance = Value
-    end,
+        config.aimAssistEnabled = Value
+    end
+})
+
+-- Botão Flutuante para Controle Rápido
+AimAssistTab:CreateToggle({
+    Name = "Botão Flutuante (Ativação Rápida)",
+    CurrentValue = false,
+    Flag = "FloatingButtonToggle",
+    Callback = function(Value)
+        if Value then
+            if not FloatingButton then
+                local screenGui = Instance.new("ScreenGui")
+                screenGui.Name = "FloatingAimbotGUI"
+                screenGui.Parent = game:GetService("CoreGui")
+
+                FloatingButton = Instance.new("Frame")
+                FloatingButton.Size = UDim2.new(0, 80, 0, 80)
+                FloatingButton.Position = UDim2.new(0.5, -40, 0, 20)
+                FloatingButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+                FloatingButton.BackgroundTransparency = 0.3
+                FloatingButton.BorderSizePixel = 0
+                FloatingButton.Parent = screenGui
+
+                local uiCorner = Instance.new("UICorner")
+                uiCorner.CornerRadius = UDim.new(0.5, 0)
+                uiCorner.Parent = FloatingButton
+
+                local Button = Instance.new("TextButton")
+                Button.Size = UDim2.new(1, 0, 1, 0)
+                Button.BackgroundTransparency = 1
+                Button.Text = config.aimAssistEnabled and "✅" or "⚫"
+                Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+                Button.Font = Enum.Font.SourceSansBold
+                Button.TextSize = 30
+                Button.Parent = FloatingButton
+
+                Button.MouseButton1Click:Connect(function()
+                    config.aimAssistEnabled = not config.aimAssistEnabled
+                    Button.Text = config.aimAssistEnabled and "✅" or "⚫"
+                end)
+
+                local UserInputService = game:GetService("UserInputService")
+                local dragging, dragInput, dragStart, startPos
+
+                FloatingButton.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                        dragging = true
+                        dragStart = input.Position
+                        startPos = FloatingButton.Position
+                        input.Changed:Connect(function()
+                            if input.UserInputState == Enum.UserInputState.End then
+                                dragging = false
+                            end
+                        end)
+                    end
+                end)
+
+                FloatingButton.InputChanged:Connect(function(input)
+                    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                        dragInput = input
+                    end
+                end)
+
+                UserInputService.InputChanged:Connect(function(input)
+                    if dragging and input == dragInput then
+                        local delta = input.Position - dragStart
+                        FloatingButton.Position = UDim2.new(
+                            startPos.X.Scale, startPos.X.Offset + delta.X,
+                            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+                        )
+                    end
+                end)
+            end
+        else
+            if FloatingButton then
+                FloatingButton.Parent:Destroy()
+                FloatingButton = nil
+            end
+        end
+    end
+})
+
+
+-- Configurações Principais do AimAssist
+AimAssistTab:CreateSlider({
+    Name = "Força do Aimbot",
+    Range = {0, 1},
+    Increment = 0.01,
+    Suffix = "",
+    CurrentValue = config.aimbotStrength,
+    Flag = "AimbotStrength",
+    Callback = function(Value)
+        config.aimbotStrength = Value
+    end
 })
 
 AimAssistTab:CreateSlider({
-    Name = "Aimbot Range",
+    Name = "Alcance do Aimbot",
     Range = {0, 2000},
     Increment = 1,
     Suffix = " studs",
@@ -68,312 +151,95 @@ AimAssistTab:CreateSlider({
     Flag = "AimbotRange",
     Callback = function(Value)
         config.aimbotRange = Value
-    end,
+    end
 })
 
 AimAssistTab:CreateSlider({
-    Name = "FOV Size",
-    Range = {0, 180},
+    Name = "Distância para Puxar Cabeça",
+    Range = {0, 2000},
+    Increment = 1,
+    Suffix = " studs",
+    CurrentValue = config.headPullDistance,
+    Flag = "HeadPullDistance",
+    Callback = function(Value)
+        config.headPullDistance = Value
+    end
+})
+
+-- Configurações de FOV
+AimAssistTab:CreateSlider({
+    Name = "Tamanho do FOV",
+    Range = {0, 360},
     Increment = 1,
     Suffix = "°",
     CurrentValue = config.fovSize,
     Flag = "FOVSize",
     Callback = function(Value)
         config.fovSize = Value
-    end,
+    end
 })
 
 AimAssistTab:CreateToggle({
-    Name = "Show FOV (Desenhar Círculo)",
+    Name = "Exibir Círculo de FOV",
     CurrentValue = config.showFov,
     Flag = "ShowFOV",
     Callback = function(Value)
         config.showFov = Value
-    end,
+    end
 })
 
+-- Filtros de Alvo
 AimAssistTab:CreateToggle({
-    Name = "Ignore Walls",
+    Name = "Ignorar Paredes",
     CurrentValue = config.ignoreWalls,
     Flag = "IgnoreWalls",
     Callback = function(Value)
         config.ignoreWalls = Value
-    end,
+    end
 })
 
 AimAssistTab:CreateToggle({
-    Name = "Team Check",
+    Name = "Verificar Time",
     CurrentValue = config.teamCheck,
     Flag = "TeamCheck",
     Callback = function(Value)
         config.teamCheck = Value
-    end,
+    end
 })
 
-AimAssistTab:CreateToggle({
-    Name = "AimAssist Enabled",
-    CurrentValue = config.aimAssistEnabled,
-    Flag = "AimAssistEnabled",
-    Callback = function(Value)
-        config.aimAssistEnabled = Value
-    end,
-})
 
-FloatingButton = FloatingButton or nil
-
-AimAssistTab:CreateToggle({
-    Name = "modo rápido button aimbot",
-    Callback = function()
-        if FloatingButton then
-            -- Se o botão já existir, destrói-o e encerra a função
-            FloatingButton.Parent:Destroy()
-            FloatingButton = nil
-            return
-        end
-
-        -- Cria um ScreenGui para conter o botão
-        local screenGui = Instance.new("ScreenGui")
-        screenGui.Name = "FloatingAimbotGUI"
-        screenGui.Parent = game:GetService("CoreGui")  -- Use CoreGui se necessário
-
-        -- Cria o frame que servirá de fundo para o botão
-        FloatingButton = Instance.new("Frame")
-        FloatingButton.Size = UDim2.new(0, 80, 0, 80)
-        -- Posiciona o botão na parte superior central da tela (ajuste o offset Y conforme necessário)
-        FloatingButton.Position = UDim2.new(0.5, -40, 0, 20)
-        FloatingButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-        FloatingButton.BackgroundTransparency = 0.3
-        FloatingButton.BorderSizePixel = 0
-        FloatingButton.Parent = screenGui
-
-        -- Adiciona cantos arredondados (mais arredondado)
-        local uiCorner = Instance.new("UICorner")
-        uiCorner.CornerRadius = UDim.new(0.5, 0)  -- Ajuste para deixar o botão bem arredondado
-        uiCorner.Parent = FloatingButton
-
-        -- Cria o botão que efetua o toggle do AimAssist
-        local Button = Instance.new("TextButton")
-        Button.Size = UDim2.new(1, 0, 1, 0)
-        Button.BackgroundTransparency = 1
-        Button.Text = config.aimAssistEnabled and "✅" or "⚫"
-        Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-        Button.Font = Enum.Font.SourceSansBold
-        Button.TextSize = 30
-        Button.Parent = FloatingButton
-
-        -- Ao clicar no botão, inverte o estado do AimAssist
-        Button.MouseButton1Click:Connect(function()
-            config.aimAssistEnabled = not config.aimAssistEnabled
-            Button.Text = config.aimAssistEnabled and "✅" or "⚫"
-        end)
-
-        -- Função para permitir o arraste do botão usando dedos ou mouse
-        local UserInputService = game:GetService("UserInputService")
-        local dragging, dragInput, dragStart, startPos
-
-        FloatingButton.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                dragStart = input.Position
-                startPos = FloatingButton.Position
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then
-                        dragging = false
-                    end
-                end)
-            end
-        end)
-
-        FloatingButton.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                dragInput = input
-            end
-        end)
-
-        UserInputService.InputChanged:Connect(function(input)
-            if dragging and input == dragInput then
-                local delta = input.Position - dragStart
-                FloatingButton.Position = UDim2.new(
-                    startPos.X.Scale, startPos.X.Offset + delta.X,
-                    startPos.Y.Scale, startPos.Y.Offset + delta.Y
-                )
-            end
-        end)
-    end,
-})
-
------------------------------------------------------------
--- Aba: ESP – Elementos de Configuração
------------------------------------------------------------
-ESPTab:CreateToggle({
-    Name = "Visualizar Players (Chams)",
-    CurrentValue = config.visualizarPlayers,
-    Flag = "VisualizarPlayers",
-    Callback = function(Value)
-        config.visualizarPlayers = Value
-        if not Value then
-            -- Remove Chams existente de todos os jogadores
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player.Character then
-                    local highlight = player.Character:FindFirstChild("ChamsHighlight")
-                    if highlight then
-                        highlight:Destroy()
-                    end
-                end
-            end
-        else
-            -- Reaplica o Chams para todos os jogadores
-            for _, player in ipairs(Players:GetPlayers()) do
-                if player.Character then
-                    applyChams(player)
-                end
-            end
-        end
-    end,
-})
-
-ESPTab:CreateButton({
-    Name = "Refresh Chams",
-    Callback = function()
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player.Character then
-                -- Remove qualquer efeito existente antes de reaplicar
-                local highlight = player.Character:FindFirstChild("ChamsHighlight")
-                if highlight then
-                    highlight:Destroy()
-                end
-                applyChams(player)
-            end
-        end
-    end,
-})
-
------------------------------------------------------------
--- Funções de AimAssist
------------------------------------------------------------
-local function isValidTarget(player)  
-    if player == LocalPlayer then return false end  
-    if not player.Character or not player.Character:FindFirstChild("Humanoid") then return false end  
-    if player.Character.Humanoid.Health <= 0 then return false end  
-    if config.teamCheck and LocalPlayer.Team and player.Team and LocalPlayer.Team == player.Team then  
-        return false  
-    end  
-    return true  
-end  
-  
-local function isVisible(target)  
-    if config.ignoreWalls then  
-        return true  
-    end  
-    local localCharacter = LocalPlayer.Character  
-    local targetCharacter = target.Character  
-    if not localCharacter or not targetCharacter then return false end  
-  
-    local localHRP = localCharacter:FindFirstChild("HumanoidRootPart")  
-    local targetHRP = targetCharacter:FindFirstChild("HumanoidRootPart")  
-    if not localHRP or not targetHRP then return false end  
-  
-    local direction = (targetHRP.Position - localHRP.Position).Unit  
-    local forward = localCharacter.HumanoidRootPart.CFrame.LookVector  
-    local dot = direction:Dot(forward)  
-    if dot < 0.5 then  
-        return false  
-    end  
-  
-    local threshold = math.cos(math.rad(config.fovSize / 2))  
-    if dot < threshold then  
-        return false  
-    end  
-  
-    local rayParams = RaycastParams.new()  
-    rayParams.FilterDescendantsInstances = {localCharacter}  
-    rayParams.FilterType = Enum.RaycastFilterType.Blacklist  
-    local rayResult = Workspace:Raycast(localHRP.Position, (targetHRP.Position - localHRP.Position), rayParams)  
-    if rayResult and not rayResult.Instance:IsDescendantOf(targetCharacter) then  
-        return false  
-    end  
-  
-    return true  
-end  
-  
-local function getClosestTarget()  
-    local closest = nil  
-    local closestDistance = config.aimbotRange  
-    local localCharacter = LocalPlayer.Character  
-    if not localCharacter or not localCharacter:FindFirstChild("HumanoidRootPart") then return nil end  
-    local localPos = localCharacter.HumanoidRootPart.Position  
-  
-    for _, player in ipairs(Players:GetPlayers()) do  
-        if isValidTarget(player) then  
-            local character = player.Character  
-            if character and character:FindFirstChild("HumanoidRootPart") then  
-                local distance = (character.HumanoidRootPart.Position - localPos).Magnitude  
-                if distance < closestDistance and isVisible(player) then  
-                    closestDistance = distance  
-                    closest = player  
-                end  
-            end  
-        end  
-    end  
-  
-    return closest  
-end  
-  
-local function getTargetPosition(target)  
-    if target and target.Character then  
-        local head = target.Character:FindFirstChild("Head")  
-        local hrp = target.Character:FindFirstChild("HumanoidRootPart")  
-        if head and hrp then  
-            local localHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")  
-            if localHRP then  
-                local distance = (head.Position - localHRP.Position).Magnitude  
-                if distance <= config.headPullDistance then  
-                    return head.Position  
-                end  
-            end  
-            return hrp.Position  
-        end  
-    end  
-    return nil  
-end
-
------------------------------------------------------------
--- Função para desenhar o círculo de FOV (se Drawing API estiver disponível)
------------------------------------------------------------
-local fovCircle
-if Drawing and Drawing.new then
-    fovCircle = Drawing.new("Circle")
-    fovCircle.Color = Color3.fromRGB(255, 0, 0)
-    fovCircle.Thickness = 2
-    fovCircle.Transparency = 1
-    fovCircle.Visible = false
-end
-
-
-----------------------------------------------------------
--- SPAM BALAS FUNCTIONS
-------------------------------------------------------------
--- WeaponModule
-
+-- ### Aba Outros ###
+-- Módulo de Armas
 local WeaponModule = {}
-
-local player = game.Players.LocalPlayer
+local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local weapon
 local debugMode = true
 local running = false
+local characterAddedConnection
 
--- Variável para armazenar a conexão do CharacterAdded e poder desconectá-la ao desativar
-local characterAddedConnection = nil
+local printCount = 0 -- contador de prints
 
--- Log simples
+local function clearConsole()
+    -- Comando para limpar console (em Roblox geralmente não tem um "clear" direto)
+    -- Podemos usar repetidos prints vazios para simular limpeza
+    for i = 1, 30 do
+        print("")
+    end
+    print("[DEBUG] Console limpo após 100 prints")
+end
+
 local function log(msg)
-    if debugMode then
-        print("[DEBUG] " .. msg)
+    if debugMode then 
+        print("[DEBUG] " .. msg) 
+        printCount = printCount + 1
+        if printCount >= 100 then
+            clearConsole()
+            printCount = 0
+        end
     end
 end
 
--- Define valor de forma segura
 local function trySetValue(obj, value)
     pcall(function()
         if obj:IsA("NumberValue") or obj:IsA("IntValue") then
@@ -386,7 +252,6 @@ local function trySetValue(obj, value)
     end)
 end
 
--- Força persistência dos valores
 local function enforceWeaponProperties(weapon, desiredProperties)
     for property, value in pairs(desiredProperties) do
         local propObj = weapon:FindFirstChild(property)
@@ -397,7 +262,6 @@ local function enforceWeaponProperties(weapon, desiredProperties)
     end
 end
 
--- Autoreload da arma
 local function autoReloadWeapon(weapon)
     local ammo = weapon:FindFirstChild("Ammo")
     local clipSizeObj = weapon:FindFirstChild("ClipSize")
@@ -407,13 +271,8 @@ local function autoReloadWeapon(weapon)
     end
 end
 
--- Detecta e configura a arma
 local function locateAndConfigureWeapon()
-    if not running then
-        -- Se o módulo não estiver ativo, não faz nada
-        return
-    end
-
+    if not running then return end
     weapon = character:FindFirstChildOfClass("Tool")
     if weapon then
         log("Arma detectada: " .. weapon.Name)
@@ -428,86 +287,58 @@ local function locateAndConfigureWeapon()
         end
 
         local weaponType = weapon.Name:lower()
-        local knownProperties = {}
+        local knownProperties = weaponType:find("pistol") and {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+            or weaponType:find("rifle") and {FireRate = 12000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+            or weaponType:find("shotgun") and {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 50, Recoil = 0, Kickback = 0}
+            or weaponType:find("smg") and {FireRate = 15000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+            or weaponType:find("sniper") and {FireRate = 6000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 20, Recoil = 0, Kickback = 0}
+            or weaponType:find("machinegun") and {FireRate = 14000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+            or weaponType:find("bazooka") and {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
+            or weaponType:find("crossbow") and {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
+            or weaponType:find("grenadelauncher") and {FireRate = 15000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 9999, Recoil = 0, Kickback = 0}
+            or weaponType:find("laser") and {FireRate = 11000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+            or weaponType:find("flamethrower") and {FireRate = 12000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 2000, Recoil = 0, Kickback = 0}
+            or weaponType:find("minigun") and {FireRate = 16000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 2000, Recoil = 0, Kickback = 0}
+            or weaponType:find("rocketlauncher") and {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
+            or weaponType:find("dartgun") and {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 50, Recoil = 0, Kickback = 0}
+            or weaponType:find("chaingun") and {FireRate = 14000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
+            or {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 9999, Recoil = 0, Kickback = 0}
 
-        if weaponType:find("pistol") then    
-            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("rifle") then    
-            knownProperties = {FireRate = 12000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("shotgun") then    
-            knownProperties = {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 50, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("smg") then    
-            knownProperties = {FireRate = 15000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("sniper") then    
-            knownProperties = {FireRate = 6000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 20, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("machinegun") then    
-            knownProperties = {FireRate = 14000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("bazooka") then    
-            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("crossbow") then    
-            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("grenadelauncher") then    
-            knownProperties = {FireRate = 15000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 9999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("laser") then    
-            knownProperties = {FireRate = 11000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("flamethrower") then    
-            knownProperties = {FireRate = 12000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 2000, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("minigun") then    
-            knownProperties = {FireRate = 16000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 2000, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("rocketlauncher") then    
-            knownProperties = {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 1, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("dartgun") then    
-            knownProperties = {FireRate = 8000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 50, Recoil = 0, Kickback = 0}
-        elseif weaponType:find("chaingun") then    
-            knownProperties = {FireRate = 14000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 999, Recoil = 0, Kickback = 0}
-        else    
-            knownProperties = {FireRate = 10000, Cooldown = 0, Automatic = true, ReloadTime = 0, ClipSize = 9999, Recoil = 0, Kickback = 0}
-        end    
-
-        for property, value in pairs(knownProperties) do    
-            if weapon:FindFirstChild(property) then    
+        for property, value in pairs(knownProperties) do
+            if weapon:FindFirstChild(property) then
                 log("Configurando " .. property .. " para " .. tostring(value))
                 trySetValue(weapon[property], value)
-            end    
-        end    
+            end
+        end
 
-        if not weapon:FindFirstChild("EnforceLoop") then    
+        if not weapon:FindFirstChild("EnforceLoop") then
             local enforceLoop = Instance.new("BoolValue")
             enforceLoop.Name = "EnforceLoop"
             enforceLoop.Parent = weapon
             spawn(function()
-                while weapon and weapon.Parent and running do  
+                while weapon and weapon.Parent and running do
                     enforceWeaponProperties(weapon, knownProperties)
                     autoReloadWeapon(weapon)
-                    wait(0.001)
+                    task.wait(0.001)
                 end
             end)
-        end    
-    else    
-        log("Nenhuma arma encontrada.")
-    end    
+        end
+    else
+        --log("") -- removido log vazio
+    end
 end
 
--- Detecta novas ferramentas no personagem
 local function setupCharacter()
-    if not running then
-        return
-    end
+    if not running then return end
     character = player.Character or player.CharacterAdded:Wait()
     character.ChildAdded:Connect(function(child)
-        if child:IsA("Tool") then
-            locateAndConfigureWeapon()
-        end
+        if child:IsA("Tool") then locateAndConfigureWeapon() end
     end)
     locateAndConfigureWeapon()
 end
 
--- Ativa o módulo
 function WeaponModule.Enable()
-    if running then
-        -- Já está ativo, nada a fazer
-        return
-    end
+    if running then return end
     running = true
     if not characterAddedConnection then
         characterAddedConnection = player.CharacterAdded:Connect(setupCharacter)
@@ -516,7 +347,6 @@ function WeaponModule.Enable()
     log("WeaponModule ativado")
 end
 
--- Desativa o módulo
 function WeaponModule.Disable()
     running = false
     if characterAddedConnection then
@@ -533,112 +363,416 @@ function WeaponModule.Disable()
     log("WeaponModule desativado")
 end
 
--- Toggle para ativar/desativar o WeaponModule
-AimAssistTab:CreateToggle({
+OthersTab:CreateToggle({
     Name = "Ativar Módulo de Armas",
     CurrentValue = false,
     Flag = "WeaponModuleToggle",
     Callback = function(Value)
-        if Value then
-            WeaponModule.Enable()
-        else
-            WeaponModule.Disable()
-        end
-    end,
+        if Value then WeaponModule.Enable() else WeaponModule.Disable() end
+    end
 })
+-- ### Validação de Alvo ###
+-- ### Verifica se o alvo é válido ###
+local function isValidTarget(player)
+    if player == LocalPlayer then return false end
+    if not player.Character or not player.Character:FindFirstChild("Humanoid") then return false end
+    if player.Character.Humanoid.Health <= 0 then return false end
+    if config.teamCheck and LocalPlayer.Team and player.Team and LocalPlayer.Team == player.Team then
+        return false
+    end
+    return true
+end
+
+-- ### Verifica se a parte está visível ###
+local function isPartVisible(part, origin)
+    if config.ignoreWalls then return true end
+    local rayParams = RaycastParams.new()
+    rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
+    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+    local result = Workspace:Raycast(origin.Position, part.Position - origin.Position, rayParams)
+    return not result or result.Instance:IsDescendantOf(part.Parent)
+end
+
+-- ### Retorna a melhor parte para mirar respeitando aimbotRange e visibilidade ###
+local function getBestVisiblePartPosition(target)
+    local character = target.Character
+    if not character then return nil end
+
+    local origin = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+    if not origin then return nil end
+
+    local head = character:FindFirstChild("Head")
+    local localHRP = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localHRP then return nil end
+
+    local bestPart = nil
+    local bestDist = math.huge
+
+    local function tryPart(part, preferHead)
+        if not part then return end
+        local dist = (part.Position - localHRP.Position).Magnitude
+        if dist <= config.aimbotRange and isPartVisible(part, origin) then
+            local priority = preferHead and 0 or 1
+            if dist < bestDist or priority < (bestPart and bestPart.priority or 1) then
+                bestPart = { pos = part.Position, priority = priority, dist = dist }
+            end
+        end
+    end
+
+    tryPart(head, (head and (head.Position - localHRP.Position).Magnitude <= config.headPullDistance))
+
+    local partsToCheck = {
+        "UpperTorso", "LowerTorso",
+        "RightUpperArm", "LeftUpperArm",
+        "RightLowerArm", "LeftLowerArm",
+        "RightHand", "LeftHand"
+    }
+
+    for _, name in ipairs(partsToCheck) do
+        tryPart(character:FindFirstChild(name), false)
+    end
+
+    return bestPart and bestPart.pos or nil
+end
+
+-- ### Busca o melhor alvo ###
+local function getClosestTarget()
+    local closestPlayer = nil
+    local closestDist = config.aimbotRange
+    local localCharacter = LocalPlayer.Character
+    local hrp = localCharacter and localCharacter:FindFirstChild("HumanoidRootPart")
+    local camera = Workspace.CurrentCamera
+    if not hrp or not camera then return nil end
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if isValidTarget(player) then
+            local aimPos = getBestVisiblePartPosition(player)
+            if aimPos then
+                local dist = (aimPos - hrp.Position).Magnitude
+                if dist < closestDist then
+                    local dir = (aimPos - camera.CFrame.Position).Unit
+                    local dot = dir:Dot(camera.CFrame.LookVector)
+                    local fovThreshold = math.cos(math.rad(config.fovSize / 2))
+                    if dot >= fovThreshold then
+                        closestDist = dist
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+-- ### FOV Circle ###
+local fovCircle
+if Drawing and Drawing.new then
+    fovCircle = Drawing.new("Circle")
+    fovCircle.Color = Color3.fromRGB(255, 0, 0)
+    fovCircle.Thickness = 2
+    fovCircle.Transparency = 1
+    fovCircle.Visible = false
+end
+
+-- ### Loop Principal ###
+RunService.RenderStepped:Connect(function()
+    local camera = Workspace.CurrentCamera
+    local localCharacter = LocalPlayer.Character
+    if not localCharacter or not localCharacter:FindFirstChild("HumanoidRootPart") then return end
+
+    if config.aimAssistEnabled then
+        local target = getClosestTarget()
+        if target then
+            local aimPos = getBestVisiblePartPosition(target)
+            if aimPos then
+                local cf = CFrame.new(camera.CFrame.Position, aimPos)
+                camera.CFrame = camera.CFrame:Lerp(cf, config.aimbotStrength)
+            end
+        end
+    end
+
+    if fovCircle and config.showFov then
+        local viewport = camera.ViewportSize
+        local fovRadians = math.rad(config.fovSize / 2)
+        local dist = (viewport.Y / 2) / math.tan(math.rad(camera.FieldOfView / 2))
+        fovCircle.Position = Vector2.new(viewport.X / 2, viewport.Y / 2)
+        fovCircle.Radius = dist * math.tan(fovRadians)
+        fovCircle.Visible = true
+    elseif fovCircle then
+        fovCircle.Visible = false
+    end
+end)
+
+-- ### Funções de ESP ###
 -----------------------------------------------------------
--- Funções de ESP
+-- SERVIÇOS & VARIÁVEIS GLOBAIS
+-----------------------------------------------------------
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local LocalPlayer = Players.LocalPlayer
+
+local playerConnections = {}
+local infoESPData = {}
+
+local config = config or {}
+config.visualizarPlayers = config.visualizarPlayers or false
+config.visualizarInfo = config.visualizarInfo or false
+
+-----------------------------------------------------------
+-- CHAMS (Highlight)
 -----------------------------------------------------------
 local function applyChams(player)
     if not config.visualizarPlayers then return end
-    if player == LocalPlayer then return end  -- Não aplicar no jogador local
-    if not player.Character then return end
-    
-    local character = player.Character
+    if player == LocalPlayer or not player.Character then return end
 
-    -- Remove qualquer Highlight existente
-    local existingHighlight = character:FindFirstChild("ChamsHighlight")
-    if existingHighlight then
-        existingHighlight:Destroy()
-    end
-    
-    -- Cria o Highlight para o efeito "chams"
+    local character = player.Character
+    local oldHighlight = character:FindFirstChild("ChamsHighlight")
+    if oldHighlight then oldHighlight:Destroy() end
+
     local highlight = Instance.new("Highlight")
     highlight.Name = "ChamsHighlight"
     highlight.Adornee = character
     highlight.FillColor = player.Team and player.Team.TeamColor.Color or Color3.new(1, 1, 1)
     highlight.OutlineColor = Color3.new(0, 0, 0)
-    highlight.FillTransparency = 0.5  -- Ajuste conforme necessário
+    highlight.FillTransparency = 0.5
     highlight.OutlineTransparency = 0
     highlight.Parent = character
 
-    -- Atualiza a cor caso o time do jogador mude
-    local teamConnection = player:GetPropertyChangedSignal("Team"):Connect(function()
-        highlight.FillColor = player.Team and player.Team.TeamColor.Color or Color3.new(1, 1, 1)
+    local teamConn = player:GetPropertyChangedSignal("Team"):Connect(function()
+        if highlight and highlight.Parent then
+            highlight.FillColor = player.Team and player.Team.TeamColor.Color or Color3.new(1, 1, 1)
+        end
     end)
 
-    -- Garante que a conexão seja desconectada ao destruir o highlight
     highlight.Destroying:Connect(function()
-        teamConnection:Disconnect()
+        if teamConn then teamConn:Disconnect() end
     end)
+
+    playerConnections[player] = playerConnections[player] or {}
+    if playerConnections[player].Team then
+        playerConnections[player].Team:Disconnect()
+    end
+    playerConnections[player].Team = teamConn
 end
 
-local function monitorPlayer(player)
-    player.CharacterAdded:Connect(function(character)
-        task.wait(0.5)
-        applyChams(player)
-    end)
-    if player.Character then
-        applyChams(player)
+-----------------------------------------------------------
+-- INFO ESP: Nome, Distância, Inventário + Imagem
+-----------------------------------------------------------
+local function removeInfoESP(player)
+    if infoESPData[player] then
+        if infoESPData[player].conn then infoESPData[player].conn:Disconnect() end
+        if infoESPData[player].gui then infoESPData[player].gui:Destroy() end
+        infoESPData[player] = nil
     end
 end
 
--- Monitora os jogadores já existentes
-for _, player in ipairs(Players:GetPlayers()) do
-    monitorPlayer(player)
+local function applyInfoESP(player)
+    if not config.visualizarInfo then return end
+    if player == LocalPlayer or not player.Character or not player.Character:FindFirstChild("Head") then return end
+
+    removeInfoESP(player)
+
+    local head = player.Character.Head
+    local gui = Instance.new("BillboardGui")
+    gui.Name = "InfoESP"
+    gui.Size = UDim2.new(0, 200, 0, 120)
+    gui.StudsOffset = Vector3.new(0, 2.8, 0)
+    gui.AlwaysOnTop = true
+    gui.Adornee = head
+    gui.Parent = head
+
+    local container = Instance.new("Frame", gui)
+    container.BackgroundTransparency = 1
+    container.Size = UDim2.new(1, 0, 1, 0)
+
+    local text = Instance.new("TextLabel")
+    text.Size = UDim2.new(1, 0, 0, 35)
+    text.Position = UDim2.new(0, 0, 0, 0)
+    text.BackgroundTransparency = 1
+    text.TextColor3 = Color3.new(1, 1, 1)
+    text.TextStrokeColor3 = Color3.new(0, 0, 0)
+    text.TextStrokeTransparency = 0.3
+    text.Font = Enum.Font.GothamBold
+    text.TextScaled = true
+    text.Parent = container
+
+    local img = Instance.new("ImageLabel")
+    img.Size = UDim2.new(0, 32, 0, 32)
+    img.Position = UDim2.new(1, -36, 0, 3)
+    img.BackgroundTransparency = 1
+    img.Visible = false -- Esconde, não vamos usar
+    img.Parent = container
+
+    local invText = Instance.new("TextLabel")
+    invText.Size = UDim2.new(1, -8, 1, -40)
+    invText.Position = UDim2.new(0, 4, 0, 38)
+    invText.BackgroundTransparency = 1
+    invText.TextColor3 = Color3.fromRGB(160, 255, 180)
+    invText.TextStrokeColor3 = Color3.new(0, 0, 0)
+    invText.TextStrokeTransparency = 0.6
+    invText.Font = Enum.Font.Code
+    invText.TextWrapped = true
+    invText.TextYAlignment = Enum.TextYAlignment.Top
+    invText.TextXAlignment = Enum.TextXAlignment.Left
+    invText.TextScaled = false
+    invText.TextSize = 12
+    invText.Parent = container
+
+local conn = RunService.RenderStepped:Connect(function()
+    if not player.Character then
+        removeInfoESP(player)
+        return
+    end
+
+    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+    local localHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp or not localHrp then
+        removeInfoESP(player)
+        return
+    end
+
+    local dist = (hrp.Position - localHrp.Position).Magnitude
+    text.Text = string.format("👤 %s | 📏 %.0f", player.Name, dist)
+
+        local inventory = {}
+
+        -- Itens na mochila
+        for _, tool in ipairs(player.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                table.insert(inventory, "• " .. tool.Name)
+            end
+        end
+
+        -- Itens usando (personagem)
+        for _, tool in ipairs(player.Character:GetChildren()) do
+            if tool:IsA("Tool") then
+                table.insert(inventory, "👉 " .. tool.Name .. " [Usando]")
+            end
+        end
+
+        invText.Text = #inventory > 0 and table.concat(inventory, "\n") or "🔒 Inventário vazio"
+        img.Visible = false -- mantém invisível
+    end)
+
+    infoESPData[player] = {
+        gui = gui,
+        conn = conn
+    }
 end
 
--- Monitora jogadores que entrarem no jogo
-Players.PlayerAdded:Connect(monitorPlayer)
-
 -----------------------------------------------------------
--- Loop Principal: Processamento do AimAssist e Atualização do FOV
+-- MONITORAMENTO GERAL
 -----------------------------------------------------------
-RunService.RenderStepped:Connect(function()
-    local camera = Workspace.CurrentCamera
-    local localCharacter = LocalPlayer.Character
-    if not localCharacter then return end  -- Sai do loop se o jogador não tiver personagem
-
-    local localHRP = localCharacter:FindFirstChild("HumanoidRootPart")
-    if not localHRP then return end  -- Sai do loop se não encontrar o HumanoidRootPart
-
-    -- Processamento do AimAssist
-    if config.aimAssistEnabled then
-        local target = getClosestTarget()
-        if target then
-            local targetPos = getTargetPosition(target)
-            if targetPos then
-                camera.CFrame = CFrame.new(camera.CFrame.Position, targetPos)
+local function monitorPlayer(player)
+    if playerConnections[player] then
+        for _, conn in pairs(playerConnections[player]) do
+            if conn and typeof(conn.Disconnect) == "function" then
+                conn:Disconnect()
             end
         end
     end
+    removeInfoESP(player)
 
-    -- Atualização do círculo do FOV (se Drawing API estiver disponível)
-    if fovCircle then
-        if config.showFov then
-            local viewportSize = camera.ViewportSize
-            local fovRadians = math.rad(config.fovSize / 2)
-            local distance = (viewportSize.Y / 2) / math.tan(math.rad(camera.FieldOfView / 2))
-            fovCircle.Position = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
-            fovCircle.Radius = distance * math.tan(fovRadians)
-            fovCircle.Visible = true
-        else
-            fovCircle.Visible = false
-        end
+    local charConn = player.CharacterAdded:Connect(function()
+        task.wait(0.3)
+        if config.visualizarPlayers then applyChams(player) end
+        if config.visualizarInfo then applyInfoESP(player) end
+    end)
+
+    if player.Character then
+        if config.visualizarPlayers then applyChams(player) end
+        if config.visualizarInfo then applyInfoESP(player) end
     end
-end)    
+
+    playerConnections[player] = playerConnections[player] or {}
+    playerConnections[player].Character = charConn
+end
+
+local function unmonitorPlayer(player)
+    if playerConnections[player] then
+        for _, conn in pairs(playerConnections[player]) do
+            if conn and typeof(conn.Disconnect) == "function" then
+                conn:Disconnect()
+            end
+        end
+        playerConnections[player] = nil
+    end
+    removeInfoESP(player)
+    if player.Character then
+        local cham = player.Character:FindFirstChild("ChamsHighlight")
+        if cham then cham:Destroy() end
+    end
+end
 
 -----------------------------------------------------------
--- Mensagem de Confirmação
+-- INICIALIZAÇÃO DE MONITORAMENTO EXISTENTE
 -----------------------------------------------------------
+Players.PlayerAdded:Connect(function(p)
+    if config.visualizarPlayers or config.visualizarInfo then
+        monitorPlayer(p)
+    end
+end)
+
+Players.PlayerRemoving:Connect(unmonitorPlayer)
+
+for _, p in ipairs(Players:GetPlayers()) do
+    if config.visualizarPlayers or config.visualizarInfo then
+        monitorPlayer(p)
+    end
+end
+
+-- ### Aba ESP ###
+-- Toggle Principal do ESP
+ESPTab:CreateToggle({
+    Name = "Visualizar Players (Chams)",
+    CurrentValue = config.visualizarPlayers,
+    Flag = "VisualizarPlayers",
+    Callback = function(Value)
+        config.visualizarPlayers = Value
+        for _, p in ipairs(Players:GetPlayers()) do
+            if Value then monitorPlayer(p) else unmonitorPlayer(p) end
+        end
+    end,
+})
+
+ESPTab:CreateToggle({
+    Name = "Visualizar Nome, Distância e Itens",
+    CurrentValue = config.visualizarInfo,
+    Flag = "VisualizarInfo",
+    Callback = function(Value)
+        config.visualizarInfo = Value
+        for _, p in ipairs(Players:GetPlayers()) do
+            if Value then applyInfoESP(p) else removeInfoESP(p) end
+        end
+    end,
+})
+
+ESPTab:CreateButton({
+    Name = "Refresh Chams",
+    Callback = function()
+        for _, p in ipairs(Players:GetPlayers()) do
+            if config.visualizarPlayers then applyChams(p) end
+        end
+    end,
+})
+-----------------------------------------------------------
+-- UI: Toggles & Botão
+-----------------------------------------------------------
+Players.PlayerAdded:Connect(function(p)
+    if config.visualizarPlayers or config.visualizarInfo then
+        monitorPlayer(p)
+    end
+end)
+
+Players.PlayerRemoving:Connect(unmonitorPlayer)
+
+for _, p in ipairs(Players:GetPlayers()) do
+    if config.visualizarPlayers or config.visualizarInfo then
+        monitorPlayer(p)
+    end
+end
+
+-- Mensagem de Confirmação
 print("Tekscripts: AimAssist e ESP carregados com sucesso!")
