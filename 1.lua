@@ -1,3 +1,4 @@
+
 -- Carregamento da Biblioteca Rayfield
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
@@ -510,7 +511,6 @@ end)
 -----------------------------------------------------------
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local MarketplaceService = game:GetService("MarketplaceService")
 local LocalPlayer = Players.LocalPlayer
 
 local playerConnections = {}
@@ -524,8 +524,7 @@ config.visualizarInfo = config.visualizarInfo or false
 -- CHAMS (Highlight)
 -----------------------------------------------------------
 local function applyChams(player)
-    if not config.visualizarPlayers then return end
-    if player == LocalPlayer or not player.Character then return end
+    if not config.visualizarPlayers or player == LocalPlayer or not player.Character then return end
 
     local character = player.Character
     local oldHighlight = character:FindFirstChild("ChamsHighlight")
@@ -534,32 +533,41 @@ local function applyChams(player)
     local highlight = Instance.new("Highlight")
     highlight.Name = "ChamsHighlight"
     highlight.Adornee = character
-    highlight.FillColor = player.Team and player.Team.TeamColor.Color or Color3.new(1, 1, 1)
-    highlight.OutlineColor = Color3.new(0, 0, 0)
-    highlight.FillTransparency = 0.5
+    highlight.FillColor = player.Team and player.Team.TeamColor.Color or Color3.fromRGB(255, 255, 255)
+    highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
+    highlight.FillTransparency = 0.6
     highlight.OutlineTransparency = 0
     highlight.Parent = character
 
-    local teamConn = player:GetPropertyChangedSignal("Team"):Connect(function()
+    local teamConn
+    teamConn = player:GetPropertyChangedSignal("Team"):Connect(function()
         if highlight and highlight.Parent then
-            highlight.FillColor = player.Team and player.Team.TeamColor.Color or Color3.new(1, 1, 1)
+            highlight.FillColor = player.Team and player.Team.TeamColor.Color or Color3.fromRGB(255, 255, 255)
+        else
+            teamConn:Disconnect()
         end
     end)
 
-    highlight.Destroying:Connect(function()
-        if teamConn then teamConn:Disconnect() end
-    end)
-
     playerConnections[player] = playerConnections[player] or {}
-    if playerConnections[player].Team then
-        playerConnections[player].Team:Disconnect()
-    end
+    if playerConnections[player].Team then playerConnections[player].Team:Disconnect() end
     playerConnections[player].Team = teamConn
 end
 
+local function removeChams(player)
+    if player.Character then
+        local highlight = player.Character:FindFirstChild("ChamsHighlight")
+        if highlight then highlight:Destroy() end
+    end
+    if playerConnections[player] and playerConnections[player].Team then
+        playerConnections[player].Team:Disconnect()
+        playerConnections[player].Team = nil
+    end
+end
+
 -----------------------------------------------------------
--- INFO ESP: Nome, Distância, Inventário + Imagem
+-- INFO ESP: Nome, Distância, Inventário, Vida (GUI adaptativa)
 -----------------------------------------------------------
+--// Remover ESP de Info de um jogador
 local function removeInfoESP(player)
     if infoESPData[player] then
         if infoESPData[player].conn then infoESPData[player].conn:Disconnect() end
@@ -568,92 +576,102 @@ local function removeInfoESP(player)
     end
 end
 
+--// Aplicar ESP de Info em um jogador
 local function applyInfoESP(player)
-    if not config.visualizarInfo then return end
-    if player == LocalPlayer or not player.Character or not player.Character:FindFirstChild("Head") then return end
+    if not config.visualizarInfo or player == LocalPlayer or not player.Character then
+        removeInfoESP(player)
+        return
+    end
+
+    local head = player.Character:FindFirstChild("Head")
+    if not head then return end
 
     removeInfoESP(player)
 
-    local head = player.Character.Head
     local gui = Instance.new("BillboardGui")
     gui.Name = "InfoESP"
-    gui.Size = UDim2.new(0, 200, 0, 120)
-    gui.StudsOffset = Vector3.new(0, 2.8, 0)
-    gui.AlwaysOnTop = true
     gui.Adornee = head
+    gui.AlwaysOnTop = true
+    gui.StudsOffset = Vector3.new(0, 2.5, 0)
     gui.Parent = head
 
-    local container = Instance.new("Frame", gui)
-    container.BackgroundTransparency = 1
-    container.Size = UDim2.new(1, 0, 1, 0)
+    local container = Instance.new("Frame")
+    container.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    container.BackgroundTransparency = 0.7
+    container.BorderSizePixel = 1
+    container.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    container.Position = UDim2.new(0, 2, 0, 2)
+    container.Parent = gui
 
-    local text = Instance.new("TextLabel")
-    text.Size = UDim2.new(1, 0, 0, 35)
-    text.Position = UDim2.new(0, 0, 0, 0)
-    text.BackgroundTransparency = 1
-    text.TextColor3 = Color3.new(1, 1, 1)
-    text.TextStrokeColor3 = Color3.new(0, 0, 0)
-    text.TextStrokeTransparency = 0.3
-    text.Font = Enum.Font.GothamBold
-    text.TextScaled = true
-    text.Parent = container
+    local uicorner = Instance.new("UICorner", container)
+    uicorner.CornerRadius = UDim.new(0, 6)
 
-    local img = Instance.new("ImageLabel")
-    img.Size = UDim2.new(0, 32, 0, 32)
-    img.Position = UDim2.new(1, -36, 0, 3)
-    img.BackgroundTransparency = 1
-    img.Visible = false -- Esconde, não vamos usar
-    img.Parent = container
+    local header = Instance.new("TextLabel")
+    header.Size = UDim2.new(1, -8, 0, 20)
+    header.Position = UDim2.new(0, 4, 0, 4)
+    header.BackgroundTransparency = 1
+    header.TextColor3 = Color3.fromRGB(255, 255, 255)
+    header.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    header.TextStrokeTransparency = 0.4
+    header.Font = Enum.Font.GothamBold
+    header.TextSize = 14
+    header.TextXAlignment = Enum.TextXAlignment.Left
+    header.Parent = container
 
-    local invText = Instance.new("TextLabel")
-    invText.Size = UDim2.new(1, -8, 1, -40)
-    invText.Position = UDim2.new(0, 4, 0, 38)
-    invText.BackgroundTransparency = 1
-    invText.TextColor3 = Color3.fromRGB(160, 255, 180)
-    invText.TextStrokeColor3 = Color3.new(0, 0, 0)
-    invText.TextStrokeTransparency = 0.6
-    invText.Font = Enum.Font.Code
-    invText.TextWrapped = true
-    invText.TextYAlignment = Enum.TextYAlignment.Top
-    invText.TextXAlignment = Enum.TextXAlignment.Left
-    invText.TextScaled = false
-    invText.TextSize = 12
-    invText.Parent = container
+    local inventoryText = Instance.new("TextLabel")
+    inventoryText.Size = UDim2.new(1, -8, 1, -28)
+    inventoryText.Position = UDim2.new(0, 4, 0, 24)
+    inventoryText.BackgroundTransparency = 1
+    inventoryText.TextColor3 = Color3.fromRGB(180, 255, 200)
+    inventoryText.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+    inventoryText.TextStrokeTransparency = 0.6
+    inventoryText.Font = Enum.Font.Code
+    inventoryText.TextWrapped = true
+    inventoryText.TextYAlignment = Enum.TextYAlignment.Top
+    inventoryText.TextXAlignment = Enum.TextXAlignment.Left
+    inventoryText.TextSize = 10
+    inventoryText.Parent = container
 
-local conn = RunService.RenderStepped:Connect(function()
-    if not player.Character then
-        removeInfoESP(player)
-        return
-    end
+    local conn
+    conn = RunService.Heartbeat:Connect(function()
+        -- Se o personagem não estiver completo, apenas pausamos a atualização
+        if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") or not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            return
+        end
 
-    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-    local localHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not hrp or not localHrp then
-        removeInfoESP(player)
-        return
-    end
+        local hrp = player.Character.HumanoidRootPart
+        local localHrp = LocalPlayer.Character.HumanoidRootPart
+        local dist = (hrp.Position - localHrp.Position).Magnitude
 
-    local dist = (hrp.Position - localHrp.Position).Magnitude
-    text.Text = string.format("👤 %s | 📏 %.0f", player.Name, dist)
+        -- Obter vida do Humanoid
+        local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+        local healthText = "❤️ N/A"
+        if humanoid then
+            healthText = string.format("\n❤️ %.0f/%.0f", humanoid.Health, humanoid.MaxHealth)
+        end
+
+        -- Atualizar cabeçalho com nome, distância e vida
+        header.Text = string.format("👤 %s | 📏 %.1f | %s", player.Name, dist, healthText)
 
         local inventory = {}
-
-        -- Itens na mochila
         for _, tool in ipairs(player.Backpack:GetChildren()) do
             if tool:IsA("Tool") then
                 table.insert(inventory, "• " .. tool.Name)
             end
         end
-
-        -- Itens usando (personagem)
         for _, tool in ipairs(player.Character:GetChildren()) do
             if tool:IsA("Tool") then
-                table.insert(inventory, "👉 " .. tool.Name .. " [Usando]")
+                table.insert(inventory, "\n👉 " .. tool.Name .. " [Equipped]")
             end
         end
 
-        invText.Text = #inventory > 0 and table.concat(inventory, "\n") or "🔒 Inventário vazio"
-        img.Visible = false -- mantém invisível
+        inventoryText.Text = (#inventory == 0) and "🔒 Empty Inventory" or table.concat(inventory, "\n")
+
+        -- Ajusta dinamicamente a altura da GUI
+        local lines = 1 + #inventory
+        local heightPx = 28 + (lines * 14)
+        container.Size = UDim2.new(1, -4, 0, heightPx)
+        gui.Size = UDim2.new(0, 180, 0, heightPx + 4)
     end)
 
     infoESPData[player] = {
@@ -663,76 +681,91 @@ local conn = RunService.RenderStepped:Connect(function()
 end
 
 -----------------------------------------------------------
--- MONITORAMENTO GERAL
+-- MONITORAMENTO DE JOGADORES
 -----------------------------------------------------------
 local function monitorPlayer(player)
-    if playerConnections[player] then
-        for _, conn in pairs(playerConnections[player]) do
-            if conn and typeof(conn.Disconnect) == "function" then
-                conn:Disconnect()
-            end
-        end
-    end
-    removeInfoESP(player)
-
-    local charConn = player.CharacterAdded:Connect(function()
-        task.wait(0.3)
-        if config.visualizarPlayers then applyChams(player) end
-        if config.visualizarInfo then applyInfoESP(player) end
-    end)
-
-    if player.Character then
-        if config.visualizarPlayers then applyChams(player) end
-        if config.visualizarInfo then applyInfoESP(player) end
-    end
+    if player == LocalPlayer then return end
 
     playerConnections[player] = playerConnections[player] or {}
+    if playerConnections[player].Character then
+        playerConnections[player].Character:Disconnect()
+    end
+
+    local charConn
+    charConn = player.CharacterAdded:Connect(function(character)
+        task.spawn(function()
+            local head = character:WaitForChild("Head", 5)
+            local hrp = character:WaitForChild("HumanoidRootPart", 5)
+
+            if not head or not hrp then
+                task.wait(1)
+                head = character:FindFirstChild("Head")
+                hrp = character:FindFirstChild("HumanoidRootPart")
+            end
+
+            if head and hrp then
+                if config.visualizarPlayers then applyChams(player) end
+                if config.visualizarInfo then applyInfoESP(player) end
+            end
+        end)
+    end)
+
     playerConnections[player].Character = charConn
+
+    -- Caso já esteja com personagem ativo
+    if player.Character and player.Character:FindFirstChild("Head") and player.Character:FindFirstChild("HumanoidRootPart") then
+        if config.visualizarPlayers then applyChams(player) end
+        if config.visualizarInfo then applyInfoESP(player) end
+    end
 end
 
 local function unmonitorPlayer(player)
+    -- ⚠️ Não apagar GUIs se for o LocalPlayer
+    if player == LocalPlayer then return end
+
     if playerConnections[player] then
         for _, conn in pairs(playerConnections[player]) do
-            if conn and typeof(conn.Disconnect) == "function" then
-                conn:Disconnect()
-            end
+            if conn then conn:Disconnect() end
         end
         playerConnections[player] = nil
     end
+
     removeInfoESP(player)
-    if player.Character then
-        local cham = player.Character:FindFirstChild("ChamsHighlight")
-        if cham then cham:Destroy() end
-    end
+    removeChams(player)
 end
 
 -----------------------------------------------------------
--- INICIALIZAÇÃO DE MONITORAMENTO EXISTENTE
+-- INICIALIZAÇÃO
 -----------------------------------------------------------
-Players.PlayerAdded:Connect(function(p)
-    if config.visualizarPlayers or config.visualizarInfo then
-        monitorPlayer(p)
-    end
+Players.PlayerAdded:Connect(function(player)
+    monitorPlayer(player)
 end)
 
 Players.PlayerRemoving:Connect(unmonitorPlayer)
 
-for _, p in ipairs(Players:GetPlayers()) do
-    if config.visualizarPlayers or config.visualizarInfo then
-        monitorPlayer(p)
-    end
+for _, player in ipairs(Players:GetPlayers()) do
+    monitorPlayer(player)
 end
 
--- ### Aba ESP ###
--- Toggle Principal do ESP
+-----------------------------------------------------------
+-- UI: TOGGLES & BOTÃO (exemplo)
+-----------------------------------------------------------
+-- ESPTab deve existir e ter CreateToggle e CreateButton métodos
+-- Adapte para seu framework de UI
+
 ESPTab:CreateToggle({
     Name = "Visualizar Players (Chams)",
     CurrentValue = config.visualizarPlayers,
     Flag = "VisualizarPlayers",
     Callback = function(Value)
         config.visualizarPlayers = Value
-        for _, p in ipairs(Players:GetPlayers()) do
-            if Value then monitorPlayer(p) else unmonitorPlayer(p) end
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player == LocalPlayer then continue end
+            if Value then
+                applyChams(player)
+            else
+                removeChams(player)
+            end
         end
     end,
 })
@@ -743,36 +776,29 @@ ESPTab:CreateToggle({
     Flag = "VisualizarInfo",
     Callback = function(Value)
         config.visualizarInfo = Value
-        for _, p in ipairs(Players:GetPlayers()) do
-            if Value then applyInfoESP(p) else removeInfoESP(p) end
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player == LocalPlayer then continue end
+            if Value then
+                applyInfoESP(player)
+            else
+                removeInfoESP(player)
+            end
         end
     end,
 })
 
 ESPTab:CreateButton({
-    Name = "Refresh Chams",
+    Name = "Refresh ESP",
     Callback = function()
-        for _, p in ipairs(Players:GetPlayers()) do
-            if config.visualizarPlayers then applyChams(p) end
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player == LocalPlayer then continue end
+            removeChams(player)
+            removeInfoESP(player)
+            if config.visualizarPlayers then applyChams(player) end
+            if config.visualizarInfo then applyInfoESP(player) end
         end
     end,
 })
------------------------------------------------------------
--- UI: Toggles & Botão
------------------------------------------------------------
-Players.PlayerAdded:Connect(function(p)
-    if config.visualizarPlayers or config.visualizarInfo then
-        monitorPlayer(p)
-    end
-end)
-
-Players.PlayerRemoving:Connect(unmonitorPlayer)
-
-for _, p in ipairs(Players:GetPlayers()) do
-    if config.visualizarPlayers or config.visualizarInfo then
-        monitorPlayer(p)
-    end
-end
 
 -- Mensagem de Confirmação
 print("Tekscripts: AimAssist e ESP carregados com sucesso!")
