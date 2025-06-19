@@ -1310,5 +1310,69 @@
         "thumbnail": "N/A",
         "bundleId": "356",
         "bundleNome": "Rthro Animation Package"
+    },
+    {
+    "idAnimacao": "88763136693023",
+    "nome": "Climb",
+    "idAsset": "rbxassetid://88763136693023",
+    "thumbnail": "N/A",
+    "bundleId": "2623795",
+    "bundleNome": "adidas Community Animation Pack"
+    },
+    {
+    "idAnimacao": "98600215928904",
+    "nome": "Fall",
+    "idAsset": "rbxassetid://98600215928904",
+    "thumbnail": "N/A",
+    "bundleId": "2623795",
+    "bundleNome": "adidas Community Animation Pack"
+    },
+    {
+    "idAnimacao": "122257458498464",
+    "nome": "Idle",
+    "idAsset": "rbxassetid://122257458498464",
+    "thumbnail": "N/A",
+    "bundleId": "2623795",
+    "bundleNome": "adidas Community Animation Pack"
+    },
+    {
+    "idAnimacao": "75290611992385",
+    "nome": "Jump",
+    "idAsset": "rbxassetid://75290611992385",
+    "thumbnail": "N/A",
+    "bundleId": "2623795",
+    "bundleNome": "adidas Community Animation Pack"
+    },
+    {
+    "idAnimacao": "122150855457006",
+    "nome": "Walk",
+    "idAsset": "rbxassetid://122150855457006",
+    "thumbnail": "N/A",
+    "bundleId": "2623795",
+    "bundleNome": "adidas Community Animation Pack"
+    },
+    {
+    "idAnimacao": "82598234841035",
+    "nome": "Run",
+    "idAsset": "rbxassetid://82598234841035",
+    "thumbnail": "N/A",
+    "bundleId": "2623795",
+    "bundleNome": "adidas Community Animation Pack"
+    },
+    {
+    "idAnimacao": "109346520324160",
+    "nome": "SwimIdle",
+    "idAsset": "rbxassetid://109346520324160",
+    "thumbnail": "N/A",
+    "bundleId": "2623795",
+    "bundleNome": "adidas Community Animation Pack"
+    },
+    {
+    "idAnimacao": "133308483266208",
+    "nome": "Swim",
+    "idAsset": "rbxassetid://133308483266208",
+    "thumbnail": "N/A",
+    "bundleId": "2623795",
+    "bundleNome": "adidas Community Animation Pack"
     }
 ]
