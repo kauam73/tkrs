@@ -13,28 +13,57 @@ local PlayerGui = player:WaitForChild("PlayerGui")
 -- Módulo de Utilitários
 local Utils = {}
 
+--##################################
+-- RETORNA A FUNÇÃO DE REQUISIÇÃO HTTP SUPORTADA PELO EXECUTOR
+--##################################
 function Utils.getRequest()
-    return (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or (krnl and krnl.request) or (getgenv().request) or request
+    return (syn and syn.request)
+        or (fluxus and fluxus.request)
+        or (http and http.request)
+        or (krnl and krnl.request)
+        or (getgenv().request)
+        or request
 end
 
+--##################################
+-- RETORNA A API DE SISTEMA DE ARQUIVOS SUPORTADA PELO EXECUTOR
+--##################################
 function Utils.getFileSystem()
     local funcs = {
-        writeFile = writefile or (fluxus and fluxus.writefile) or (trigon and trigon.writefile) or (codex and codex.writefile),
-        readFile = readfile or (fluxus and fluxus.readFile) or (trigon and trigon.readFile) or (codex and codex.readFile),
-        isFile = isfile or (fluxus and fluxus.isfile) or (trigon and trigon.isfile) or (codex and codex.isfile) or function() return false end
+        writeFile = writefile
+            or (fluxus and fluxus.writefile)
+            or (trigon and trigon.writefile)
+            or (codex and codex.writefile),
+
+        readFile = readfile
+            or (fluxus and fluxus.readFile)
+            or (trigon and trigon.readFile)
+            or (codex and codex.readFile),
+
+        isFile = isfile
+            or (fluxus and fluxus.isfile)
+            or (trigon and trigon.isfile)
+            or (codex and codex.isfile)
+            or function() return false end
     }
+
     assert(funcs.writeFile and funcs.readFile, "Executor não suporta escrita/leitura de arquivos.")
     return funcs
 end
 
 Utils.fs = Utils.getFileSystem()
 
+--##################################
+-- GARANTE QUE O FRAME FIQUE DENTRO DA TELA
+--##################################
 function Utils.keepFrameOnScreen(frame)
     local viewportSize = workspace.CurrentCamera.ViewportSize
     local frameSize = frame.AbsoluteSize
     local framePos = frame.AbsolutePosition
+
     local newPosX = math.clamp(framePos.X, 0, viewportSize.X - frameSize.X)
     local newPosY = math.clamp(framePos.Y, 0, viewportSize.Y - frameSize.Y)
+
     if newPosX ~= framePos.X or newPosY ~= framePos.Y then
         frame.Position = UDim2.new(0, newPosX, 0, newPosY)
     end
@@ -108,14 +137,25 @@ local UIBuilder = {}
 
 local ConnectionManager = {}
 
+--##############################
+-- CRIA UMA NOVA INSTÂNCIA DO CONNECTIONMANAGER
+--##############################
 function ConnectionManager:New()
-    local self = setmetatable({}, {__index = ConnectionManager})
+    local self = setmetatable({}, { __index = ConnectionManager })
     self.connections = {}
     return self
 end
+
+--##############################
+-- ADICIONA UMA CONEXÃO AO GERENCIADOR
+--##############################
 function ConnectionManager:Add(connection)
     table.insert(self.connections, connection)
 end
+
+--##############################
+-- REMOVE UMA CONEXÃO DO GERENCIADOR
+--##############################
 function ConnectionManager:Remove(connection)
     for i, conn in ipairs(self.connections) do
         if conn == connection then
@@ -124,38 +164,77 @@ function ConnectionManager:Remove(connection)
         end
     end
 end
+
+--##############################
+-- DESCONECTA TODAS AS CONEXÕES E LIMPA A LISTA
+--##############################
 function ConnectionManager:DisconnectAll()
     for _, conn in ipairs(self.connections) do
-        pcall(function() conn:Disconnect() end)
+        pcall(function()
+            conn:Disconnect()
+        end)
     end
     self.connections = {}
 end
 
+--##################################
+-- CRIA UM UIGradient CONFIGURADO
+--##################################
 function UIBuilder.createUIGradient(parent, color1, color2, rotation)
     local gradient = Instance.new("UIGradient")
+
     gradient.Color = ColorSequence.new{
         ColorSequenceKeypoint.new(0, color1 or Config.COLOR_ACCENT_PRIMARY),
         ColorSequenceKeypoint.new(1, color2 or Config.COLOR_ACCENT_SECONDARY)
     }
     gradient.Rotation = rotation or 90
+
     gradient.Parent = parent
     return gradient
 end
+
+--##################################
+-- CRIA UM UICORNER CONFIGURADO
+--##################################
 function UIBuilder.createUICorner(parent, radius)
     local corner = Instance.new("UICorner")
+
     corner.CornerRadius = radius or Config.CORNER_RADIUS
     corner.Parent = parent
     return corner
 end
+
+--##############################
+-- CRIA UM UISTROKE CONFIGURADO
+--##############################
 function UIBuilder.createUIStroke(parent, color, thickness)
     local stroke = Instance.new("UIStroke")
+
     stroke.Color = color or Config.COLOR_STROKE_LIGHT
     stroke.Thickness = thickness or Config.BORDER_THICKNESS
+
     stroke.Parent = parent
     return stroke
 end
-function UIBuilder.createFrame(parent, size, position, backgroundColor, backgroundTransparency, borderSizePixel, active, clipsDescendants, cornerRadius, strokeColor, strokeThickness)
+
+--##################################
+-- CRIA UM FRAME CONFIGURADO COM OPCIONAIS
+--##################################
+function UIBuilder.createFrame(
+    parent,
+    size,
+    position,
+    backgroundColor,
+    backgroundTransparency,
+    borderSizePixel,
+    active,
+    clipsDescendants,
+    cornerRadius,
+    strokeColor,
+    strokeThickness
+)
     local frame = Instance.new("Frame")
+
     frame.Size = size
     frame.Position = position
     frame.BackgroundColor3 = backgroundColor or Color3.fromRGB(255, 255, 255)
@@ -163,78 +242,262 @@ function UIBuilder.createFrame(parent, size, position, backgroundColor, backgrou
     frame.BorderSizePixel = borderSizePixel or 0
     frame.Active = active or false
     frame.ClipsDescendants = clipsDescendants or false
+
     frame.Parent = parent
-    if cornerRadius then UIBuilder.createUICorner(frame, cornerRadius) end
-    if strokeColor then UIBuilder.createUIStroke(frame, strokeColor, strokeThickness) end
+
+    if cornerRadius then
+        UIBuilder.createUICorner(frame, cornerRadius)
+    end
+
+    if strokeColor then
+        UIBuilder.createUIStroke(frame, strokeColor, strokeThickness)
+    end
+
     return frame
 end
-function UIBuilder.createTextLabel(parent, size, position, text, textSize, font, backgroundTransparency, textColor, textStrokeTransparency, textStrokeColor, textXAlignment, textYAlignment, textWrapped)
+
+--##################################
+-- CRIA UM TEXTLABEL CONFIGURADO
+--##################################
+function UIBuilder.createTextLabel(
+    parent,
+    size,
+    position,
+    text,
+    textSize,
+    font,
+    backgroundTransparency,
+    textColor,
+    textStrokeTransparency,
+    textStrokeColor,
+    textXAlignment,
+    textYAlignment,
+    textWrapped
+)
     local label = Instance.new("TextLabel")
-    label.Size = size; label.Position = position; label.Text = text; label.TextSize = textSize; label.Font = font
-    label.BackgroundTransparency = backgroundTransparency or 1; label.TextColor3 = textColor or Color3.fromRGB(255, 255, 255)
-    label.TextStrokeTransparency = textStrokeTransparency or 1; label.TextStrokeColor3 = textStrokeColor or Color3.new(0, 0, 0)
-    label.TextXAlignment = textXAlignment or Enum.TextXAlignment.Center; label.TextYAlignment = textYAlignment or Enum.TextYAlignment.Center
-    label.TextWrapped = textWrapped or false; label.Parent = parent
+
+    label.Size = size
+    label.Position = position
+    label.Text = text
+    label.TextSize = textSize
+    label.Font = font
+
+    label.BackgroundTransparency = backgroundTransparency or 1
+    label.TextColor3 = textColor or Color3.fromRGB(255, 255, 255)
+
+    label.TextStrokeTransparency = textStrokeTransparency or 1
+    label.TextStrokeColor3 = textStrokeColor or Color3.new(0, 0, 0)
+
+    label.TextXAlignment = textXAlignment or Enum.TextXAlignment.Center
+    label.TextYAlignment = textYAlignment or Enum.TextYAlignment.Center
+
+    label.TextWrapped = textWrapped or false
+    label.Parent = parent
+
     return label
 end
-function UIBuilder.createTextButton(parent, size, position, text, textSize, font, textColor, backgroundColor, backgroundTransparency, cornerRadius, strokeColor, strokeThickness, gradient)
+
+--###################################
+-- CRIA UM TEXTBUTTON CONFIGURADO COM OPCIONAIS
+--###################################
+function UIBuilder.createTextButton(
+    parent,
+    size,
+    position,
+    text,
+    textSize,
+    font,
+    textColor,
+    backgroundColor,
+    backgroundTransparency,
+    cornerRadius,
+    strokeColor,
+    strokeThickness,
+    gradient
+)
     local button = Instance.new("TextButton")
-    button.Size = size; button.Position = position; button.Text = text; button.TextSize = textSize; button.Font = font
-    button.TextColor3 = textColor or Color3.new(1, 1, 1); button.BackgroundColor3 = backgroundColor or Color3.fromRGB(255, 255, 255)
-    button.BackgroundTransparency = backgroundTransparency or 0; button.Parent = parent
-    if cornerRadius then UIBuilder.createUICorner(button, cornerRadius) end
-    if strokeColor then UIBuilder.createUIStroke(button, strokeColor, strokeThickness) end
-    if gradient then UIBuilder.createUIGradient(button) end
+
+    button.Size = size
+    button.Position = position
+    button.Text = text
+    button.TextSize = textSize
+    button.Font = font
+
+    button.TextColor3 = textColor or Color3.new(1, 1, 1)
+    button.BackgroundColor3 = backgroundColor or Color3.fromRGB(255, 255, 255)
+    button.BackgroundTransparency = backgroundTransparency or 0
+
+    button.Parent = parent
+
+    if cornerRadius then
+        UIBuilder.createUICorner(button, cornerRadius)
+    end
+
+    if strokeColor then
+        UIBuilder.createUIStroke(button, strokeColor, strokeThickness)
+    end
+
+    if gradient then
+        UIBuilder.createUIGradient(button)
+    end
+
     return button
 end
+
+--##############################
+-- CRIA UM IMAGELABEL CONFIGURADO
+--##############################
 function UIBuilder.createImageLabel(parent, size, position, image, backgroundTransparency, zIndex)
     local label = Instance.new("ImageLabel")
-    label.Image = image; label.Size = size; label.Position = position
-    label.BackgroundTransparency = backgroundTransparency or 1; label.ZIndex = zIndex or 1; label.Parent = parent
+
+    label.Image = image
+    label.Size = size
+    label.Position = position
+
+    label.BackgroundTransparency = backgroundTransparency or 1
+    label.ZIndex = zIndex or 1
+
+    label.Parent = parent
     return label
 end
-function UIBuilder.createTextBox(parent, size, position, placeholderText, textSize, font, textColor, backgroundColor, borderSizePixel, clearTextOnFocus, cornerRadius, strokeColor, strokeThickness)
+
+--##################################
+-- CRIA UM TEXTBOX CONFIGURADO COM OPCIONAIS
+--##################################
+function UIBuilder.createTextBox(
+    parent,
+    size,
+    position,
+    placeholderText,
+    textSize,
+    font,
+    textColor,
+    backgroundColor,
+    borderSizePixel,
+    clearTextOnFocus,
+    cornerRadius,
+    strokeColor,
+    strokeThickness
+)
     local textBox = Instance.new("TextBox")
-    textBox.PlaceholderText = placeholderText; textBox.Size = size; textBox.Position = position; textBox.Font = font; textBox.TextSize = textSize
-    textBox.TextColor3 = textColor or Color3.new(1, 1, 1); textBox.BackgroundColor3 = backgroundColor or Color3.fromRGB(255, 255, 255)
-    textBox.BorderSizePixel = borderSizePixel or 0; textBox.ClearTextOnFocus = clearTextOnFocus or false; textBox.Parent = parent
-    if cornerRadius then UIBuilder.createUICorner(textBox, cornerRadius) end
-    if strokeColor then UIBuilder.createUIStroke(textBox, strokeColor, strokeThickness) end
+
+    textBox.PlaceholderText = placeholderText
+    textBox.Size = size
+    textBox.Position = position
+    textBox.Font = font
+    textBox.TextSize = textSize
+
+    textBox.TextColor3 = textColor or Color3.new(1, 1, 1)
+    textBox.BackgroundColor3 = backgroundColor or Color3.fromRGB(255, 255, 255)
+
+    textBox.BorderSizePixel = borderSizePixel or 0
+    textBox.ClearTextOnFocus = clearTextOnFocus or false
+
+    textBox.Parent = parent
+
+    if cornerRadius then
+        UIBuilder.createUICorner(textBox, cornerRadius)
+    end
+
+    if strokeColor then
+        UIBuilder.createUIStroke(textBox, strokeColor, strokeThickness)
+    end
+
     return textBox
 end
-function UIBuilder.createScrollingFrame(parent, size, position, scrollBarThickness, scrollBarImageColor, backgroundTransparency, scrollingEnabled, scrollingDirection, elasticBehavior)
+
+--###########################################
+-- CRIA UM SCROLLINGFRAME CONFIGURADO E PERSONALIZADO
+--###########################################
+function UIBuilder.createScrollingFrame(
+    parent,
+    size,
+    position,
+    scrollBarThickness,
+    scrollBarImageColor,
+    backgroundTransparency,
+    scrollingEnabled,
+    scrollingDirection,
+    elasticBehavior
+)
     local scroll = Instance.new("ScrollingFrame")
-    scroll.Size = size; scroll.Position = position; scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-    scroll.ScrollBarThickness = scrollBarThickness or Config.SCROLLBAR_THICKNESS; scroll.ScrollBarImageColor3 = scrollBarImageColor or Config.COLOR_SCROLLBAR
-    scroll.BackgroundTransparency = backgroundTransparency or 1; scroll.ScrollingEnabled = scrollingEnabled or true
-    scroll.ScrollingDirection = scrollingDirection or Enum.ScrollingDirection.Y; scroll.ElasticBehavior = elasticBehavior or Enum.ElasticBehavior.Never
+
+    scroll.Size = size
+    scroll.Position = position
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+    scroll.ScrollBarThickness = scrollBarThickness or Config.SCROLLBAR_THICKNESS
+    scroll.ScrollBarImageColor3 = scrollBarImageColor or Config.COLOR_SCROLLBAR
+
+    scroll.BackgroundTransparency = backgroundTransparency or 1
+    scroll.ScrollingEnabled = scrollingEnabled ~= nil and scrollingEnabled or true
+
+    scroll.ScrollingDirection = scrollingDirection or Enum.ScrollingDirection.Y
+    scroll.ElasticBehavior = elasticBehavior or Enum.ElasticBehavior.Never
+
     scroll.Parent = parent
+
     return scroll
 end
+
+--##################################
+-- CRIA UM UIGridLayout CONFIGURADO
+--##################################
 function UIBuilder.createUIGridLayout(parent, cellSize, cellPadding, startCorner, horizontalAlignment)
     local gridLayout = Instance.new("UIGridLayout")
-    gridLayout.CellSize = cellSize or Config.CARD_SIZE; gridLayout.CellPadding = cellPadding or Config.CARD_PADDING
-    gridLayout.StartCorner = startCorner or Enum.StartCorner.TopLeft; gridLayout.HorizontalAlignment = horizontalAlignment or Enum.HorizontalAlignment.Center
+
+    gridLayout.CellSize = cellSize or Config.CARD_SIZE
+    gridLayout.CellPadding = cellPadding or Config.CARD_PADDING
+    gridLayout.StartCorner = startCorner or Enum.StartCorner.TopLeft
+    gridLayout.HorizontalAlignment = horizontalAlignment or Enum.HorizontalAlignment.Center
+
     gridLayout.Parent = parent
     return gridLayout
 end
+
+--##################################
+-- CRIA UM UIListLayout CONFIGURADO
+--##################################
 function UIBuilder.createUIListLayout(parent, padding, horizontalAlignment, verticalAlignment, sortOrder)
     local list = Instance.new("UIListLayout")
+
     list.Padding = padding or UDim.new(0, 5)
     list.HorizontalAlignment = horizontalAlignment or Enum.HorizontalAlignment.Center
     list.VerticalAlignment = verticalAlignment or Enum.VerticalAlignment.Top
     list.SortOrder = sortOrder or Enum.SortOrder.LayoutOrder
+
     list.Parent = parent
     return list
 end
+
+--##################################
+-- CRIA UM LOADING SPINNER ANIMADO
+--##################################
 function UIBuilder.createLoadingSpinner(parent)
-    local spinner = UIBuilder.createImageLabel(parent, UDim2.new(0.8, 0, 0.8, 0), UDim2.new(0.1, 0, 0.1, 0), "rbxassetid://10101260412", 1, 2)
+    local spinner = UIBuilder.createImageLabel(
+        parent,
+        UDim2.new(0.8, 0, 0.8, 0),
+        UDim2.new(0.1, 0, 0.1, 0),
+        "rbxassetid://10101260412",
+        1,
+        2
+    )
+
     local connectionManager = ConnectionManager:New()
-    connectionManager:Add(RunService.RenderStepped:Connect(function(delta)
-        if not spinner or not spinner.Parent then connectionManager:DisconnectAll(); return end
+
+    local renderConn = RunService.RenderStepped:Connect(function(delta)
+        if not spinner or not spinner.Parent then
+            connectionManager:DisconnectAll()
+            return
+        end
         spinner.Rotation = spinner.Rotation + (delta * 360)
-    end))
-    spinner.Destroying:Connect(function() connectionManager:DisconnectAll() end)
+    end)
+
+    connectionManager:Add(renderConn)
+    spinner.Destroying:Connect(function()
+        connectionManager:DisconnectAll()
+    end)
+
     return spinner
 end
 
@@ -259,163 +522,215 @@ PlayerController.dragButtonStart = nil
 PlayerController.dragButtonStartPos = nil
 PlayerController.connections = ConnectionManager:New()
 
+--##############################
+-- INICIALIZA O PLAYERCONTROLLER
+--##############################
 function PlayerController:init()
-    if PlayerGui:FindFirstChild(Config.GUI_NAME) then return end
+    if PlayerGui:FindFirstChild(Config.GUI_NAME) then
+        return
+    end
+
     self:setupCharacterListeners()
     self:createGUI()
     self:setupInteractions()
     self:loadAllData()
 end
 
+--########################################################
+-- CONFIGURA LISTENERS PARA EVENTOS DE RESPAWN DO PERSONAGEM
+--########################################################
 function PlayerController:setupCharacterListeners()
-    -- Configura listeners para o evento de respawn do personagem
     local function onCharacter(char)
-        -- Aguarda até que o Humanoid e o Animate estejam disponíveis
         self.character = char
-        self.humanoid = char:WaitForChild("Humanoid", 5) -- Timeout de 5 segundos
+        self.humanoid = char:WaitForChild("Humanoid", 5) -- timeout 5s
         if not self.humanoid then
-            -- warn("Humanoid não encontrado após respawn")
+            -- warn("Humanoid não encontrado após respawn.")
             return
         end
-        
-        -- Limpa emotes anteriores
+
         self:cleanupEmoteAnimation()
-        
-        -- Aguarda o Animate ser carregado e aplica as animações
+
         local animate = char:WaitForChild("Animate", 5)
         if not animate then
-
+            -- warn("Animate não encontrado após respawn.")
             return
         end
-        
-        -- Aplica as animações com um pequeno atraso para garantir inicialização
+
         task.delay(0.1, function()
             self:reloadCharacterAnimations(char)
         end)
     end
-    
-    -- Conecta o evento CharacterAdded
+
     self.connections:Add(player.CharacterAdded:Connect(onCharacter))
-    
-    -- Se o personagem já existe, aplica imediatamente
+
     if player.Character then
         onCharacter(player.Character)
     end
 end
 
+--##################################################
+-- RECARREGA AS ANIMAÇÕES DO PERSONAGEM DE FORMA ROBUSTA
+--##################################################
 function PlayerController:reloadCharacterAnimations(char)
-    -- Recarrega as animações do personagem de forma robusta
     local humanoid = char:FindFirstChildOfClass("Humanoid")
     local animate = char:FindFirstChild("Animate")
-    
+
     if not (humanoid and animate) then
-        -- warn("Humanoid ou Animate não encontrado ao tentar recarregar animações")
+        -- warn("Humanoid ou Animate não encontrado ao tentar recarregar animações.")
         return
     end
-    
+
     -- Para todas as animações em execução
     for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
         track:Stop(0)
     end
-    
+
     -- Desativa e reativa o script Animate com atraso para garantir recarregamento
     animate.Disabled = true
     task.wait(0.1) -- Atraso maior para estabilidade
+
     self:applyCustomAnimationsToCharacter(char)
+
     animate.Disabled = false
-    
+
     -- print("Animações recarregadas para o personagem: " .. char.Name)
 end
 
+--##############################################################
+-- APLICA AS ANIMAÇÕES PERSONALIZADAS AO SCRIPT ANIMATE DO PLAYER
+--##############################################################
 function PlayerController:applyCustomAnimationsToCharacter(char)
-    -- Aplica as animações customizadas ao script Animate, criando estrutura se necessário
     local animate = char:FindFirstChild("Animate")
     if not animate then
-        -- warn("Script Animate não encontrado ao aplicar animações")
+        -- warn("Script Animate não encontrado ao aplicar animações.")
         return
     end
-    
+
+    -- Cria ou atualiza uma animação dentro do Animate
     local function ensureAnimationStructure(folderName, animName, id)
         if not id then return end
+
         local folder = animate:FindFirstChild(folderName)
         if not folder then
             folder = Instance.new("Folder")
             folder.Name = folderName
             folder.Parent = animate
-            -- print("Criado folder " .. folderName .. " em Animate")
+            -- print("Criado folder '" .. folderName .. "' em Animate.")
         end
-        
+
         local anim = folder:FindFirstChild(animName)
         if not anim then
             anim = Instance.new("Animation")
             anim.Name = animName
             anim.Parent = folder
-            -- print("Criada animação " .. animName .. " em " .. folderName)
+            -- print("Criada animação '" .. animName .. "' em " .. folderName .. ".")
         end
-        
+
         if anim:IsA("Animation") then
             anim.AnimationId = "rbxassetid://" .. id
         else
-            -- warn("Objeto " .. animName .. " não é uma Animation")
+            -- warn("Objeto '" .. animName .. "' não é uma Animation.")
         end
     end
-    
-    -- Aplica todas as animações customizadas
-    ensureAnimationStructure("walk", "WalkAnim", self.customAnimations.walk)
-    ensureAnimationStructure("idle", "Animation1", self.customAnimations.idle)
-    ensureAnimationStructure("idle", "Animation2", self.customAnimations.idle)
-    ensureAnimationStructure("jump", "JumpAnim", self.customAnimations.jump)
-    ensureAnimationStructure("fall", "FallAnim", self.customAnimations.fall)
-    ensureAnimationStructure("run", "RunAnim", self.customAnimations.run)
-    ensureAnimationStructure("swim", "Swim", self.customAnimations.swim)
-    ensureAnimationStructure("climb", "ClimbAnim", self.customAnimations.climb)
+
+    -- Aplicação de cada animação customizada
+    ensureAnimationStructure("walk",  "WalkAnim",   self.customAnimations.walk)
+    ensureAnimationStructure("idle",  "Animation1", self.customAnimations.idle)
+    ensureAnimationStructure("idle",  "Animation2", self.customAnimations.idle)
+    ensureAnimationStructure("jump",  "JumpAnim",   self.customAnimations.jump)
+    ensureAnimationStructure("fall",  "FallAnim",   self.customAnimations.fall)
+    ensureAnimationStructure("run",   "RunAnim",    self.customAnimations.run)
+    ensureAnimationStructure("swim",  "Swim",       self.customAnimations.swim)
+    ensureAnimationStructure("climb", "ClimbAnim",  self.customAnimations.climb)
 end
 
+--##################################
+-- CARREGA OS DADOS DAS ANIMAÇÕES ONLINE
+--##################################
 function PlayerController:loadAnimationsData()
     local attempt = 1
+
     while attempt <= Config.MAX_RETRIES do
         local success, err = pcall(function()
-            local res = Utils.getRequest()({ Url = Config.ANIMATION_DATA_URL, Method = "GET" })
-            if res and res.Success then
-                self.animationList = HttpService:JSONDecode(res.Body)
-            else
-                error("Erro ao carregar animações: " .. (res and res.StatusMessage or "Falha na requisição"))
+            local request = Utils.getRequest()
+            local res = request({
+                Url = Config.ANIMATION_DATA_URL,
+                Method = "GET"
+            })
+
+            if not res or not res.Success then
+                local msg = res and res.StatusMessage or "Falha na requisição"
+                error("Erro ao carregar animações: " .. msg)
             end
+
+            self.animationList = HttpService:JSONDecode(res.Body)
         end)
-        if success then return true end
-        -- warn("Animações: Tentativa " .. attempt .. " falhou: " .. tostring(err))
-        if attempt == Config.MAX_RETRIES then self.animationList = {}; return false end
+
+        if success then
+            return true
+        end
+
+        if attempt == Config.MAX_RETRIES then
+            self.animationList = {}
+            return false
+        end
+
         task.wait(Config.RETRY_DELAY)
         attempt += 1
     end
+
     return false
 end
 
+--#########################################
+-- SALVA AS ANIMAÇÕES PERSONALIZADAS NO ARQUIVO
+--#########################################
 function PlayerController:saveCustomAnimations()
     local success, err = pcall(function()
-        Utils.fs.writeFile(Config.SAVED_ANIMATIONS_FILE, HttpService:JSONEncode(self.customAnimations))
+        local json = HttpService:JSONEncode(self.customAnimations)
+        Utils.fs.writeFile(Config.SAVED_ANIMATIONS_FILE, json)
     end)
+
     if not success then
-        -- warn("Erro ao salvar animações personalizadas: " .. tostring(err))
+        -- warn("[AnimSave] Falha ao salvar animações: " .. tostring(err))
     end
 end
 
+--##################################
+-- CARREGA AS ANIMAÇÕES PERSONALIZADAS
+--##################################
 function PlayerController:loadSavedAnimations()
-    if Utils.fs.isFile(Config.SAVED_ANIMATIONS_FILE) then
-        local success, data = pcall(function() return Utils.fs.readFile(Config.SAVED_ANIMATIONS_FILE) end)
-        if success and data then
-            local decodedSuccess, decodedData = pcall(function() return HttpService:JSONDecode(data) end)
-            if decodedSuccess then
-                self.customAnimations = decodedData
-            else
-                -- warn("Erro ao decodificar animações salvas: " .. tostring(decodedData))
-            end
-        else
-            -- warn("Erro ao ler arquivo de animações salvas: " .. tostring(data))
-        end
+    if not Utils.fs.isFile(Config.SAVED_ANIMATIONS_FILE) then
+        -- print("Arquivo não encontrado. Carregando animações padrão.")
+        self.customAnimations = {
+            climb = nil,
+            fall  = nil,
+            idle  = nil,
+            jump  = nil,
+            run   = nil,
+            swim  = nil,
+            walk  = nil,
+        }
+        return
+    end
+
+    local success, data = pcall(function()
+        return Utils.fs.readFile(Config.SAVED_ANIMATIONS_FILE)
+    end)
+
+    if not success or not data then
+        -- warn("Erro ao ler arquivo: " .. tostring(data))
+        return
+    end
+
+    local decodedSuccess, decodedData = pcall(function()
+        return HttpService:JSONDecode(data)
+    end)
+
+    if decodedSuccess then
+        self.customAnimations = decodedData
     else
-        -- print("Arquivo " .. Config.SAVED_ANIMATIONS_FILE .. " não encontrado. Iniciando com animações padrão.")
-        self.customAnimations = {climb = nil, fall = nil, idle = nil, jump = nil, run = nil, swim = nil, walk = nil}
+        -- warn("Erro ao decodificar JSON: " .. tostring(decodedData))
     end
 end
 
@@ -796,12 +1111,11 @@ function PlayerController:createDragButton()
     end))
 end
 
+--######################################
+-- CONFIGURA INTERAÇÕES DE GUI: TROCA DE ABAS, DRAG, BUSCA E CONTROLES
+--######################################
 function PlayerController:setupInteractions()
-    local tweenInfo = TweenInfo.new(
-        Config.TWEEN_DURATION,
-        Config.TWEEN_EASING_STYLE,
-        Config.TWEEN_EASING_DIRECTION
-    )
+    local tweenInfo = TweenInfo.new(Config.TWEEN_DURATION, Config.TWEEN_EASING_STYLE, Config.TWEEN_EASING_DIRECTION)
 
     local allTabs = {
         emotes = self.emoteTabButton,
@@ -815,7 +1129,6 @@ function PlayerController:setupInteractions()
         config = self.configPanel,
     }
 
-    -- Troca de abas
     local function setActiveTab(activeTabName)
         for name, button in pairs(allTabs) do
             local isActive = (name == activeTabName)
@@ -834,19 +1147,14 @@ function PlayerController:setupInteractions()
         end
     end
 
-    self.connections:Add(self.emoteTabButton.MouseButton1Click:Connect(function()
-        setActiveTab("emotes")
-    end))
+    -- Conexões das abas
+    for tabName, button in pairs(allTabs) do
+        self.connections:Add(button.MouseButton1Click:Connect(function()
+            setActiveTab(tabName)
+        end))
+    end
 
-    self.connections:Add(self.animationTabButton.MouseButton1Click:Connect(function()
-        setActiveTab("animations")
-    end))
-
-    self.connections:Add(self.configTabButton.MouseButton1Click:Connect(function()
-        setActiveTab("config")
-    end))
-
-    -- Toggle loop emote
+    -- Toggle loop do emote
     self.connections:Add(self.loopToggle.MouseButton1Click:Connect(function()
         self.loopEmote = not self.loopEmote
         self.loopToggle.Text = "Loop Emote: " .. (self.loopEmote and "On" or "Off")
@@ -862,7 +1170,7 @@ function PlayerController:setupInteractions()
         self.connections:DisconnectAll()
     end))
 
-    -- Minimizar e restaurar GUI
+    -- Minimizar/Restaurar GUI
     self.connections:Add(self.dragButton.MouseButton1Click:Connect(function()
         self.isMinimized = not self.isMinimized
         self.mainFrame.Visible = not self.isMinimized
@@ -873,7 +1181,7 @@ function PlayerController:setupInteractions()
         }):Play()
     end))
 
-    -- Início do drag do botão
+    -- Drag início
     self.connections:Add(self.dragButton.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             self.draggingButton = true
@@ -887,31 +1195,27 @@ function PlayerController:setupInteractions()
                     endConn:Disconnect()
                 end
             end)
-
             self.connections:Add(endConn)
         end
     end))
 
-    -- Movimento do botão
+    -- Drag movimento
     self.connections:Add(UserInputService.InputChanged:Connect(function(input)
         if self.draggingButton and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - self.dragButtonStart
-
-            TweenService:Create(self.dragButton, tweenInfo, {
-                Position = UDim2.new(
-                    self.dragButtonStartPos.X.Scale,
-                    self.dragButtonStartPos.X.Offset + delta.X,
-                    self.dragButtonStartPos.Y.Scale,
-                    self.dragButtonStartPos.Y.Offset + delta.Y
-                )
-            }):Play()
+            local newPos = UDim2.new(
+                self.dragButtonStartPos.X.Scale,
+                self.dragButtonStartPos.X.Offset + delta.X,
+                self.dragButtonStartPos.Y.Scale,
+                self.dragButtonStartPos.Y.Offset + delta.Y
+            )
+            TweenService:Create(self.dragButton, tweenInfo, { Position = newPos }):Play()
         end
     end))
 
-    -- Debounce de busca
+    -- Debounce para busca
     local function setupSearchDebounce(searchBox, updateFunction)
-        local searchTimer = nil
-        local lastSearchText = ""
+        local searchTimer, lastSearchText = nil, ""
 
         self.connections:Add(searchBox:GetPropertyChangedSignal("Text"):Connect(function()
             local currentText = searchBox.Text
@@ -936,6 +1240,9 @@ function PlayerController:setupInteractions()
     setupSearchDebounce(self.animationSearchBox, self.updateAnimationList)
 end
 
+--##########################################
+-- REPRODUZ UMA ANIMAÇÃO DE EMOTE PELO ID FORNECIDO
+--##########################################
 function PlayerController:playEmoteAnimation(emoteId)
     if not emoteId then
         -- warn("EmoteId inválido.")
@@ -946,7 +1253,7 @@ function PlayerController:playEmoteAnimation(emoteId)
     self:cleanupEmoteAnimation()
 
     if not self.character or not self.humanoid then
-        -- warn("Personagem ou humanoid não disponível para emoteId: " .. emoteId)
+        -- warn("Personagem ou Humanoid indisponível para emoteId: " .. emoteId)
         return
     end
 
@@ -981,14 +1288,18 @@ function PlayerController:playEmoteAnimation(emoteId)
             return
         end
 
-        if self.humanoid.MoveDirection.Magnitude > 0.1 or
-            self.humanoid:GetState() == Enum.HumanoidStateType.Jumping or
-            self.humanoid:GetState() == Enum.HumanoidStateType.Freefall then
+        local state = self.humanoid:GetState()
+        if self.humanoid.MoveDirection.Magnitude > 0.1
+            or state == Enum.HumanoidStateType.Jumping
+            or state == Enum.HumanoidStateType.Freefall then
             self:cleanupEmoteAnimation()
         end
     end)
 end
 
+--######################################
+-- LIMPA A ANIMAÇÃO DE EMOTE ATUAL, DESCONECTANDO E PARANDO A TRACK
+--######################################
 function PlayerController:cleanupEmoteAnimation()
     if self.currentEmoteStopConn then
         pcall(function()
@@ -1010,6 +1321,9 @@ function PlayerController:cleanupEmoteAnimation()
     end
 end
 
+--#########################################
+-- CARREGA EMOTES DA URL, RETENTANDO SE NECESSÁRIO
+--#########################################
 function PlayerController:loadEmotes()
     if not Config or not Config.MAX_RETRIES or not Config.RETRY_DELAY or not Config.EMOTE_DATA_URL then
         -- warn("Configuração inválida para loadEmotes.")
@@ -1017,7 +1331,8 @@ function PlayerController:loadEmotes()
     end
 
     local req = Utils.getRequest()
-    for i = 1, Config.MAX_RETRIES do
+
+    for attempt = 1, Config.MAX_RETRIES do
         local success, res = pcall(function()
             return req({ Url = Config.EMOTE_DATA_URL, Method = "GET" })
         end)
@@ -1029,6 +1344,7 @@ function PlayerController:loadEmotes()
 
             if ok and data then
                 local validEmotes = {}
+
                 for _, emote in ipairs(data) do
                     if emote.nome and emote.idEmote and emote.idCatalogo then
                         table.insert(validEmotes, emote)
@@ -1052,17 +1368,17 @@ function PlayerController:loadEmotes()
     return false
 end
 
+--##########################################
+-- VINCULA EVENTO DE RESPAWN DO PERSONAGEM E REPLICA EMOTES AUTOMATICAMENTE
+--##########################################
 function PlayerController:bindCharacterRespawn()
-    if self._bindedCharacterAdded then
-        return
-    end
+    if self._bindedCharacterAdded then return end
     self._bindedCharacterAdded = true
 
     local player = Players.LocalPlayer
     self.characterAddedConn = player.CharacterAdded:Connect(function(char)
         self.character = char
         self.humanoid = char:WaitForChild("Humanoid", 5)
-
         if not self.humanoid then
             -- warn("Humanoid não encontrado após CharacterAdded")
             return
@@ -1078,8 +1394,12 @@ function PlayerController:bindCharacterRespawn()
     end)
 end
 
+--########################
+-- LIMPA ANIMAÇÕES E DESCONECTA EVENTOS
+--########################
 function PlayerController:cleanupAllConnections()
     self:cleanupEmoteAnimation()
+
     if self._bindedCharacterAdded then
         pcall(function()
             self.characterAddedConn:Disconnect()
@@ -1089,6 +1409,9 @@ function PlayerController:cleanupAllConnections()
     end
 end
 
+--########################
+-- CRIA UM CARD VISUAL PARA UM EMOTE
+--########################
 function PlayerController:createEmoteCard(emote)
     local btn = Instance.new("ImageButton")
     btn.Name = emote.nome
@@ -1098,14 +1421,36 @@ function PlayerController:createEmoteCard(emote)
 
     UIBuilder.createUICorner(btn, Config.CORNER_RADIUS)
     local btnStroke = UIBuilder.createUIStroke(btn, Config.COLOR_STROKE_LIGHT, Config.BORDER_THICKNESS)
+
     btn.Image = "rbxthumb://type=Asset&id=" .. emote.idCatalogo .. "&w=420&h=420"
     btn.ImageTransparency = 0
 
-    local txtContainer = UIBuilder.createFrame(btn, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 1, -25), Config.COLOR_CARD_TEXT_BG, 0.5, 0, false, true)
-    local txt = UIBuilder.createTextLabel(txtContainer, UDim2.new(1, -10, 1, 0), UDim2.new(0, 5, 0, 0), emote.nome, 12, Config.FONT_CARD, 1, Config.COLOR_TEXT_WHITE, nil, nil, Enum.TextXAlignment.Center, Enum.TextYAlignment.Center, true)
+    local txtContainer = UIBuilder.createFrame(
+        btn,
+        UDim2.new(1, 0, 0, 25),
+        UDim2.new(0, 0, 1, -25),
+        Config.COLOR_CARD_TEXT_BG,
+        0.5, 0, false, true
+    )
+    local txt = UIBuilder.createTextLabel(
+        txtContainer,
+        UDim2.new(1, -10, 1, 0),
+        UDim2.new(0, 5, 0, 0),
+        emote.nome,
+        12,
+        Config.FONT_CARD,
+        1,
+        Config.COLOR_TEXT_WHITE,
+        nil,
+        nil,
+        Enum.TextXAlignment.Center,
+        Enum.TextYAlignment.Center,
+        true
+    )
     UIBuilder.createUIStroke(txt, Config.COLOR_CARD_TEXT_STROKE, 0.5)
 
     local tweenInfo = TweenInfo.new(Config.TWEEN_DURATION)
+
     local enterConn = btn.MouseEnter:Connect(function()
         TweenService:Create(btn, tweenInfo, { BackgroundColor3 = Config.COLOR_CARD_HOVER }):Play()
         TweenService:Create(btnStroke, tweenInfo, { Color = Config.COLOR_ACCENT_PRIMARY }):Play()
@@ -1128,118 +1473,254 @@ function PlayerController:createEmoteCard(emote)
     end)
 end
 
-function PlayerController:updateEmoteList(filter)
-    for _, child in ipairs(self.emoteScrollFrame:GetChildren()) do
-        if child:IsA("GuiObject") and child.Name ~= "UIGridLayout" then
-            child:Destroy()
-        end
-    end
 
-    local filtered = {}
-    local filterLower = string.lower(filter or "")
+--########################
+-- ATUALIZA A LISTA VISUAL DE EMOTES COM BASE EM UM FILTRO
+--########################
 
-    for _, emote in ipairs(self.emoteList) do
-        local name = string.lower(tostring(emote.nome or ""))
-        local idCatalogo = tostring(emote.idCatalogo or "")
-
-        if filterLower == "" or string.find(name, filterLower, 1, true) or string.find(idCatalogo, filterLower, 1, true) then
-            table.insert(filtered, emote)
-        end
-    end
-
-    for _, emote in ipairs(filtered) do
-        self:createEmoteCard(emote)
-    end
+function PlayerController:updateEmoteList(filter)        
+    for _, child in ipairs(self.emoteScrollFrame:GetChildren()) do        
+        if child:IsA("GuiObject") and child.Name ~= "UIGridLayout" then        
+            child:Destroy()        
+        end        
+    end        
+        
+    local filtered = {}        
+    local filterLower = string.lower(filter or "")        
+        
+    for _, emote in ipairs(self.emoteList) do        
+        local name = string.lower(tostring(emote.nome or ""))        
+        local idCatalogo = tostring(emote.idCatalogo or "")        
+        
+        if filterLower == "" or string.find(name, filterLower, 1, true) or string.find(idCatalogo, filterLower, 1, true) then        
+            table.insert(filtered, emote)        
+        end        
+    end        
+        
+    for _, emote in ipairs(filtered) do        
+        self:createEmoteCard(emote)        
+    end        
 end
 
+--########################
+-- CRIA UM CARD VISUAL PARA UMA ANIMAÇÃO PERSONALIZADA
+--########################
+
 function PlayerController:createAnimationCard(animationData, parentFrame)
+    -- Cria botão principal do card
     local btn = Instance.new("ImageButton")
-    btn.Name = animationData.nome; btn.LayoutOrder = 1; btn.BackgroundColor3 = Config.COLOR_CARD_BG; btn.Size = Config.CARD_SIZE; btn.Parent = parentFrame
+    btn.Name = animationData.nome
+    btn.LayoutOrder = 1
+    btn.BackgroundColor3 = Config.COLOR_CARD_BG
+    btn.Size = Config.CARD_SIZE
+    btn.Parent = parentFrame
+
     UIBuilder.createUICorner(btn, Config.CORNER_RADIUS)
-    
+
+    -- Define imagem do card
+    btn.Image = "rbxthumb://type=Asset&id=" .. animationData.idAsset .. "&w=420&h=420"
+    btn.ImageTransparency = 0
+
+    -- Verifica se a animação está selecionada
     local animType = self.animationTypes[animationData.nome]
     local isSelected = animType and self.customAnimations[animType] == animationData.idAnimacao
     local strokeColor = isSelected and Config.COLOR_ACCENT_PRIMARY or Config.COLOR_STROKE_LIGHT
     local btnStroke = UIBuilder.createUIStroke(btn, strokeColor, Config.BORDER_THICKNESS)
 
-    btn.Image = "rbxthumb://type=Asset&id=" .. animationData.idAsset .. "&w=420&h=420"; btn.ImageTransparency = 0 
-    
-    local txtContainer = UIBuilder.createFrame(btn, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 1, -25), Config.COLOR_CARD_TEXT_BG, 0.5, 0, false, true)
-    local txt = UIBuilder.createTextLabel(txtContainer, UDim2.new(1, -10, 1, 0), UDim2.new(0, 5, 0, 0), animationData.nome, 12, Config.FONT_CARD, 1, Config.COLOR_TEXT_WHITE, nil, nil, Enum.TextXAlignment.Center, Enum.TextYAlignment.Center, true)
+    -- Cria container para o nome no rodapé do card
+    local txtContainer = UIBuilder.createFrame(
+        btn,
+        UDim2.new(1, 0, 0, 25),
+        UDim2.new(0, 0, 1, -25),
+        Config.COLOR_CARD_TEXT_BG,
+        0.5, 0, false, true
+    )
+
+    -- Adiciona texto com o nome da animação
+    local txt = UIBuilder.createTextLabel(
+        txtContainer,
+        UDim2.new(1, -10, 1, 0),
+        UDim2.new(0, 5, 0, 0),
+        animationData.nome,
+        12,
+        Config.FONT_CARD,
+        1,
+        Config.COLOR_TEXT_WHITE,
+        nil, nil,
+        Enum.TextXAlignment.Center,
+        Enum.TextYAlignment.Center,
+        true
+    )
+
     UIBuilder.createUIStroke(txt, Config.COLOR_CARD_TEXT_STROKE, 0.5)
 
+    -- Animações ao passar o mouse
     local tweenInfo = TweenInfo.new(Config.TWEEN_DURATION)
+
     local enterConn = btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, tweenInfo, {BackgroundColor3 = Config.COLOR_CARD_HOVER}):Play()
-        if not isSelected then TweenService:Create(btnStroke, tweenInfo, {Color = Config.COLOR_ACCENT_PRIMARY}):Play() end
+        TweenService:Create(btn, tweenInfo, {
+            BackgroundColor3 = Config.COLOR_CARD_HOVER
+        }):Play()
+
+        if not isSelected then
+            TweenService:Create(btnStroke, tweenInfo, {
+                Color = Config.COLOR_ACCENT_PRIMARY
+            }):Play()
+        end
     end)
+
     local leaveConn = btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, tweenInfo, {BackgroundColor3 = Config.COLOR_CARD_BG}):Play()
-        if not isSelected then TweenService:Create(btnStroke, tweenInfo, {Color = Config.COLOR_STROKE_LIGHT}):Play() end
+        TweenService:Create(btn, tweenInfo, {
+            BackgroundColor3 = Config.COLOR_CARD_BG
+        }):Play()
+
+        if not isSelected then
+            TweenService:Create(btnStroke, tweenInfo, {
+                Color = Config.COLOR_STROKE_LIGHT
+            }):Play()
+        end
     end)
+
+    -- Aplica a animação ao clicar
     local clickConn = btn.MouseButton1Click:Connect(function()
         self:applyAnimation(animationData.idAnimacao)
     end)
-    local cardConnections = ConnectionManager:New(); cardConnections:Add(enterConn); cardConnections:Add(leaveConn); cardConnections:Add(clickConn)
-    btn.Destroying:Connect(function() cardConnections:DisconnectAll() end)
+
+    -- Gerencia conexões para evitar vazamento de memória
+    local cardConnections = ConnectionManager:New()
+    cardConnections:Add(enterConn)
+    cardConnections:Add(leaveConn)
+    cardConnections:Add(clickConn)
+
+    btn.Destroying:Connect(function()
+        cardConnections:DisconnectAll()
+    end)
 end
 
+
 function PlayerController:updateAnimationList(filter)
-    for _, child in ipairs(self.animationScrollFrame:GetChildren()) do if child:IsA("GuiObject") and child.Name ~= "UIListLayout" then child:Destroy() end end
-    
+    -- Limpa os elementos antigos
+    for _, child in ipairs(self.animationScrollFrame:GetChildren()) do
+        if child:IsA("GuiObject") and child.Name ~= "UIListLayout" then
+            child:Destroy()
+        end
+    end
+
+    -- Prepara filtro e categorizações
     local filterLower = string.lower(filter or "")
     local categorized = {}
 
     for _, anim in ipairs(self.animationList) do
         local nameLower = string.lower(tostring(anim.nome or ""))
         local bundleLower = string.lower(tostring(anim.bundleNome or "Outros"))
-        if filterLower == "" or string.find(nameLower, filterLower, 1, true) or string.find(bundleLower, filterLower, 1, true) then
-            if not categorized[anim.bundleNome] then categorized[anim.bundleNome] = {} end
-            table.insert(categorized[anim.bundleNome], anim)
+
+        if filterLower == ""
+            or string.find(nameLower, filterLower, 1, true)
+            or string.find(bundleLower, filterLower, 1, true)
+        then
+            local groupName = anim.bundleNome or "Outros"
+            if not categorized[groupName] then
+                categorized[groupName] = {}
+            end
+            table.insert(categorized[groupName], anim)
         end
     end
 
+    -- Ordena categorias
     local categoryOrder = {}
-    for name in pairs(categorized) do table.insert(categoryOrder, name) end
+    for name in pairs(categorized) do
+        table.insert(categoryOrder, name)
+    end
     table.sort(categoryOrder)
 
+    -- Cria visualização por categoria
     for i, categoryName in ipairs(categoryOrder) do
-        local categoryFrame = UIBuilder.createFrame(self.animationScrollFrame, UDim2.new(1, 0, 0, 0), UDim2.new(), nil, 1)
-        categoryFrame.Name = "Category_" .. (categoryName or "Outros")
+        -- Frame da categoria
+        local categoryFrame = UIBuilder.createFrame(
+            self.animationScrollFrame,
+            UDim2.new(1, 0, 0, 0),
+            UDim2.new(),
+            nil,
+            1
+        )
+        categoryFrame.Name = "Category_" .. categoryName
         categoryFrame.AutomaticSize = Enum.AutomaticSize.Y
         categoryFrame.LayoutOrder = i
-        UIBuilder.createUIListLayout(categoryFrame, UDim.new(0, 5), Enum.HorizontalAlignment.Center, Enum.VerticalAlignment.Top, Enum.SortOrder.LayoutOrder)
 
-        local header = UIBuilder.createTextLabel(categoryFrame, UDim2.new(1, -10, 0, Config.CATEGORY_HEADER_HEIGHT), UDim2.new(0, 5, 0, 0),
-            categoryName, 16, Config.FONT_TABS, 0, Config.COLOR_TEXT_WHITE, nil, nil, Enum.TextXAlignment.Left, Enum.TextYAlignment.Center, false)
+        UIBuilder.createUIListLayout(
+            categoryFrame,
+            UDim.new(0, 5),
+            Enum.HorizontalAlignment.Center,
+            Enum.VerticalAlignment.Top,
+            Enum.SortOrder.LayoutOrder
+        )
+
+        -- Cabeçalho
+        local header = UIBuilder.createTextLabel(
+            categoryFrame,
+            UDim2.new(1, -10, 0, Config.CATEGORY_HEADER_HEIGHT),
+            UDim2.new(0, 5, 0, 0),
+            categoryName,
+            16,
+            Config.FONT_TABS,
+            0,
+            Config.COLOR_TEXT_WHITE,
+            nil,
+            nil,
+            Enum.TextXAlignment.Left,
+            Enum.TextYAlignment.Center,
+            false
+        )
         header.LayoutOrder = 0
         header.BackgroundColor3 = Config.COLOR_CATEGORY_HEADER_BG
         UIBuilder.createUICorner(header, Config.CORNER_RADIUS)
 
-        local gridFrame = UIBuilder.createFrame(categoryFrame, UDim2.new(1, 0, 0, 0), UDim2.new(), nil, 1)
+        -- Grid de cards
+        local gridFrame = UIBuilder.createFrame(
+            categoryFrame,
+            UDim2.new(1, 0, 0, 0),
+            UDim2.new(),
+            nil,
+            1
+        )
         gridFrame.LayoutOrder = 1
         gridFrame.AutomaticSize = Enum.AutomaticSize.Y
-        UIBuilder.createUIGridLayout(gridFrame, Config.CARD_SIZE, Config.CARD_PADDING, Enum.StartCorner.TopLeft, Enum.HorizontalAlignment.Left)
 
+        UIBuilder.createUIGridLayout(
+            gridFrame,
+            Config.CARD_SIZE,
+            Config.CARD_PADDING,
+            Enum.StartCorner.TopLeft,
+            Enum.HorizontalAlignment.Left
+        )
+
+        -- Cards da categoria
         for _, animData in ipairs(categorized[categoryName]) do
             self:createAnimationCard(animData, gridFrame)
         end
     end
 end
 
+--########################
+-- CARREGA DADOS LOCAIS E REMOTOS DE EMOTES E ANIMAÇÕES
+--########################
 function PlayerController:loadAllData()
     self:loadSavedAnimations()
+
     if player.Character then
         self:applyCustomAnimationsToCharacter(player.Character)
     end
 
+    -- Carrega dados dos emotes
     coroutine.wrap(function()
         if self:loadEmotes() then
+            -- Emotes carregados com sucesso
         else
             -- warn("Não foi possível carregar os emotes. Verifique sua conexão ou a URL dos dados.")
         end
     end)()
 
+    -- Carrega dados das animações e atualiza a lista
     coroutine.wrap(function()
         if self:loadAnimationsData() then
             self:updateAnimationList("")
