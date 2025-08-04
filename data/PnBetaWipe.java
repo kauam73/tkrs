@@ -224,6 +224,124 @@ function UIBuilder.createUIStroke(parent, color, thickness)
 end
 
 --##################################
+-- CRIA UM COMPONENTE DE CRÉDITOS HORIZONTAL
+--##################################
+function UIBuilder.createCreditsSwitcher(parent, position, creditsList, textSize, font, textColor, spacing, interval, effect)
+    interval = interval or 2
+    spacing = spacing or 6
+    effect = effect or "suav"
+
+    local TweenService = game:GetService("TweenService")
+
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, -20, 0, 0)
+    container.Position = position
+    container.AnchorPoint = Vector2.new(0.5, 0)
+    container.BackgroundTransparency = 1
+    container.AutomaticSize = Enum.AutomaticSize.Y
+    container.Parent = parent
+
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.new(1, 0, 0, 0)
+    bg.AutomaticSize = Enum.AutomaticSize.Y
+    bg.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    bg.BackgroundTransparency = 0.2
+    bg.BorderSizePixel = 0
+    bg.Parent = container
+
+    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 6)
+    local stroke = Instance.new("UIStroke", bg)
+    stroke.Color = Color3.fromRGB(50, 50, 50)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.6
+
+    local layout = Instance.new("UIListLayout", bg)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, spacing)
+
+    local padding = Instance.new("UIPadding", bg)
+    padding.PaddingTop = UDim.new(0, 8)
+    padding.PaddingBottom = UDim.new(0, 8)
+    padding.PaddingLeft = UDim.new(0, 12)
+    padding.PaddingRight = UDim.new(0, 12)
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.LayoutOrder = 0
+    titleLabel.Size = UDim2.new(1, 0, 0, 0)
+    titleLabel.AutomaticSize = Enum.AutomaticSize.Y
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.TextSize = textSize * 0.7
+    titleLabel.Font = font
+    titleLabel.TextColor3 = textColor:Lerp(Color3.new(1,1,1), 0.6)
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.TextYAlignment = Enum.TextYAlignment.Top
+    titleLabel.Text = creditsList[1] and creditsList[1].title or ""
+    titleLabel.Parent = bg
+
+    local creditLabel = titleLabel:Clone()
+    creditLabel.LayoutOrder = 1
+    creditLabel.TextSize = textSize
+    creditLabel.TextColor3 = textColor
+    creditLabel.Text = creditsList[1] and creditsList[1].text or ""
+    creditLabel.Parent = bg
+
+    local currentIndex = 1
+    local running = false
+
+    local function typing(label, text, speed)
+        for i = #label.Text, 0, -1 do
+            label.Text = label.Text:sub(1, i)
+            task.wait(speed * 0.5)
+        end
+        for i = 1, #text do
+            label.Text = text:sub(1, i)
+            task.wait(speed)
+        end
+    end
+
+    local function smooth(label1, label2, newTitle, newText)
+        running = true
+        local out1 = TweenService:Create(label1, TweenInfo.new(0.3), { TextTransparency = 1 })
+        local out2 = TweenService:Create(label2, TweenInfo.new(0.3), { TextTransparency = 1 })
+        out1:Play() out2:Play()
+        out1.Completed:Wait()
+
+        label1.Text = newTitle
+        label2.Text = newText
+
+        TweenService:Create(label1, TweenInfo.new(0.3), { TextTransparency = 0 }):Play()
+        TweenService:Create(label2, TweenInfo.new(0.3), { TextTransparency = 0 }):Play()
+
+        running = false
+    end
+
+    local function next()
+        if running then return end
+        currentIndex = currentIndex % #creditsList + 1
+        local entry = creditsList[currentIndex]
+        if effect == "typing" then
+            running = true
+            task.spawn(function()
+                typing(titleLabel, entry.title or "", 0.03)
+                typing(creditLabel, entry.text or "", 0.03)
+                running = false
+            end)
+        else
+            task.spawn(smooth, titleLabel, creditLabel, entry.title or "", entry.text or "")
+        end
+    end
+
+    task.spawn(function()
+        while true do
+            task.wait(interval)
+            next()
+        end
+    end)
+
+    return container
+end
+
+--##################################
 -- CRIA UM FRAME CONFIGURADO COM OPCIONAIS
 --##################################
 function UIBuilder.createFrame(
@@ -434,14 +552,36 @@ function UIBuilder.createScrollingFrame(
     scroll.Position = position
     scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 
-    scroll.ScrollBarThickness = scrollBarThickness or Config.SCROLLBAR_THICKNESS
-    scroll.ScrollBarImageColor3 = scrollBarImageColor or Config.COLOR_SCROLLBAR
+    scroll.ScrollBarThickness = scrollBarThickness or 6
+    scroll.ScrollBarImageColor3 = scrollBarImageColor or Color3.fromRGB(180, 180, 180)
 
-    scroll.BackgroundTransparency = backgroundTransparency or 1
+    scroll.BackgroundTransparency = backgroundTransparency or 0.15
+    scroll.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+    scroll.BorderSizePixel = 0
+    scroll.ClipsDescendants = true
+    scroll.ZIndex = 2
+
     scroll.ScrollingEnabled = scrollingEnabled ~= nil and scrollingEnabled or true
-
     scroll.ScrollingDirection = scrollingDirection or Enum.ScrollingDirection.Y
-    scroll.ElasticBehavior = elasticBehavior or Enum.ElasticBehavior.Never
+    scroll.ElasticBehavior = elasticBehavior or Enum.ElasticBehavior.Always -- estilo iOS com bounce
+
+    -- Arredondamento do frame principal
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 12)
+    corner.Parent = scroll
+
+    -- Sombra interna elegante
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = Color3.fromRGB(0, 0, 0)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.8
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Parent = scroll
+
+    -- Comportamento natural de arrastar com toque e mouse já é nativo
+    -- Mas você pode ajustar o modo de scroll suave assim:
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scroll.ScrollingDirection = Enum.ScrollingDirection.Y
 
     scroll.Parent = parent
 
@@ -787,7 +927,6 @@ function PlayerController:createGUI()
     )
     self.mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 
-    -- Blur/Stroke Frame de fundo
     local blurFrame = UIBuilder.createFrame(
         self.mainFrame,
         UDim2.new(1, 20, 1, 20),
@@ -802,10 +941,30 @@ function PlayerController:createGUI()
         Config.BORDER_THICKNESS
     )
 
-    -- Adicionado para garantir que o painel principal fique sempre na tela
+    -- Lógica reforçada pra manter o frame sempre dentro da tela
     self.connections:Add(RunService.RenderStepped:Connect(function()
         if self.mainFrame.Visible then
-            Utils.keepFrameOnScreen(self.mainFrame)
+            local absPos = self.mainFrame.AbsolutePosition
+            local absSize = self.mainFrame.AbsoluteSize
+            local screenSize = self.screenGui.AbsoluteSize
+            local pos = self.mainFrame.Position
+
+            local newX = pos.X
+            local newY = pos.Y
+
+            if absPos.X < 0 then
+                newX = UDim.new(0, 0 + absSize.X * self.mainFrame.AnchorPoint.X)
+            elseif absPos.X + absSize.X > screenSize.X then
+                newX = UDim.new(0, screenSize.X - absSize.X * (1 - self.mainFrame.AnchorPoint.X))
+            end
+
+            if absPos.Y < 0 then
+                newY = UDim.new(0, 0 + absSize.Y * self.mainFrame.AnchorPoint.Y)
+            elseif absPos.Y + absSize.Y > screenSize.Y then
+                newY = UDim.new(0, screenSize.Y - absSize.Y * (1 - self.mainFrame.AnchorPoint.Y))
+            end
+
+            self.mainFrame.Position = UDim2.new(newX.Scale, newX.Offset, newY.Scale, newY.Offset)
         end
     end))
 
@@ -1043,41 +1202,52 @@ function PlayerController:createConfigPanel()
     local padding = 10
     local headerHeight = Config.HEADER_HEIGHT
     local tabHeight = Config.TAB_HEIGHT
+    local yOffset = padding + headerHeight + padding + tabHeight
 
     self.configPanel = UIBuilder.createFrame(
         self.mainFrame,
-        UDim2.new(1, -20, 1, -(padding + headerHeight + padding + tabHeight + padding)),
-        UDim2.new(0, padding, 0, padding + headerHeight + padding + tabHeight),
-        nil, 1, 0, false, false, nil, nil, nil
+        UDim2.new(1, -20, 1, -(yOffset + padding)),
+        UDim2.new(0, padding, 0, yOffset),
+        nil, 1, 0, false, false
     )
     self.configPanel.Visible = false
 
+    local posY = 10
+
     UIBuilder.createTextLabel(
         self.configPanel,
-        UDim2.new(1, -20, 0, 40),
-        UDim2.new(0, 10, 0, 10),
+        UDim2.new(1, -20, 0, 35),
+        UDim2.new(0, 10, 0, posY),
         "Configurações",
-        20, Config.FONT_TABS,
+        22, Config.FONT_TABS,
         1, Config.COLOR_TEXT_WHITE,
         0.8, Config.COLOR_TEXT_STROKE_GREY,
         Enum.TextXAlignment.Left
     )
+    posY += 40
 
-    UIBuilder.createTextLabel(
+    local credits = {
+        { title = "Criador do Painel", text = "Kauam" },
+        { title = "Tiktok", text = "Tekscripts" },
+        { title = "Roblox", text = "FXZGHS1" }
+    }
+
+    self.creditsSwitcher = UIBuilder.createCreditsSwitcher(
         self.configPanel,
-        UDim2.new(1, -20, 0, 30),
-        UDim2.new(0, 10, 0, 60),
-        "| By: Kauam     \n| ttk: Tekscripts\n| R: FXZGHS1    ",
+        UDim2.new(0.5, 0, 0, posY),
+        credits,
         16, Config.FONT_DEFAULT,
-        1, Config.COLOR_CREDITS_TEXT,
-        nil, nil,
-        Enum.TextXAlignment.Left
+        Config.COLOR_CREDITS_TEXT,
+        15,
+        2,          -- intervalo em segundos
+        "typing"    -- efeito "typing" ou "suav"
     )
+    posY += 70
 
     self.loopToggle = UIBuilder.createTextButton(
         self.configPanel,
-        Config.LOOP_TOGGLE_SIZE,
-        UDim2.new(0, 10, 0, 100),
+        UDim2.new(1, -20, 0, 40),
+        UDim2.new(0, 10, 0, posY),
         "Loop Emote: Off",
         14, Config.FONT_DEFAULT,
         Config.COLOR_TEXT_WHITE,
@@ -1085,11 +1255,12 @@ function PlayerController:createConfigPanel()
         0, Config.CORNER_RADIUS,
         nil, nil, true
     )
+    posY += 50
 
     self.closeGuiButton = UIBuilder.createTextButton(
         self.configPanel,
-        Config.CLOSE_BUTTON_SIZE,
-        UDim2.new(0, 10, 0, 150),
+        UDim2.new(1, -20, 0, 40),
+        UDim2.new(0, 10, 0, posY),
         "Fechar GUI",
         14, Config.FONT_DEFAULT,
         Config.COLOR_TEXT_WHITE,
