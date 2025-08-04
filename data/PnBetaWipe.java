@@ -1,5 +1,3 @@
-
-
 -- Core
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
@@ -55,17 +53,25 @@ Utils.fs = Utils.getFileSystem()
 
 --##################################
 -- GARANTE QUE O FRAME FIQUE DENTRO DA TELA
+-- Corrigido para ajustar a posição de forma robusta
 --##################################
 function Utils.keepFrameOnScreen(frame)
     local viewportSize = workspace.CurrentCamera.ViewportSize
     local frameSize = frame.AbsoluteSize
     local framePos = frame.AbsolutePosition
 
-    local newPosX = math.clamp(framePos.X, 0, viewportSize.X - frameSize.X)
-    local newPosY = math.clamp(framePos.Y, 0, viewportSize.Y - frameSize.Y)
+    -- Calcula a nova posição X e Y, garantindo que a borda direita e inferior não saiam da tela.
+    local newX = math.clamp(framePos.X, 0, viewportSize.X - frameSize.X)
+    local newY = math.clamp(framePos.Y, 0, viewportSize.Y - frameSize.Y)
 
-    if newPosX ~= framePos.X or newPosY ~= framePos.Y then
-        frame.Position = UDim2.new(0, newPosX, 0, newPosY)
+    if newX ~= framePos.X or newY ~= framePos.Y then
+        -- A diferença de offset necessária para ajustar a posição
+        local xOffset = newX - framePos.X
+        local yOffset = newY - framePos.Y
+
+        -- Cria uma nova UDim2 com o novo offset
+        frame.Position = UDim2.new(frame.Position.X.Scale, frame.Position.X.Offset + xOffset,
+                                   frame.Position.Y.Scale, frame.Position.Y.Offset + yOffset)
     end
 end
 
@@ -386,6 +392,8 @@ function UIBuilder.createTextBox(
     textBox.Position = position
     textBox.Font = font
     textBox.TextSize = textSize
+    
+    textBox.Text = "" -- Garante que o texto inicial é vazio
 
     textBox.TextColor3 = textColor or Color3.new(1, 1, 1)
     textBox.BackgroundColor3 = backgroundColor or Color3.fromRGB(255, 255, 255)
@@ -780,7 +788,7 @@ function PlayerController:createGUI()
     self.mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 
     -- Blur/Stroke Frame de fundo
-    UIBuilder.createFrame(
+    local blurFrame = UIBuilder.createFrame(
         self.mainFrame,
         UDim2.new(1, 20, 1, 20),
         UDim2.new(0, -10, 0, -10),
@@ -794,6 +802,7 @@ function PlayerController:createGUI()
         Config.BORDER_THICKNESS
     )
 
+    -- Adicionado para garantir que o painel principal fique sempre na tela
     self.connections:Add(RunService.RenderStepped:Connect(function()
         if self.mainFrame.Visible then
             Utils.keepFrameOnScreen(self.mainFrame)
@@ -892,8 +901,8 @@ function PlayerController:createHeaderAndTabs()
             self.panelStartPos = self.mainFrame.Position
 
             local inputEndConn
-            inputEndConn = input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
+            inputEndConn = UserInputService.InputEnded:Connect(function(inputEnded)
+                if inputEnded.UserInputType == Enum.UserInputType.MouseButton1 or inputEnded.UserInputType == Enum.UserInputType.Touch then
                     self.isDraggingPanel = false
                     inputEndConn:Disconnect()
                 end
@@ -903,15 +912,16 @@ function PlayerController:createHeaderAndTabs()
         end
     end))
 
-    self.connections:Add(header.InputChanged:Connect(function(input)
+    self.connections:Add(UserInputService.InputChanged:Connect(function(input)
         if (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) and self.isDraggingPanel then
             local delta = input.Position - self.panelDragStart
-            self.mainFrame.Position = UDim2.new(
+            local newPos = UDim2.new(
                 self.panelStartPos.X.Scale,
                 self.panelStartPos.X.Offset + delta.X,
                 self.panelStartPos.Y.Scale,
                 self.panelStartPos.Y.Offset + delta.Y
             )
+            self.mainFrame.Position = newPos
         end
     end))
 end
@@ -1048,7 +1058,9 @@ function PlayerController:createConfigPanel()
         UDim2.new(0, 10, 0, 10),
         "Configurações",
         20, Config.FONT_TABS,
-        1, Config.COLOR_TEXT_WHITE
+        1, Config.COLOR_TEXT_WHITE,
+        0.8, Config.COLOR_TEXT_STROKE_GREY,
+        Enum.TextXAlignment.Left
     )
 
     UIBuilder.createTextLabel(
@@ -1057,7 +1069,9 @@ function PlayerController:createConfigPanel()
         UDim2.new(0, 10, 0, 60),
         "| By: Kauam     \n| ttk: Tekscripts\n| R: FXZGHS1    ",
         16, Config.FONT_DEFAULT,
-        1, Config.COLOR_CREDITS_TEXT
+        1, Config.COLOR_CREDITS_TEXT,
+        nil, nil,
+        Enum.TextXAlignment.Left
     )
 
     self.loopToggle = UIBuilder.createTextButton(
@@ -1093,7 +1107,7 @@ function PlayerController:createDragButton()
     self.dragButton = UIBuilder.createTextButton(
         self.screenGui,
         Config.DRAG_BUTTON_SIZE_NORMAL,
-        UDim2.new(0.5, 200, 0.5, -200),
+        UDim2.new(1, -120, 0, 60), -- Posicionado no canto superior direito para melhor visibilidade
         "fechar",
         18, Config.FONT_DRAG_BUTTON,
         Config.COLOR_TEXT_WHITE,
@@ -1106,6 +1120,7 @@ function PlayerController:createDragButton()
     local btnGrad = UIBuilder.createUIGradient(self.dragButton)
     btnGrad.Transparency = NumberSequence.new(0.4)
 
+    -- Adicionado para garantir que o botão flutuante fique sempre na tela
     self.connections:Add(RunService.RenderStepped:Connect(function()
         Utils.keepFrameOnScreen(self.dragButton)
     end))
@@ -1209,7 +1224,7 @@ function PlayerController:setupInteractions()
                 self.dragButtonStartPos.Y.Scale,
                 self.dragButtonStartPos.Y.Offset + delta.Y
             )
-            TweenService:Create(self.dragButton, tweenInfo, { Position = newPos }):Play()
+            self.dragButton.Position = newPos
         end
     end))
 
@@ -1667,7 +1682,7 @@ function PlayerController:updateAnimationList(filter)
             Config.COLOR_TEXT_WHITE,
             nil,
             nil,
-            Enum.TextXAlignment.Left,
+            Enum.TextXAlignment.Center,
             Enum.TextYAlignment.Center,
             false
         )
@@ -1691,7 +1706,7 @@ function PlayerController:updateAnimationList(filter)
             Config.CARD_SIZE,
             Config.CARD_PADDING,
             Enum.StartCorner.TopLeft,
-            Enum.HorizontalAlignment.Left
+            Enum.HorizontalAlignment.Center
         )
 
         -- Cards da categoria
