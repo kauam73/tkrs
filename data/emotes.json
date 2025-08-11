@@ -828,21 +828,21 @@
         "thumbnail": "https://tr.rbxcdn.com/180DAY-e3c4a8b587d0bcff73667ac97becb608/420/420/EmoteAnimation/Png/noFilter"
     },
     {
-        "idCatalogo": "77500244240572",
-        "nome": "fan",
-        "idEmote": "77500244240572",
-        "thumbnail": "https://tr.rbxcdn.com/180DAY-04818d55186d98e0196369edb9e8f316/420/420/EmoteAnimation/Png/noFilter"
-    },
-    {
-        "idCatalogo": "116039916991602",
-        "nome": "Charleston",
-        "idEmote": "116039916991602",
-        "thumbnail": "https://tr.rbxcdn.com/180DAY-491a5fc85b64c3675d58b320494efbb8/420/420/EmoteAnimation/Png/noFilter"
-    },
-    {
         "idCatalogo": "100264861073913",
-        "nome": "Cute Sit",
-        "idEmote": "100264861073913",
+        "nome": "sit Cute
+        "idEmote": "94193231139354",
         "thumbnail": "https://tr.rbxcdn.com/180DAY-fd8df371572c6841769302998c2d2f09/420/420/EmoteAnimation/Png/noFilter"
+    },
+    {
+        "idCatalogo": "76293199076231",
+        "nome": "cute & petite sit",
+        "idEmote": "133890175309618",
+        "thumbnail": null,
+    },
+    {
+        "idCatalogo": "133549872370068",
+        "nome": "Cute Adoring You",
+        "idEmote": "113715180205983",
+        "thumbnail": null,
     }
 ]
