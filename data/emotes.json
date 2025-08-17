@@ -1119,28 +1119,48 @@
         "idEmote": "133991116526872"
     },
     {
-        "idCatalogo": "106383862917130",
-        "nome": "Magician Hat Fix Idle",
-        "idEmote": "139433213852503"
-    },
-    {
-        "idCatalogo": "74455038014111",
-        "nome": "Nonchalant Idle AURA",
-        "idEmote": "85573078572941"
-    },
-    {
-        "idCatalogo": "118440871176115",
-        "nome": "AURA Farming Sit",
-        "idEmote": "75947185782811"
-    },
-    {
-        "idCatalogo": "101573394483995",
-        "nome": "Effortless Aura Pose",
-        "idEmote": "133418516499878"
-    },
-    {
-        "idCatalogo": "82096188761745",
-        "nome": "Aura Idle",
-        "idEmote": "122746752555782"
-    }
+    "idCatalogo": "106383862917130",
+    "nome": "Magician Hat Fix Idle",
+    "idEmote": "139433213852503"
+},
+{
+    "idCatalogo": "74455038014111",
+    "nome": "Nonchalant Idle AURA",
+    "idEmote": "85573078572941"
+},
+{
+    "idCatalogo": "118440871176115",
+    "nome": "AURA Farming Sit",
+    "idEmote": "75947185782811"
+},
+{
+    "idCatalogo": "101573394483995",
+    "nome": "Effortless Aura Pose",
+    "idEmote": "133418516499878"
+},
+{
+    "idCatalogo": "82096188761745",
+    "nome": "Aura Idle",
+    "idEmote": "122746752555782"
+},
+{
+    "idCatalogo": "98064631733787",
+    "nome": "Do That Thang",
+    "idEmote": "96673018720208"
+},
+{
+    "idCatalogo": "82373416441271",
+    "nome": "Ting Tang Cute Dance",
+    "idEmote": "136973654263823"
+},
+{
+    "idCatalogo": "79463634071156",
+    "nome": "Matching Kiss 1",
+    "idEmote": "118852929393077"
+},
+{
+    "idCatalogo": "74526858335866",
+    "nome": "Matching Kiss 2",
+    "idEmote": "122666806434277"
+}
 ]
