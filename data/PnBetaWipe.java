@@ -228,7 +228,7 @@ end
 --##################################
 function UIBuilder.createCreditsSwitcher(parent, position, creditsList, textSize, font, textColor, spacing, interval, effect)
     interval = interval or 2
-    spacing = spacing or 6
+    spacing = spacing or 2 -- bem menor para deixar o título mais próximo do texto
     effect = effect or "suav"
 
     local TweenService = game:GetService("TweenService")
@@ -260,58 +260,58 @@ function UIBuilder.createCreditsSwitcher(parent, position, creditsList, textSize
     layout.Padding = UDim.new(0, spacing)
 
     local padding = Instance.new("UIPadding", bg)
-    padding.PaddingTop = UDim.new(0, 8)
-    padding.PaddingBottom = UDim.new(0, 8)
-    padding.PaddingLeft = UDim.new(0, 12)
-    padding.PaddingRight = UDim.new(0, 12)
+    padding.PaddingTop = UDim.new(0, 6)
+    padding.PaddingBottom = UDim.new(0, 6)
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
 
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.LayoutOrder = 0
-    titleLabel.Size = UDim2.new(1, 0, 0, 0)
-    titleLabel.AutomaticSize = Enum.AutomaticSize.Y
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.TextSize = textSize * 0.7
-    titleLabel.Font = font
-    titleLabel.TextColor3 = textColor:Lerp(Color3.new(1,1,1), 0.6)
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.TextYAlignment = Enum.TextYAlignment.Top
-    titleLabel.Text = creditsList[1] and creditsList[1].title or ""
-    titleLabel.Parent = bg
+    local function createLabel(order, sizeMultiplier, color)
+        local lbl = Instance.new("TextLabel")
+        lbl.LayoutOrder = order
+        lbl.Size = UDim2.new(1, 0, 0, 0)
+        lbl.AutomaticSize = Enum.AutomaticSize.Y
+        lbl.BackgroundTransparency = 1
+        lbl.TextSize = textSize * sizeMultiplier
+        lbl.Font = font
+        lbl.TextColor3 = color
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.TextYAlignment = Enum.TextYAlignment.Top
+        lbl.TextWrapped = true -- quebra de linha automática
+        lbl.Parent = bg
+        return lbl
+    end
 
-    local creditLabel = titleLabel:Clone()
-    creditLabel.LayoutOrder = 1
-    creditLabel.TextSize = textSize
-    creditLabel.TextColor3 = textColor
-    creditLabel.Text = creditsList[1] and creditsList[1].text or ""
-    creditLabel.Parent = bg
+    local titleLabel = createLabel(0, 0.8, textColor:Lerp(Color3.new(1,1,1), 0.6))
+    local creditLabel = createLabel(1, 1, textColor)
 
     local currentIndex = 1
     local running = false
+    local stopLoop = false
 
     local function typing(label, text, speed)
-        for i = #label.Text, 0, -1 do
-            label.Text = label.Text:sub(1, i)
-            task.wait(speed * 0.5)
-        end
+        label.Text = ""
         for i = 1, #text do
             label.Text = text:sub(1, i)
             task.wait(speed)
         end
     end
 
-    local function smooth(label1, label2, newTitle, newText)
+    local function smooth(labels, newTexts)
         running = true
-        local out1 = TweenService:Create(label1, TweenInfo.new(0.3), { TextTransparency = 1 })
-        local out2 = TweenService:Create(label2, TweenInfo.new(0.3), { TextTransparency = 1 })
-        out1:Play() out2:Play()
-        out1.Completed:Wait()
+        local tweens = {}
+        for i, lbl in ipairs(labels) do
+            table.insert(tweens, TweenService:Create(lbl, TweenInfo.new(0.3), { TextTransparency = 1 }))
+        end
+        for _, t in ipairs(tweens) do t:Play() end
+        tweens[1].Completed:Wait()
 
-        label1.Text = newTitle
-        label2.Text = newText
+        for i, lbl in ipairs(labels) do
+            lbl.Text = newTexts[i]
+        end
 
-        TweenService:Create(label1, TweenInfo.new(0.3), { TextTransparency = 0 }):Play()
-        TweenService:Create(label2, TweenInfo.new(0.3), { TextTransparency = 0 }):Play()
-
+        for i, lbl in ipairs(labels) do
+            TweenService:Create(lbl, TweenInfo.new(0.3), { TextTransparency = 0 }):Play()
+        end
         running = false
     end
 
@@ -327,18 +327,18 @@ function UIBuilder.createCreditsSwitcher(parent, position, creditsList, textSize
                 running = false
             end)
         else
-            task.spawn(smooth, titleLabel, creditLabel, entry.title or "", entry.text or "")
+            task.spawn(smooth, {titleLabel, creditLabel}, {entry.title or "", entry.text or ""})
         end
     end
 
     task.spawn(function()
-        while true do
+        while not stopLoop do
             task.wait(interval)
             next()
         end
     end)
 
-    return container
+    return container, function() stopLoop = true end
 end
 
 --##################################
@@ -468,6 +468,138 @@ function UIBuilder.createTextButton(
     return button
 end
 
+--###################################
+-- CRIA UM DIALOG PARA INTERAÇÃO COM USUÁRIO
+--###################################
+function UIBuilder.createDialog(
+    parent,
+    titleText,
+    messageText,
+    showYes,
+    showNo,
+    closeOnOutside
+)
+    -- Overlay full screen
+    local screen = Instance.new("Frame")
+    screen.AnchorPoint = Vector2.new(0,0)
+    screen.Position = UDim2.fromOffset(0,0)
+    screen.Size = UDim2.fromScale(1,1)
+    screen.BackgroundColor3 = Config.COLOR_BLUR_BACKGROUND
+    screen.BackgroundTransparency = Config.COLOR_BLUR_TRANSPARENCY
+    screen.ZIndex = 999
+    screen.ClipsDescendants = false
+    screen.Active = true
+    screen.Parent = parent
+
+    if closeOnOutside then
+        screen.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                screen:Destroy()
+            end
+        end)
+    end
+
+    -- Caixa do diálogo
+    local dialog = Instance.new("Frame")
+    dialog.Size = UDim2.new(0, 320, 0, 180)
+    dialog.Position = UDim2.fromScale(0.5, 0.5)
+    dialog.AnchorPoint = Vector2.new(0.5, 0.5)
+    dialog.BackgroundColor3 = Config.COLOR_BACKGROUND_DARK
+    dialog.BackgroundTransparency = Config.COLOR_BACKGROUND_TRANSPARENCY
+    dialog.BorderSizePixel = 0
+    dialog.ZIndex = 1000
+    dialog.Parent = screen
+
+    UIBuilder.createUICorner(dialog, Config.CORNER_RADIUS)
+    UIBuilder.createUIStroke(dialog, Config.COLOR_STROKE_LIGHT, Config.BORDER_THICKNESS)
+
+    -- Título
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, -20, 0, 28)
+    title.Position = UDim2.new(0, 10, 0, 8)
+    title.BackgroundTransparency = 1
+    title.Text = titleText or "Aviso"
+    title.TextSize = 18
+    title.Font = Config.FONT_HEADER
+    title.TextColor3 = Config.COLOR_TEXT_WHITE
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.ZIndex = 1001
+    title.Parent = dialog
+
+    -- Mensagem
+    local message = Instance.new("TextLabel")
+    message.Size = UDim2.new(1, -20, 0, 70)
+    message.Position = UDim2.new(0, 10, 0, 40)
+    message.BackgroundTransparency = 1
+    message.TextWrapped = true
+    message.Text = messageText or ""
+    message.TextSize = 16
+    message.Font = Config.FONT_DEFAULT
+    message.TextColor3 = Config.COLOR_TEXT_WHITE
+    message.TextXAlignment = Enum.TextXAlignment.Left
+    message.TextYAlignment = Enum.TextYAlignment.Top
+    message.ZIndex = 1001
+    message.Parent = dialog
+
+    -- Container dos botões
+    local buttonContainer = Instance.new("Frame")
+    buttonContainer.Size = UDim2.new(1, -20, 0, 40)
+    buttonContainer.Position = UDim2.new(0, 10, 1, -50)
+    buttonContainer.BackgroundTransparency = 1
+    buttonContainer.ZIndex = 1001
+    buttonContainer.Parent = dialog
+
+    local layout = Instance.new("UIListLayout")
+    layout.FillDirection = Enum.FillDirection.Horizontal
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.Padding = UDim.new(0, 10)
+    layout.Parent = buttonContainer
+
+    local callbacks = {}
+
+    if showYes then
+        local yesButton = UIBuilder.createTextButton(
+            buttonContainer,
+            UDim2.new(0.5, -5, 1, 0),
+            UDim2.fromOffset(0,0),
+            "Sim",
+            16, Config.FONT_DEFAULT,
+            Config.COLOR_TEXT_WHITE,
+            Config.COLOR_ACCENT_PRIMARY,
+            0, Config.CORNER_RADIUS
+        )
+        yesButton.ZIndex = 1002
+        yesButton.MouseButton1Click:Connect(function()
+            if callbacks.onYes then callbacks.onYes() end
+            screen:Destroy()
+        end)
+    end
+
+    if showNo then
+        local noButton = UIBuilder.createTextButton(
+            buttonContainer,
+            UDim2.new(0.5, -5, 1, 0),
+            UDim2.fromOffset(0,0),
+            "Não",
+            16, Config.FONT_DEFAULT,
+            Config.COLOR_TEXT_WHITE,
+            Config.COLOR_CLOSE_BUTTON_BG,
+            0, Config.CORNER_RADIUS
+        )
+        noButton.ZIndex = 1002
+        noButton.MouseButton1Click:Connect(function()
+            if callbacks.onNo then callbacks.onNo() end
+            screen:Destroy()
+        end)
+    end
+
+    return {
+        Frame = screen,
+        OnYes = function(fn) callbacks.onYes = fn end,
+        OnNo = function(fn) callbacks.onNo = fn end,
+        Close = function() screen:Destroy() end
+    }
+end
 --##############################
 -- CRIA UM IMAGELABEL CONFIGURADO
 --##############################
@@ -748,6 +880,17 @@ end
 -- APLICA AS ANIMAÇÕES PERSONALIZADAS AO SCRIPT ANIMATE DO PLAYER
 --##############################################################
 function PlayerController:applyCustomAnimationsToCharacter(char)
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if not humanoid then
+        return
+    end
+
+    -- Bloqueia caso seja R6
+    if humanoid.RigType ~= Enum.HumanoidRigType.R15 then
+        -- print("Personagem é R6, animações customizadas não serão aplicadas.")
+        return
+    end
+
     local animate = char:FindFirstChild("Animate")
     if not animate then
         -- warn("Script Animate não encontrado ao aplicar animações.")
@@ -763,7 +906,6 @@ function PlayerController:applyCustomAnimationsToCharacter(char)
             folder = Instance.new("Folder")
             folder.Name = folderName
             folder.Parent = animate
-            -- print("Criado folder '" .. folderName .. "' em Animate.")
         end
 
         local anim = folder:FindFirstChild(animName)
@@ -771,13 +913,10 @@ function PlayerController:applyCustomAnimationsToCharacter(char)
             anim = Instance.new("Animation")
             anim.Name = animName
             anim.Parent = folder
-            -- print("Criada animação '" .. animName .. "' em " .. folderName .. ".")
         end
 
         if anim:IsA("Animation") then
             anim.AnimationId = "rbxassetid://" .. id
-        else
-            -- warn("Objeto '" .. animName .. "' não é uma Animation.")
         end
     end
 
@@ -1226,11 +1365,11 @@ function PlayerController:createConfigPanel()
     )
     posY += 40
 
-    local credits = {
-        { title = "Criador do Painel", text = "Kauam" },
-        { title = "Tiktok", text = "Tekscripts" },
-        { title = "Roblox", text = "FXZGHS1" }
-    }
+	local credits = {
+	    { title = "Criador", text = "Kauam" },
+	    { title = "TikTok", text = "@Tekscripts" },
+	    { title = "Roblox", text = "FXZGHS1" }
+	}
 
     self.creditsSwitcher = UIBuilder.createCreditsSwitcher(
         self.configPanel,
@@ -1349,12 +1488,27 @@ function PlayerController:setupInteractions()
         end
     end))
 
-    -- Fechar GUI
-    self.connections:Add(self.closeGuiButton.MouseButton1Click:Connect(function()
-        self:cleanupEmoteAnimation()
-        self.screenGui:Destroy()
-        self.connections:DisconnectAll()
-    end))
+    -- Fechar GUI com confirmação
+	self.connections:Add(self.closeGuiButton.MouseButton1Click:Connect(function()
+	    local dialog = UIBuilder.createDialog(
+	        self.screenGui,                -- parent (fica em cima da tela inteira)
+	        "Confirmar saída",             -- título
+	        "Você realmente deseja fechar a interface?", -- mensagem
+	        true,                          -- mostrar botão Sim
+	        true,                          -- mostrar botão Não
+	        false                          -- não fechar ao clicar fora (obrigar escolha)
+	    )
+	
+	    dialog.OnYes(function()
+	        self:cleanupEmoteAnimation()
+	        self.screenGui:Destroy()
+	        self.connections:DisconnectAll()
+	    end)
+	
+	    dialog.OnNo(function()
+	        -- simplesmente fecha o diálogo sem destruir a GUI
+	    end)
+	end))
 
     -- Minimizar/Restaurar GUI
     self.connections:Add(self.dragButton.MouseButton1Click:Connect(function()
