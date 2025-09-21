@@ -18,6 +18,7 @@ local DESIGN = {
     FloatButtonColor = Color3.fromRGB(50, 50, 50),
     TabActiveColor = Color3.fromRGB(70, 70, 70),
     TabInactiveColor = Color3.fromRGB(40, 40, 40),
+    ResizeBarColor = Color3.fromRGB(70, 70, 70),
 
     -- Tamanhos e Dimensões
     WindowSize = UDim2.new(0, 400, 0, 500),
@@ -26,7 +27,9 @@ local DESIGN = {
     ComponentPadding = 10,
     ContainerPadding = 10,
     FloatButtonSize = UDim2.new(0, 50, 0, 50),
-    TabButtonHeight = 30,
+    TabButtonWidth = 80, -- Largura do botão da aba
+    TabPanelWidth = 100, -- Largura do painel de abas
+    ResizeHandleSize = 10,
 
     -- Outros
     CornerRadius = 8
@@ -35,7 +38,6 @@ local DESIGN = {
 ---
 -- Funções de Criação de Componentes
 ---
-
 local function addRoundedCorners(instance, radius)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius)
@@ -126,6 +128,13 @@ function UIManager.new(name, parent)
     windowGradient.Rotation = 90
     windowGradient.Parent = self.Window
 
+    -- Barra de Título para arrastar
+    local titleBar = Instance.new("Frame")
+    titleBar.Size = UDim2.new(1, 0, 0, DESIGN.TitleHeight)
+    titleBar.Position = UDim2.new(0, 0, 0, 0)
+    titleBar.BackgroundTransparency = 1
+    titleBar.Parent = self.Window
+    
     local title = Instance.new("TextLabel")
     title.Text = name or "UIManager"
     title.Size = UDim2.new(1, -DESIGN.TitleHeight, 0, DESIGN.TitleHeight)
@@ -134,7 +143,27 @@ function UIManager.new(name, parent)
     title.TextColor3 = DESIGN.TitleColor
     title.TextScaled = true
     title.Font = Enum.Font.Roboto
-    title.Parent = self.Window
+    title.Parent = titleBar
+
+    -- Lógica de arrastar a janela
+    local isDragging = false
+    local dragStartPos = Vector2.new()
+    titleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = true
+            dragStartPos = game:GetService("UserInputService"):GetMouseLocation() - self.Window.AbsolutePosition
+        end
+    end)
+    titleBar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isDragging = false
+        end
+    end)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            self.Window.Position = UDim2.new(0, input.Position.X - dragStartPos.X, 0, input.Position.Y - dragStartPos.Y)
+        end
+    end)
 
     local minimizeBtn = Instance.new("TextButton")
     minimizeBtn.Text = "–"
@@ -144,7 +173,7 @@ function UIManager.new(name, parent)
     minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     minimizeBtn.Font = Enum.Font.Roboto
     minimizeBtn.TextScaled = true
-    minimizeBtn.Parent = self.Window
+    minimizeBtn.Parent = titleBar
 
     minimizeBtn.MouseButton1Click:Connect(function()
         self:Minimize()
@@ -153,67 +182,103 @@ function UIManager.new(name, parent)
     addRoundedCorners(minimizeBtn, DESIGN.CornerRadius)
     addHoverEffect(minimizeBtn, DESIGN.MinimizeButtonColor, DESIGN.ComponentHoverColor)
 
+    -- Float Button com lógica de arrastar melhorada
     self.FloatButton = Instance.new("Frame")
     self.FloatButton.Size = UDim2.new(0, 100, 0, 50)
     self.FloatButton.Position = UDim2.new(0.5, -50, 1, -100)
-    self.FloatButton.BackgroundTransparency = 1
+    self.FloatButton.BackgroundColor3 = DESIGN.FloatButtonColor
     self.FloatButton.Visible = false
     self.FloatButton.Parent = self.ScreenGui
+    addRoundedCorners(self.FloatButton, DESIGN.CornerRadius)
+
+    local dragPart = Instance.new("Frame")
+    dragPart.Size = UDim2.new(1, -50, 1, 0)
+    dragPart.BackgroundTransparency = 1
+    dragPart.Parent = self.FloatButton
+    local isFloatDragging = false
+    local floatDragStartPos = Vector2.new()
+
+    dragPart.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isFloatDragging = true
+            floatDragStartPos = game:GetService("UserInputService"):GetMouseLocation() - self.FloatButton.AbsolutePosition
+        end
+    end)
+    dragPart.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isFloatDragging = false
+        end
+    end)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if isFloatDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            self.FloatButton.Position = UDim2.new(0, input.Position.X - floatDragStartPos.X, 0, input.Position.Y - floatDragStartPos.Y)
+        end
+    end)
     
-    local expandBtn = createButton("Expandir", UDim2.new(0.5, 0, 1, 0), self.FloatButton)
+    local expandBtn = createButton(">", UDim2.new(0, 50, 1, 0), self.FloatButton)
+    expandBtn.Text = "Abrir"
     expandBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     expandBtn.Font = Enum.Font.Roboto
-    
-    local dragBtn = createButton("Arrastar", UDim2.new(0.5, 0, 1, 0), self.FloatButton)
-    dragBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    dragBtn.Font = Enum.Font.Roboto
-    dragBtn.Position = UDim2.new(0.5, 0, 0, 0)
+    expandBtn.Position = UDim2.new(1, -50, 0, 0)
 
-    local floatLayout = Instance.new("UIListLayout")
-    floatLayout.FillDirection = Enum.FillDirection.Horizontal
-    floatLayout.Parent = self.FloatButton
-
-    local isDragging = false
-    local dragStartPosition = Vector2.new()
-    dragBtn.MouseButton1Down:Connect(function(x, y)
-        isDragging = true
-        dragStartPosition = Vector2.new(x, y) - self.FloatButton.Position.Offset
-    end)
-
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local newPos = input.Position - dragStartPosition
-            self.FloatButton.Position = UDim2.new(0, newPos.X, 0, newPos.Y)
-        end
-    end)
-
-    game:GetService("UserInputService").InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDragging = false
-        end
-    end)
-    
     expandBtn.MouseButton1Click:Connect(function()
         self:Expand()
     end)
 
-    -- Containers para os botões das abas e o conteúdo das abas
+    -- Nova Estrutura de Tabs
     self.TabButtonContainer = Instance.new("Frame")
-    self.TabButtonContainer.Size = UDim2.new(1, 0, 0, DESIGN.TabButtonHeight)
-    self.TabButtonContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight)
-    self.TabButtonContainer.BackgroundTransparency = 1
+    self.TabButtonContainer.Size = UDim2.new(0, DESIGN.TabPanelWidth, 1, -DESIGN.TitleHeight)
+    self.TabButtonContainer.Position = UDim2.new(1, -DESIGN.TabPanelWidth, 0, DESIGN.TitleHeight)
+    self.TabButtonContainer.BackgroundColor3 = DESIGN.TabInactiveColor
     self.TabButtonContainer.Parent = self.Window
     
     local tabLayout = Instance.new("UIListLayout")
-    tabLayout.FillDirection = Enum.FillDirection.Horizontal
     tabLayout.Padding = UDim.new(0, 5)
     tabLayout.Parent = self.TabButtonContainer
 
     self.TabContentContainer = Instance.new("Frame")
-    self.TabContentContainer.Size = UDim2.new(1, 0, 1, -DESIGN.TitleHeight - DESIGN.TabButtonHeight)
-    self.TabContentContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight + DESIGN.TabButtonHeight)
+    self.TabContentContainer.Size = UDim2.new(1, -DESIGN.TabPanelWidth, 1, -DESIGN.TitleHeight)
+    self.TabContentContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight)
     self.TabContentContainer.BackgroundTransparency = 1
     self.TabContentContainer.Parent = self.Window
+
+    -- Barra de Redimensionar
+    local resizeHandle = Instance.new("Frame")
+    resizeHandle.Size = UDim2.new(0, DESIGN.ResizeHandleSize, 0, DESIGN.ResizeHandleSize)
+    resizeHandle.Position = UDim2.new(1, -DESIGN.ResizeHandleSize, 1, -DESIGN.ResizeHandleSize)
+    resizeHandle.BackgroundColor3 = DESIGN.ResizeBarColor
+    resizeHandle.Parent = self.Window
+    addRoundedCorners(resizeHandle, 5)
+
+    local isResizing = false
+    local resizeStartPos = Vector2.new()
+    local originalSize = Vector2.new()
+
+    resizeHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isResizing = true
+            resizeStartPos = game:GetService("UserInputService"):GetMouseLocation()
+            originalSize = self.Window.AbsoluteSize
+        end
+    end)
+    resizeHandle.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            isResizing = false
+        end
+    end)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local mousePos = input.Position
+            local newSizeX = originalSize.X + (mousePos.X - resizeStartPos.X)
+            local newSizeY = originalSize.Y + (mousePos.Y - resizeStartPos.Y)
+            
+            -- Limites de tamanho (opcional, mas recomendado)
+            newSizeX = math.max(newSizeX, 200)
+            newSizeY = math.max(newSizeY, 200)
+
+            self.Window.Size = UDim2.new(0, newSizeX, 0, newSizeY)
+        end
+    end)
     
     return self
 end
@@ -221,7 +286,6 @@ end
 ---
 -- Lógica de Abas
 ---
-
 function UIManager:CreateTab(options)
     local tabTitle = options.Title or "Nova Aba"
     local tab = Tab.new(tabTitle, self.TabContentContainer)
@@ -229,11 +293,12 @@ function UIManager:CreateTab(options)
 
     local tabButton = Instance.new("TextButton")
     tabButton.Text = tabTitle
-    tabButton.Size = UDim2.new(0, 80, 1, 0)
+    tabButton.Size = UDim2.new(1, 0, 0, DESIGN.TabButtonWidth) -- Tamanho na vertical
     tabButton.BackgroundColor3 = DESIGN.TabInactiveColor
     tabButton.TextColor3 = DESIGN.ComponentTextColor
     tabButton.Parent = self.TabButtonContainer
     addRoundedCorners(tabButton, 6)
+    addHoverEffect(tabButton, DESIGN.TabInactiveColor, DESIGN.TabActiveColor)
 
     tabButton.MouseButton1Click:Connect(function()
         self:SetActiveTab(tab)
@@ -278,7 +343,6 @@ end
 
 ---
 -- Funções Públicas para criar componentes
--- Adaptadas para receber uma 'Tab' como primeiro argumento
 ---
 
 function UIManager:CreateButton(tab, text, callback)
