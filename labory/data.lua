@@ -496,7 +496,8 @@ function UIManager:SetupFloatButton(text: string)
     expandBtn.TextScaled = true
     expandBtn.Parent = self.FloatButton
 
-    addHoverEffect(expandBtn, DESIGN.FloatButton.BackgroundColor3, DESIGN.ComponentHoverColor)
+    -- corrigido aqui
+    addHoverEffect(expandBtn, DESIGN.FloatButtonColor, DESIGN.ComponentHoverColor)
 
     self.Connections.ExpandBtn = expandBtn.MouseButton1Click:Connect(function()
         if self.Blocked then return end
