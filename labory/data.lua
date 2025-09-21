@@ -18,6 +18,9 @@ local DESIGN = {
     TabActiveColor = Color3.fromRGB(70, 160, 255),
     TabInactiveColor = Color3.fromRGB(40, 40, 40),
     ResizeHandleColor = Color3.fromRGB(70, 70, 70),
+    NotifyBackground = Color3.fromRGB(50, 50, 50),
+    NotifyTextColor = Color3.fromRGB(255, 255, 255),
+    TagBackground = Color3.fromRGB(70, 160, 255),
 
     -- Tamanhos e Dimensões
     WindowSize = UDim2.new(0, 500, 0, 400),
@@ -31,6 +34,10 @@ local DESIGN = {
     TabButtonWidth = 120,
     TabButtonHeight = 35,
     ResizeHandleSize = 15,
+    NotifyWidth = 200,
+    NotifyHeight = 40,
+    TagHeight = 25,
+    TagWidth = 100,
 
     -- Outros
     CornerRadius = 10
@@ -106,6 +113,7 @@ function Tab.new(name, parent)
 
     local listLayout = Instance.new("UIListLayout")
     listLayout.Padding = UDim.new(0, DESIGN.ComponentPadding)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Parent = self.Container
     
     -- Auto-resize do ScrollingFrame
@@ -223,6 +231,27 @@ function UIManager.new(name, parent)
 
     -- Float Button melhorado
     self:SetupFloatButton()
+
+    -- Container de Notificações (visível mesmo quando minimizado)
+    self.NotifyContainer = Instance.new("Frame")
+    self.NotifyContainer.Name = "NotifyContainer"
+    self.NotifyContainer.Size = UDim2.new(0, DESIGN.NotifyWidth, 1, 0)
+    self.NotifyContainer.Position = UDim2.new(1, -DESIGN.NotifyWidth - 10, 0, 0)
+    self.NotifyContainer.BackgroundTransparency = 1
+    self.NotifyContainer.ClipsDescendants = false
+    self.NotifyContainer.Parent = self.ScreenGui
+
+    local notifyLayout = Instance.new("UIListLayout")
+    notifyLayout.FillDirection = Enum.FillDirection.Vertical
+    notifyLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    notifyLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    notifyLayout.Padding = UDim.new(0, 10)
+    notifyLayout.Parent = self.NotifyContainer
+
+    local notifyPadding = Instance.new("UIPadding")
+    notifyPadding.PaddingBottom = UDim.new(0, 10)
+    notifyPadding.PaddingRight = UDim.new(0, 10)
+    notifyPadding.Parent = self.NotifyContainer
     
     return self
 end
@@ -528,76 +557,75 @@ function UIManager:CreateButton(tab, text, callback)
     return btn
 end
 
-function UIManager:CreateToggle(tab, text, callback)
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
-    frame.BackgroundTransparency = 1
-    frame.Parent = tab.Container
-
-    -- Label
-    local label = Instance.new("TextLabel")
-    label.Text = text or "Toggle"
-    label.Size = UDim2.new(1, -60, 1, 0) -- ocupa o espaço menos a largura do switch
-    label.BackgroundTransparency = 1
-    label.TextColor3 = DESIGN.ComponentTextColor
-    label.Font = Enum.Font.Roboto
-    label.TextScaled = true
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = frame
-
-    -- Cápsula do switch (clicável e grudada à direita)
-    local switch = Instance.new("TextButton")
-    switch.Size = UDim2.new(0, 50, 0, 24)
-    switch.AnchorPoint = Vector2.new(1, 0.5)
-    switch.Position = UDim2.new(1, -5, 0.5, 0) -- sempre colado na direita com 5px de margem
-    switch.BackgroundColor3 = DESIGN.InactiveToggleColor
-    switch.Text = "" -- sem texto
-    switch.AutoButtonColor = false
-    switch.Parent = frame
-    switch.ClipsDescendants = true
-
-    local corner = Instance.new("UICorner", switch)
-    corner.CornerRadius = UDim.new(1, 0)
-
-    -- Bolinha interna
-    local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0, 20, 0, 20)
-    knob.Position = UDim2.new(0, 2, 0.5, -10)
-    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    knob.Parent = switch
-
-    local knobCorner = Instance.new("UICorner", knob)
-    knobCorner.CornerRadius = UDim.new(1, 0)
-
-    -- Interatividade
-    local state = false
-    local TweenService = game:GetService("TweenService")
-
-    local function toggle(newState)
-        state = newState
-
-        -- cor da cápsula
-        TweenService:Create(switch, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
-            BackgroundColor3 = state and DESIGN.ActiveToggleColor or DESIGN.InactiveToggleColor
-        }):Play()
-
-        -- posição da bolinha
-        TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
-            Position = state and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
-        }):Play()
-
-        if callback then
-            callback(state)
-        end
-    end
-
-    -- Eventos de clique/touch (funciona em PC e Mobile)
-    switch.MouseButton1Click:Connect(function()
-        toggle(not state)
-    end)
-
-    table.insert(tab.Components, frame)
-    return frame
+function UIManager:CreateToggle(tab, text, callback)    
+    local frame = Instance.new("Frame")    
+    frame.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)    
+    frame.BackgroundTransparency = 1    
+    frame.Parent = tab.Container    
+    
+    -- Label    
+    local label = Instance.new("TextLabel")    
+    label.Text = text or "Toggle"    
+    label.Size = UDim2.new(0.7, 0, 1, 0)    
+    label.BackgroundTransparency = 1    
+    label.TextColor3 = DESIGN.ComponentTextColor    
+    label.Font = Enum.Font.Roboto    
+    label.TextScaled = true    
+    label.TextXAlignment = Enum.TextXAlignment.Left    
+    label.Parent = frame    
+    
+    -- Cápsula do switch (agora botão clicável)    
+    local switch = Instance.new("TextButton")    
+    switch.Size = UDim2.new(0, 50, 0, 24)    
+    switch.Position = UDim2.new(0.7, 0, 0.5, -12)    
+    switch.BackgroundColor3 = DESIGN.InactiveToggleColor    
+    switch.Text = "" -- sem texto    
+    switch.AutoButtonColor = false    
+    switch.Parent = frame    
+    switch.ClipsDescendants = true    
+    
+    local corner = Instance.new("UICorner", switch)    
+    corner.CornerRadius = UDim.new(1, 0)    
+    
+    -- Bolinha interna    
+    local knob = Instance.new("Frame")    
+    knob.Size = UDim2.new(0, 20, 0, 20)    
+    knob.Position = UDim2.new(0, 2, 0.5, -10)    
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)    
+    knob.Parent = switch    
+    
+    local knobCorner = Instance.new("UICorner", knob)    
+    knobCorner.CornerRadius = UDim.new(1, 0)    
+    
+    -- Interatividade    
+    local state = false    
+    local TweenService = game:GetService("TweenService")    
+    
+    local function toggle(newState)    
+        state = newState    
+    
+        -- cor da cápsula    
+        TweenService:Create(switch, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {    
+            BackgroundColor3 = state and DESIGN.ActiveToggleColor or DESIGN.InactiveToggleColor    
+        }):Play()    
+    
+        -- posição da bolinha    
+        TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {    
+            Position = state and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)    
+        }):Play()    
+    
+        if callback then    
+            callback(state)    
+        end    
+    end    
+    
+    -- Evento de clique (funciona no PC e mobile)    
+    switch.MouseButton1Click:Connect(function()    
+        toggle(not state)    
+    end)    
+    
+    table.insert(tab.Components, frame)    
+    return frame    
 end
 
 function UIManager:CreateDropdown(tab, title, values, callback)
@@ -679,6 +707,82 @@ function UIManager:CreateDropdown(tab, title, values, callback)
     
     table.insert(tab.Components, frame)
     return frame
+end
+
+function UIManager:CreateLabel(tab, text)
+    local label = Instance.new("TextLabel")
+    label.Text = text or "Label"
+    label.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
+    label.BackgroundColor3 = DESIGN.ComponentBackground
+    label.TextColor3 = DESIGN.ComponentTextColor
+    label.Font = Enum.Font.Roboto
+    label.TextScaled = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.BorderSizePixel = 0
+    label.Parent = tab.Container
+
+    addRoundedCorners(label, DESIGN.CornerRadius)
+
+    table.insert(tab.Components, label)
+    return label
+end
+
+function UIManager:CreateTag(tab, text, color)
+    local tag = Instance.new("TextLabel")
+    tag.Text = text or "Tag"
+    tag.Size = UDim2.new(0, DESIGN.TagWidth, 0, DESIGN.TagHeight)
+    tag.BackgroundColor3 = color or DESIGN.TagBackground
+    tag.TextColor3 = DESIGN.ComponentTextColor
+    tag.Font = Enum.Font.Roboto
+    tag.TextScaled = true
+    tag.TextXAlignment = Enum.TextXAlignment.Center
+    tag.BorderSizePixel = 0
+    tag.Parent = tab.Container
+
+    addRoundedCorners(tag, DESIGN.CornerRadius / 2)  -- Mais arredondado para tags
+
+    table.insert(tab.Components, tag)
+    return tag
+end
+
+function UIManager:Notify(text, duration)
+    local notifyFrame = Instance.new("Frame")
+    notifyFrame.Size = UDim2.new(1, 0, 0, DESIGN.NotifyHeight)
+    notifyFrame.BackgroundColor3 = DESIGN.NotifyBackground
+    notifyFrame.BackgroundTransparency = 1
+    notifyFrame.BorderSizePixel = 0
+    addRoundedCorners(notifyFrame, DESIGN.CornerRadius)
+
+    local notifyText = Instance.new("TextLabel")
+    notifyText.Text = text or "Notificação"
+    notifyText.Size = UDim2.new(1, 0, 1, 0)
+    notifyText.BackgroundTransparency = 1
+    notifyText.TextColor3 = DESIGN.NotifyTextColor
+    notifyText.TextTransparency = 1
+    notifyText.Font = Enum.Font.Roboto
+    notifyText.TextScaled = true
+    notifyText.TextXAlignment = Enum.TextXAlignment.Center
+    notifyText.TextYAlignment = Enum.TextYAlignment.Center
+    notifyText.Parent = notifyFrame
+
+    notifyFrame.Parent = self.NotifyContainer
+
+    -- Animação de entrada
+    local tweenInBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0})
+    local tweenInText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {TextTransparency = 0})
+    tweenInBg:Play()
+    tweenInText:Play()
+
+    -- Agendar saída
+    spawn(function()
+        wait(duration or 5)
+        local tweenOutBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1})
+        local tweenOutText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1})
+        tweenOutBg:Play()
+        tweenOutText:Play()
+        tweenOutBg.Completed:Wait()
+        notifyFrame:Destroy()
+    end)
 end
 
 return UIManager
