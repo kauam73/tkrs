@@ -534,13 +534,24 @@ function UIManager:CreateToggle(tab, text, callback)
     frame.BackgroundTransparency = 1
     frame.Parent = tab.Container
 
-    -- Cápsula do switch (grudado na esquerda e adaptável)
+    -- Label
+    local label = Instance.new("TextLabel")
+    label.Text = text or "Toggle"
+    label.Size = UDim2.new(1, -60, 1, 0) -- ocupa o espaço menos a largura do switch
+    label.BackgroundTransparency = 1
+    label.TextColor3 = DESIGN.ComponentTextColor
+    label.Font = Enum.Font.Roboto
+    label.TextScaled = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    -- Cápsula do switch (clicável e grudada à direita)
     local switch = Instance.new("TextButton")
-    switch.AnchorPoint = Vector2.new(0, 0.5)
-    switch.Position = UDim2.new(0, 0, 0.5, 0) -- lateral esquerda
-    switch.Size = UDim2.new(0, frame.Size.Y.Offset * 2, 1, -4) 
+    switch.Size = UDim2.new(0, 50, 0, 24)
+    switch.AnchorPoint = Vector2.new(1, 0.5)
+    switch.Position = UDim2.new(1, -5, 0.5, 0) -- sempre colado na direita com 5px de margem
     switch.BackgroundColor3 = DESIGN.InactiveToggleColor
-    switch.Text = ""
+    switch.Text = "" -- sem texto
     switch.AutoButtonColor = false
     switch.Parent = frame
     switch.ClipsDescendants = true
@@ -548,29 +559,15 @@ function UIManager:CreateToggle(tab, text, callback)
     local corner = Instance.new("UICorner", switch)
     corner.CornerRadius = UDim.new(1, 0)
 
-    -- Bolinha interna (se adapta à altura também)
+    -- Bolinha interna
     local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0.8, 0, 0.8, 0)
-    knob.AnchorPoint = Vector2.new(0, 0.5)
-    knob.Position = UDim2.new(0, 2, 0.5, 0)
+    knob.Size = UDim2.new(0, 20, 0, 20)
+    knob.Position = UDim2.new(0, 2, 0.5, -10)
     knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     knob.Parent = switch
 
     local knobCorner = Instance.new("UICorner", knob)
     knobCorner.CornerRadius = UDim.new(1, 0)
-
-    -- Label à direita do toggle
-    local label = Instance.new("TextLabel")
-    label.Text = text or "Toggle"
-    label.AnchorPoint = Vector2.new(0, 0.5)
-    label.Position = UDim2.new(0, switch.Size.X.Offset + 8, 0.5, 0)
-    label.Size = UDim2.new(1, -switch.Size.X.Offset - 10, 1, 0)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = DESIGN.ComponentTextColor
-    label.Font = Enum.Font.Roboto
-    label.TextScaled = true
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = frame
 
     -- Interatividade
     local state = false
@@ -586,8 +583,7 @@ function UIManager:CreateToggle(tab, text, callback)
 
         -- posição da bolinha
         TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
-            Position = state and UDim2.new(1, -knob.Size.X.Offset - 2, 0.5, 0)
-                      or UDim2.new(0, 2, 0.5, 0)
+            Position = state and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
         }):Play()
 
         if callback then
@@ -595,15 +591,9 @@ function UIManager:CreateToggle(tab, text, callback)
         end
     end
 
-    -- Eventos de clique/touch (funciona PC + Mobile)
+    -- Eventos de clique/touch (funciona em PC e Mobile)
     switch.MouseButton1Click:Connect(function()
         toggle(not state)
-    end)
-
-    switch.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            toggle(not state)
-        end
     end)
 
     table.insert(tab.Components, frame)
