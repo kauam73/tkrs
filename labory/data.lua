@@ -1,4 +1,3 @@
--- UIManager.lua
 local UIManager = {}
 UIManager.__index = UIManager
 
@@ -16,24 +15,30 @@ local DESIGN = {
     DropdownHoverColor = Color3.fromRGB(60, 60, 60),
     MinimizeButtonColor = Color3.fromRGB(255, 50, 50),
     FloatButtonColor = Color3.fromRGB(50, 50, 50),
-    TabActiveColor = Color3.fromRGB(70, 70, 70),
+    TabActiveColor = Color3.fromRGB(70, 160, 255),
     TabInactiveColor = Color3.fromRGB(40, 40, 40),
-    ResizeHandleColor = Color3.fromRGB(150, 150, 150),
+    ResizeHandleColor = Color3.fromRGB(70, 70, 70),
 
     -- Tamanhos e Dimensões
-    WindowSize = UDim2.new(0, 400, 0, 500),
-    WindowMinSize = Vector2.new(300, 400),
-    TitleHeight = 30,
+    WindowSize = UDim2.new(0, 500, 0, 400),
+    MinWindowSize = Vector2.new(300, 250),
+    MaxWindowSize = Vector2.new(800, 600),
+    TitleHeight = 35,
     ComponentHeight = 40,
     ComponentPadding = 10,
     ContainerPadding = 10,
-    FloatButtonSize = UDim2.new(0, 100, 0, 50),
-    TabButtonWidth = 80, -- Largura da aba na lateral
-    ResizeHandleSize = 10,
+    FloatButtonSize = UDim2.new(0, 120, 0, 40),
+    TabButtonWidth = 120,
+    TabButtonHeight = 35,
+    ResizeHandleSize = 15,
+
+    -- Outros
+    CornerRadius = 10
 }
 
-local TweenService = game:GetService("TweenService")
+-- Services
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 ---
 -- Funções de Criação de Componentes
@@ -41,16 +46,18 @@ local UserInputService = game:GetService("UserInputService")
 
 local function addRoundedCorners(instance, radius)
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, radius)
+    corner.CornerRadius = UDim.new(0, radius or DESIGN.CornerRadius)
     corner.Parent = instance
 end
 
 local function addHoverEffect(button, originalColor, hoverColor)
     button.MouseEnter:Connect(function()
-        button.BackgroundColor3 = hoverColor
+        local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = hoverColor})
+        tween:Play()
     end)
     button.MouseLeave:Connect(function()
-        button.BackgroundColor3 = originalColor
+        local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = originalColor})
+        tween:Play()
     end)
 end
 
@@ -62,6 +69,7 @@ local function createButton(text, size, parent)
     btn.TextColor3 = DESIGN.ComponentTextColor
     btn.BorderSizePixel = 0
     btn.Font = Enum.Font.Roboto
+    btn.TextScaled = true
     btn.Parent = parent
 
     addRoundedCorners(btn, DESIGN.CornerRadius)
@@ -80,10 +88,13 @@ function Tab.new(name, parent)
     local self = setmetatable({}, Tab)
     
     self.Name = name
-    self.Container = Instance.new("Frame")
+    self.Container = Instance.new("ScrollingFrame")
     self.Container.Size = UDim2.new(1, 0, 1, 0)
     self.Container.Position = UDim2.new(0, 0, 0, 0)
     self.Container.BackgroundTransparency = 1
+    self.Container.BorderSizePixel = 0
+    self.Container.ScrollBarThickness = 6
+    self.Container.ScrollBarImageColor3 = DESIGN.ComponentHoverColor
     self.Container.Parent = parent
     
     local padding = Instance.new("UIPadding")
@@ -96,6 +107,11 @@ function Tab.new(name, parent)
     local listLayout = Instance.new("UIListLayout")
     listLayout.Padding = UDim.new(0, DESIGN.ComponentPadding)
     listLayout.Parent = self.Container
+    
+    -- Auto-resize do ScrollingFrame
+    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        self.Container.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + DESIGN.ContainerPadding * 2)
+    end)
     
     self.Components = {}
     return self
@@ -114,55 +130,45 @@ function UIManager.new(name, parent)
     self.IsMinimized = false
     self.Tabs = {}
     self.CurrentTab = nil
+    self.IsDragging = false
+    self.IsResizing = false
     
+    -- Container principal da janela
     self.Window = Instance.new("Frame")
     self.Window.Size = DESIGN.WindowSize
     self.Window.Position = UDim2.new(0.5, -DESIGN.WindowSize.X.Offset / 2, 0.5, -DESIGN.WindowSize.Y.Offset / 2)
     self.Window.BackgroundColor3 = DESIGN.WindowColor1
     self.Window.BorderSizePixel = 0
     self.Window.Parent = self.ScreenGui
+    self.Window.ClipsDescendants = true
 
     addRoundedCorners(self.Window, DESIGN.CornerRadius)
 
     local windowGradient = Instance.new("UIGradient")
-    windowGradient.Color = ColorSequence.new({ColorSequenceKeypoint.new(0, DESIGN.WindowColor1), ColorSequenceKeypoint.new(1, DESIGN.WindowColor2)})
+    windowGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, DESIGN.WindowColor1), 
+        ColorSequenceKeypoint.new(1, DESIGN.WindowColor2)
+    })
     windowGradient.Rotation = 90
     windowGradient.Parent = self.Window
 
-    local titleBar = Instance.new("Frame")
-    titleBar.Size = UDim2.new(1, 0, 0, DESIGN.TitleHeight)
-    titleBar.BackgroundTransparency = 1
-    titleBar.Parent = self.Window
+    -- Cabeçalho arrastável
+    self.TitleBar = Instance.new("Frame")
+    self.TitleBar.Size = UDim2.new(1, 0, 0, DESIGN.TitleHeight)
+    self.TitleBar.Position = UDim2.new(0, 0, 0, 0)
+    self.TitleBar.BackgroundTransparency = 1
+    self.TitleBar.Parent = self.Window
 
     local title = Instance.new("TextLabel")
     title.Text = name or "UIManager"
-    title.Size = UDim2.new(1, -DESIGN.TitleHeight, 0, DESIGN.TitleHeight)
-    title.Position = UDim2.new(0, 0, 0, 0)
+    title.Size = UDim2.new(1, -DESIGN.TitleHeight, 1, 0)
+    title.Position = UDim2.new(0, 10, 0, 0)
     title.BackgroundTransparency = 1
     title.TextColor3 = DESIGN.TitleColor
     title.TextScaled = true
-    title.Font = Enum.Font.Roboto
-    title.Parent = titleBar
-
-    -- Lógica de arrastar a janela
-    local isDraggingWindow = false
-    local dragStartPositionWindow = Vector2.new()
-    titleBar.MouseButton1Down:Connect(function(x, y)
-        isDraggingWindow = true
-        dragStartPositionWindow = Vector2.new(x, y) - self.Window.AbsolutePosition
-        local dragConnection = UserInputService.InputChanged:Connect(function(input)
-            if isDraggingWindow and input.UserInputType == Enum.UserInputType.MouseMovement then
-                local newPos = input.Position - dragStartPositionWindow
-                self.Window.Position = UDim2.new(0, newPos.X, 0, newPos.Y)
-            end
-        end)
-        UserInputService.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                isDraggingWindow = false
-                dragConnection:Disconnect()
-            end
-        end)
-    end)
+    title.Font = Enum.Font.RobotoMono
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Parent = self.TitleBar
 
     local minimizeBtn = Instance.new("TextButton")
     minimizeBtn.Text = "–"
@@ -172,106 +178,234 @@ function UIManager.new(name, parent)
     minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     minimizeBtn.Font = Enum.Font.Roboto
     minimizeBtn.TextScaled = true
-    minimizeBtn.Parent = titleBar
-    minimizeBtn.MouseButton1Click:Connect(function() self:Minimize() end)
+    minimizeBtn.BorderSizePixel = 0
+    minimizeBtn.Parent = self.TitleBar
+
     addRoundedCorners(minimizeBtn, DESIGN.CornerRadius)
-    addHoverEffect(minimizeBtn, DESIGN.MinimizeButtonColor, DESIGN.ComponentHoverColor)
+    addHoverEffect(minimizeBtn, DESIGN.MinimizeButtonColor, Color3.fromRGB(255, 80, 80))
 
-    -- Floating Button
-    self.FloatButton = Instance.new("Frame")
-    self.FloatButton.Size = DESIGN.FloatButtonSize
-    self.FloatButton.Position = UDim2.new(0.5, -DESIGN.FloatButtonSize.X.Offset / 2, 1, -DESIGN.FloatButtonSize.Y.Offset - 10)
-    self.FloatButton.BackgroundColor3 = DESIGN.FloatButtonColor
-    self.FloatButton.Visible = false
-    self.FloatButton.Parent = self.ScreenGui
-    addRoundedCorners(self.FloatButton, DESIGN.CornerRadius)
-
-    local floatLayout = Instance.new("UIListLayout")
-    floatLayout.FillDirection = Enum.FillDirection.Horizontal
-    floatLayout.Parent = self.FloatButton
-
-    local expandBtn = createButton("Expandir", UDim2.new(0.5, 0, 1, 0), self.FloatButton)
-    expandBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    expandBtn.Font = Enum.Font.Roboto
-    expandBtn.MouseButton1Click:Connect(function() self:Expand() end)
-
-    local dragBtn = createButton("Arrastar", UDim2.new(0.5, 0, 1, 0), self.FloatButton)
-    dragBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    dragBtn.Font = Enum.Font.Roboto
-
-    -- Lógica de Arrastar o FloatButton
-    local isDraggingFloat = false
-    local dragStartPositionFloat = Vector2.new()
-    dragBtn.MouseButton1Down:Connect(function(x, y)
-        isDraggingFloat = true
-        dragStartPositionFloat = Vector2.new(x, y) - self.FloatButton.AbsolutePosition
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if isDraggingFloat and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local newPos = input.Position - dragStartPositionFloat
-            self.FloatButton.Position = UDim2.new(0, newPos.X, 0, newPos.Y)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isDraggingFloat = false
-        end
+    minimizeBtn.MouseButton1Click:Connect(function()
+        self:Minimize()
     end)
 
-    -- Barra de Redimensionamento
-    local resizeHandle = Instance.new("Frame")
-    resizeHandle.Size = UDim2.new(0, DESIGN.ResizeHandleSize, 0, DESIGN.ResizeHandleSize)
-    resizeHandle.Position = UDim2.new(1, -DESIGN.ResizeHandleSize, 1, -DESIGN.ResizeHandleSize)
-    resizeHandle.BackgroundColor3 = DESIGN.ResizeHandleColor
-    resizeHandle.Parent = self.Window
-    addRoundedCorners(resizeHandle, 3)
+    -- Sistema de arrastar pela barra de título
+    self:SetupDragSystem()
 
-    -- Lógica de Redimensionar
-    local isResizing = false
-    resizeHandle.MouseButton1Down:Connect(function()
-        isResizing = true
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if isResizing and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local newSize = input.Position - self.Window.AbsolutePosition
-            local clampedSize = Vector2.new(
-                math.max(newSize.X, DESIGN.WindowMinSize.X),
-                math.max(newSize.Y, DESIGN.WindowMinSize.Y)
-            )
-            self.Window.Size = UDim2.new(0, clampedSize.X, 0, clampedSize.Y)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            isResizing = false
-        end
-    end)
+    -- Container das abas (lateral esquerda)
+    self.TabContainer = Instance.new("Frame")
+    self.TabContainer.Size = UDim2.new(0, DESIGN.TabButtonWidth, 1, -DESIGN.TitleHeight)
+    self.TabContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight)
+    self.TabContainer.BackgroundColor3 = DESIGN.WindowColor2
+    self.TabContainer.BorderSizePixel = 0
+    self.TabContainer.Parent = self.Window
 
-    -- Containers para os botões das abas e o conteúdo das abas
-    self.TabButtonContainer = Instance.new("Frame")
-    self.TabButtonContainer.Size = UDim2.new(0, DESIGN.TabButtonWidth, 1, -DESIGN.TitleHeight)
-    self.TabButtonContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight)
-    self.TabButtonContainer.BackgroundTransparency = 1
-    self.TabButtonContainer.Parent = self.Window
-    
+    addRoundedCorners(self.TabContainer, DESIGN.CornerRadius)
+
     local tabLayout = Instance.new("UIListLayout")
-    tabLayout.FillDirection = Enum.FillDirection.Vertical
     tabLayout.Padding = UDim.new(0, 5)
-    tabLayout.Parent = self.TabButtonContainer
+    tabLayout.Parent = self.TabContainer
 
+    local tabPadding = Instance.new("UIPadding")
+    tabPadding.PaddingTop = UDim.new(0, 10)
+    tabPadding.PaddingLeft = UDim.new(0, 5)
+    tabPadding.PaddingRight = UDim.new(0, 5)
+    tabPadding.Parent = self.TabContainer
+
+    -- Container do conteúdo das abas
     self.TabContentContainer = Instance.new("Frame")
-    self.TabContentContainer.Size = UDim2.new(1, -DESIGN.TabButtonWidth, 1, -DESIGN.TitleHeight)
+    self.TabContentContainer.Size = UDim2.new(1, -DESIGN.TabButtonWidth - DESIGN.ResizeHandleSize, 1, -DESIGN.TitleHeight)
     self.TabContentContainer.Position = UDim2.new(0, DESIGN.TabButtonWidth, 0, DESIGN.TitleHeight)
     self.TabContentContainer.BackgroundTransparency = 1
     self.TabContentContainer.Parent = self.Window
+
+    -- Sistema de redimensionamento
+    self:SetupResizeSystem()
+
+    -- Float Button melhorado
+    self:SetupFloatButton()
     
     return self
 end
 
 ---
+-- Sistema de Arrastar
+---
+function UIManager:SetupDragSystem()
+    local dragStart = nil
+    local startPos = nil
+    
+    self.TitleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            self.IsDragging = true
+            dragStart = input.Position
+            startPos = self.Window.Position
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if self.IsDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            local newPos = UDim2.new(
+                startPos.X.Scale, 
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale, 
+                startPos.Y.Offset + delta.Y
+            )
+            
+            -- Suavizar movimento
+            local tween = TweenService:Create(self.Window, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Position = newPos})
+            tween:Play()
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            self.IsDragging = false
+        end
+    end)
+end
+
+---
+-- Sistema de Redimensionamento
+---
+function UIManager:SetupResizeSystem()
+    -- Handle de redimensionamento no canto inferior direito
+    self.ResizeHandle = Instance.new("Frame")
+    self.ResizeHandle.Size = UDim2.new(0, DESIGN.ResizeHandleSize, 0, DESIGN.ResizeHandleSize)
+    self.ResizeHandle.Position = UDim2.new(1, -DESIGN.ResizeHandleSize, 1, -DESIGN.ResizeHandleSize)
+    self.ResizeHandle.BackgroundColor3 = DESIGN.ResizeHandleColor
+    self.ResizeHandle.BorderSizePixel = 0
+    self.ResizeHandle.Parent = self.Window
+
+    addRoundedCorners(self.ResizeHandle, 4)
+
+    -- Indicador visual do resize handle
+    local resizeIcon = Instance.new("TextLabel")
+    resizeIcon.Size = UDim2.new(1, 0, 1, 0)
+    resizeIcon.BackgroundTransparency = 1
+    resizeIcon.Text = "↘"
+    resizeIcon.TextColor3 = DESIGN.ComponentTextColor
+    resizeIcon.TextScaled = true
+    resizeIcon.Font = Enum.Font.Roboto
+    resizeIcon.Parent = self.ResizeHandle
+
+    -- Hover effect para o resize handle
+    addHoverEffect(self.ResizeHandle, DESIGN.ResizeHandleColor, DESIGN.ComponentHoverColor)
+
+    local resizeStart = nil
+    local startSize = nil
+    
+    self.ResizeHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            self.IsResizing = true
+            resizeStart = input.Position
+            startSize = self.Window.Size
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if self.IsResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - resizeStart
+            local newWidth = math.clamp(startSize.X.Offset + delta.X, DESIGN.MinWindowSize.X, DESIGN.MaxWindowSize.X)
+            local newHeight = math.clamp(startSize.Y.Offset + delta.Y, DESIGN.MinWindowSize.Y, DESIGN.MaxWindowSize.Y)
+            
+            local newSize = UDim2.new(0, newWidth, 0, newHeight)
+            
+            -- Suavizar redimensionamento
+            local tween = TweenService:Create(self.Window, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = newSize})
+            tween:Play()
+            
+            -- Atualizar containers
+            self:UpdateContainersSize()
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            self.IsResizing = false
+        end
+    end)
+end
+
+function UIManager:UpdateContainersSize()
+    -- Atualizar tamanho do container de conteúdo das abas
+    self.TabContentContainer.Size = UDim2.new(1, -DESIGN.TabButtonWidth - DESIGN.ResizeHandleSize, 1, -DESIGN.TitleHeight)
+end
+
+---
+-- Float Button Melhorado
+---
+function UIManager:SetupFloatButton()
+    self.FloatButton = Instance.new("Frame")
+    self.FloatButton.Size = DESIGN.FloatButtonSize
+    self.FloatButton.Position = UDim2.new(1, -130, 1, -60)
+    self.FloatButton.BackgroundColor3 = DESIGN.FloatButtonColor
+    self.FloatButton.BorderSizePixel = 0
+    self.FloatButton.Visible = false
+    self.FloatButton.Parent = self.ScreenGui
+    
+    addRoundedCorners(self.FloatButton, DESIGN.CornerRadius)
+
+    -- Gradient para o float button
+    local floatGradient = Instance.new("UIGradient")
+    floatGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, DESIGN.FloatButtonColor), 
+        ColorSequenceKeypoint.new(1, DESIGN.WindowColor2)
+    })
+    floatGradient.Rotation = 45
+    floatGradient.Parent = self.FloatButton
+
+    local expandBtn = Instance.new("TextButton")
+    expandBtn.Text = "📋 Expandir"
+    expandBtn.Size = UDim2.new(1, 0, 1, 0)
+    expandBtn.BackgroundTransparency = 1
+    expandBtn.TextColor3 = DESIGN.ComponentTextColor
+    expandBtn.Font = Enum.Font.Roboto
+    expandBtn.TextScaled = true
+    expandBtn.Parent = self.FloatButton
+
+    addHoverEffect(self.FloatButton, DESIGN.FloatButtonColor, DESIGN.ComponentHoverColor)
+
+    expandBtn.MouseButton1Click:Connect(function()
+        self:Expand()
+    end)
+
+    -- Sistema de arrastar para o float button
+    local floatDragStart = nil
+    local floatStartPos = nil
+    local floatIsDragging = false
+    
+    expandBtn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            floatIsDragging = true
+            floatDragStart = input.Position
+            floatStartPos = self.FloatButton.Position
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if floatIsDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - floatDragStart
+            local newPos = UDim2.new(
+                floatStartPos.X.Scale, 
+                floatStartPos.X.Offset + delta.X,
+                floatStartPos.Y.Scale, 
+                floatStartPos.Y.Offset + delta.Y
+            )
+            self.FloatButton.Position = newPos
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            floatIsDragging = false
+        end
+    end)
+end
+
+---
 -- Lógica de Abas
 ---
-
 function UIManager:CreateTab(options)
     local tabTitle = options.Title or "Nova Aba"
     local tab = Tab.new(tabTitle, self.TabContentContainer)
@@ -279,11 +413,16 @@ function UIManager:CreateTab(options)
 
     local tabButton = Instance.new("TextButton")
     tabButton.Text = tabTitle
-    tabButton.Size = UDim2.new(1, 0, 0, DESIGN.TabButtonWidth) -- Adaptação para layout vertical
+    tabButton.Size = UDim2.new(1, 0, 0, DESIGN.TabButtonHeight)
     tabButton.BackgroundColor3 = DESIGN.TabInactiveColor
     tabButton.TextColor3 = DESIGN.ComponentTextColor
-    tabButton.Parent = self.TabButtonContainer
-    addRoundedCorners(tabButton, 6)
+    tabButton.Font = Enum.Font.Roboto
+    tabButton.TextScaled = true
+    tabButton.BorderSizePixel = 0
+    tabButton.Parent = self.TabContainer
+    
+    addRoundedCorners(tabButton, DESIGN.CornerRadius)
+    addHoverEffect(tabButton, DESIGN.TabInactiveColor, DESIGN.ComponentHoverColor)
 
     tabButton.MouseButton1Click:Connect(function()
         self:SetActiveTab(tab)
@@ -291,7 +430,7 @@ function UIManager:CreateTab(options)
     
     tab.Button = tabButton
 
-    if next(self.Tabs) == tabTitle then
+    if not self.CurrentTab then
         self:SetActiveTab(tab)
     end
     
@@ -299,14 +438,23 @@ function UIManager:CreateTab(options)
 end
 
 function UIManager:SetActiveTab(tab)
+    -- Desativar aba atual
     if self.CurrentTab then
         self.CurrentTab.Container.Visible = false
-        self.CurrentTab.Button.BackgroundColor3 = DESIGN.TabInactiveColor
+        local inactiveTween = TweenService:Create(self.CurrentTab.Button, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+            BackgroundColor3 = DESIGN.TabInactiveColor
+        })
+        inactiveTween:Play()
     end
     
+    -- Ativar nova aba
     self.CurrentTab = tab
     self.CurrentTab.Container.Visible = true
-    self.CurrentTab.Button.BackgroundColor3 = DESIGN.TabActiveColor
+    
+    local activeTween = TweenService:Create(self.CurrentTab.Button, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = DESIGN.TabActiveColor
+    })
+    activeTween:Play()
 end
 
 ---
@@ -315,25 +463,43 @@ end
 function UIManager:Minimize()
     if self.IsMinimized then return end
     self.IsMinimized = true
-    local TweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    TweenService:Create(self.Window, TweenInfo, {BackgroundTransparency = 1}):Play()
-    TweenService:Create(self.Window, TweenInfo, {Size = UDim2.new(0, 0, 0, 0)}):Play()
-
-    -- Oculta e move o float button
-    self.FloatButton.Position = UDim2.new(0.5, -DESIGN.FloatButtonSize.X.Offset / 2, 1, -DESIGN.FloatButtonSize.Y.Offset - 10)
-    self.FloatButton.Visible = true
+    
+    local minimizeTween = TweenService:Create(self.Window, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0)
+    })
+    
+    minimizeTween:Play()
+    minimizeTween.Completed:Connect(function()
+        self.Window.Visible = false
+        self.FloatButton.Visible = true
+        
+        local floatTween = TweenService:Create(self.FloatButton, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+            Size = DESIGN.FloatButtonSize
+        })
+        floatTween:Play()
+    end)
 end
 
 function UIManager:Expand()
     if not self.IsMinimized then return end
     self.IsMinimized = false
     
-    local TweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    TweenService:Create(self.Window, TweenInfo, {BackgroundTransparency = 0}):Play()
-    TweenService:Create(self.Window, TweenInfo, {Size = DESIGN.WindowSize}):Play()
-
-    -- Oculta o float button
-    self.FloatButton.Visible = false
+    local floatTween = TweenService:Create(self.FloatButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        Size = UDim2.new(0, 0, 0, 0)
+    })
+    floatTween:Play()
+    
+    floatTween.Completed:Connect(function()
+        self.FloatButton.Visible = false
+        self.Window.Visible = true
+        
+        local expandTween = TweenService:Create(self.Window, TweenInfo.new(0.4, Enum.EasingStyle.Back), {
+            Size = DESIGN.WindowSize,
+            Position = UDim2.new(0.5, -DESIGN.WindowSize.X.Offset / 2, 0.5, -DESIGN.WindowSize.Y.Offset / 2)
+        })
+        expandTween:Play()
+    end)
 end
 
 ---
@@ -343,6 +509,19 @@ end
 function UIManager:CreateButton(tab, text, callback)
     local btn = createButton(text, nil, tab.Container)
     btn.MouseButton1Click:Connect(function()
+        -- Feedback visual
+        local feedbackTween = TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+            Size = UDim2.new(0.95, 0, 0, DESIGN.ComponentHeight * 0.9)
+        })
+        feedbackTween:Play()
+        
+        feedbackTween.Completed:Connect(function()
+            local returnTween = TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
+            })
+            returnTween:Play()
+        end)
+        
         if callback then callback() end
     end)
     table.insert(tab.Components, btn)
@@ -361,18 +540,24 @@ function UIManager:CreateToggle(tab, text, callback)
     label.BackgroundTransparency = 1
     label.TextColor3 = DESIGN.ComponentTextColor
     label.Font = Enum.Font.Roboto
+    label.TextScaled = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
 
     local btn = createButton("Off", UDim2.new(0.3, 0, 1, 0), frame)
     btn.Position = UDim2.new(0.7, 0, 0, 0)
     btn.BackgroundColor3 = DESIGN.InactiveToggleColor
-    addHoverEffect(btn, DESIGN.InactiveToggleColor, DESIGN.ComponentHoverColor)
 
     local state = false
     btn.MouseButton1Click:Connect(function()
         state = not state
         btn.Text = state and "On" or "Off"
-        btn.BackgroundColor3 = state and DESIGN.ActiveToggleColor or DESIGN.InactiveToggleColor
+        
+        local toggleTween = TweenService:Create(btn, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+            BackgroundColor3 = state and DESIGN.ActiveToggleColor or DESIGN.InactiveToggleColor
+        })
+        toggleTween:Play()
+        
         if callback then callback(state) end
     end)
     
@@ -388,28 +573,42 @@ function UIManager:CreateDropdown(tab, title, values, callback)
     
     local label = Instance.new("TextLabel")
     label.Text = title or "Dropdown"
-    label.Size = UDim2.new(1, 0, 0.5, 0)
+    label.Size = UDim2.new(1, 0, 0.4, 0)
     label.BackgroundTransparency = 1
     label.TextColor3 = DESIGN.ComponentTextColor
     label.Font = Enum.Font.Roboto
+    label.TextScaled = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
 
-    local btn = createButton("Select", UDim2.new(1, 0, 0.5, 0), frame)
-    btn.Position = UDim2.new(0, 0, 0.5, 0)
+    local btn = createButton("Selecionar ▼", UDim2.new(1, 0, 0.6, 0), frame)
+    btn.Position = UDim2.new(0, 0, 0.4, 0)
     
     local dropdownOpen = false
     local dropdownFrame
 
     btn.MouseButton1Click:Connect(function()
         if dropdownOpen then
-            if dropdownFrame then dropdownFrame:Destroy() end
+            if dropdownFrame then 
+                local closeTween = TweenService:Create(dropdownFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                    Size = UDim2.new(1, 0, 0, 0)
+                })
+                closeTween:Play()
+                closeTween.Completed:Connect(function()
+                    dropdownFrame:Destroy()
+                end)
+            end
             dropdownOpen = false
+            btn.Text = btn.Text:gsub("▲", "▼")
         else
+            btn.Text = btn.Text:gsub("▼", "▲")
             dropdownFrame = Instance.new("Frame")
-            dropdownFrame.Size = UDim2.new(1, 0, 0, #values * DESIGN.ComponentHeight)
+            dropdownFrame.Size = UDim2.new(1, 0, 0, 0)
             dropdownFrame.Position = UDim2.new(0, 0, 1, 0)
             dropdownFrame.BackgroundColor3 = DESIGN.ComponentBackground
+            dropdownFrame.BorderSizePixel = 0
             dropdownFrame.Parent = frame
+            dropdownFrame.ClipsDescendants = true
             addRoundedCorners(dropdownFrame, DESIGN.CornerRadius)
 
             local dropdownLayout = Instance.new("UIListLayout")
@@ -420,12 +619,25 @@ function UIManager:CreateDropdown(tab, title, values, callback)
                 local option = createButton(v, UDim2.new(1, 0, 0, DESIGN.ComponentHeight-2), dropdownFrame)
                 
                 option.MouseButton1Click:Connect(function()
-                    btn.Text = v
+                    btn.Text = v .. " ▼"
                     dropdownOpen = false
-                    dropdownFrame:Destroy()
+                    
+                    local closeTween = TweenService:Create(dropdownFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+                        Size = UDim2.new(1, 0, 0, 0)
+                    })
+                    closeTween:Play()
+                    closeTween.Completed:Connect(function()
+                        dropdownFrame:Destroy()
+                    end)
+                    
                     if callback then callback(v) end
                 end)
             end
+            
+            local openTween = TweenService:Create(dropdownFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(1, 0, 0, #values * DESIGN.ComponentHeight)
+            })
+            openTween:Play()
             dropdownOpen = true
         end
     end)
