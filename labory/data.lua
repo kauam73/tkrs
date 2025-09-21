@@ -534,6 +534,7 @@ function UIManager:CreateToggle(tab, text, callback)
     frame.BackgroundTransparency = 1
     frame.Parent = tab.Container
 
+    -- Label do texto
     local label = Instance.new("TextLabel")
     label.Text = text or "Toggle"
     label.Size = UDim2.new(0.7, 0, 1, 0)
@@ -544,23 +545,56 @@ function UIManager:CreateToggle(tab, text, callback)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
 
-    local btn = createButton("Off", UDim2.new(0.3, 0, 1, 0), frame)
-    btn.Position = UDim2.new(0.7, 0, 0, 0)
-    btn.BackgroundColor3 = DESIGN.InactiveToggleColor
+    -- Switch principal (a cápsula)
+    local switch = Instance.new("Frame")
+    switch.Size = UDim2.new(0, 50, 0, 24)
+    switch.Position = UDim2.new(0.7, 0, 0.5, -12)
+    switch.BackgroundColor3 = DESIGN.InactiveToggleColor
+    switch.Parent = frame
+    switch.ClipsDescendants = true
 
+    local corner = Instance.new("UICorner", switch)
+    corner.CornerRadius = UDim.new(1, 0)
+
+    -- Bolinha interna
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 20, 0, 20)
+    knob.Position = UDim2.new(0, 2, 0.5, -10)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.Parent = switch
+
+    local knobCorner = Instance.new("UICorner", knob)
+    knobCorner.CornerRadius = UDim.new(1, 0)
+
+    -- Interatividade
     local state = false
-    btn.MouseButton1Click:Connect(function()
-        state = not state
-        btn.Text = state and "On" or "Off"
-        
-        local toggleTween = TweenService:Create(btn, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+    local TweenService = game:GetService("TweenService")
+
+    local function toggle(newState)
+        state = newState
+
+        -- cor da cápsula
+        TweenService:Create(switch, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
             BackgroundColor3 = state and DESIGN.ActiveToggleColor or DESIGN.InactiveToggleColor
-        })
-        toggleTween:Play()
-        
-        if callback then callback(state) end
+        }):Play()
+
+        -- posição da bolinha
+        TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+            Position = state and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
+        }):Play()
+
+        if callback then
+            callback(state)
+        end
+    end
+
+    -- Clicar na cápsula alterna
+    switch.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            toggle(not state)
+        end
     end)
-    
+
     table.insert(tab.Components, frame)
     return frame
 end
