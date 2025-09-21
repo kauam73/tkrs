@@ -15,7 +15,7 @@ local DESIGN = {
     InactiveToggleColor = Color3.fromRGB(70, 70, 70),
     DropdownHoverColor = Color3.fromRGB(60, 60, 60),
     MinimizeButtonColor = Color3.fromRGB(255, 50, 50),
-    CloseButtonColor = Color3.fromRGB(255, 50, 50), -- Novo botão de fechar
+    CloseButtonColor = Color3.fromRGB(255, 50, 50),
     FloatButtonColor = Color3.fromRGB(50, 50, 50),
     TabActiveColor = Color3.fromRGB(70, 160, 255),
     TabInactiveColor = Color3.fromRGB(40, 40, 40),
@@ -598,6 +598,8 @@ function UIManager:CreateButton(tab: any, options: { Text: string, Callback: () 
     local btn = createButton(options.Text, nil, tab.Container)
     local connections = {}
 
+    local publicApi = {}
+
     connections.Click = btn.MouseButton1Click:Connect(function()
         local feedbackTween = TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
             Size = UDim2.new(0.95, 0, 0, DESIGN.ComponentHeight * 0.9)
@@ -614,13 +616,13 @@ function UIManager:CreateButton(tab: any, options: { Text: string, Callback: () 
         if options.Callback then options.Callback() end
     end)
 
-    function btn.Update(newOptions: { Text: string? })
+    function publicApi.Update(newOptions: { Text: string? })
         if newOptions.Text then
             btn.Text = newOptions.Text
         end
     end
 
-    function btn.Destroy()
+    function publicApi.Destroy()
         for _, conn in pairs(connections) do
             if conn.Connected then
                 conn:Disconnect()
@@ -630,7 +632,7 @@ function UIManager:CreateButton(tab: any, options: { Text: string, Callback: () 
     end
 
     table.insert(tab.Components, btn)
-    return btn
+    return publicApi
 end
 
 function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (state: boolean) -> () })
@@ -670,6 +672,7 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
 
     local state = false
     local connections = {}
+    local publicApi = {}
 
     local function toggle(newState: boolean)
         state = newState
@@ -682,7 +685,7 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
         toggle(not state)
     end)
 
-    function frame.Update(newOptions: { Text: string?, State: boolean? })
+    function publicApi.Update(newOptions: { Text: string?, State: boolean? })
         if newOptions.Text then
             label.Text = newOptions.Text
         end
@@ -691,7 +694,7 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
         end
     end
 
-    function frame.Destroy()
+    function publicApi.Destroy()
         for _, conn in pairs(connections) do
             if conn.Connected then
                 conn:Disconnect()
@@ -701,7 +704,7 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
     end
 
     table.insert(tab.Components, frame)
-    return frame
+    return publicApi
 end
 
 function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { string }, Callback: (value: string) -> () })
@@ -730,6 +733,8 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
     local connections = {}
     local currentValues = options.Values
     local currentValue = currentValues[1]
+
+    local publicApi = {}
 
     connections.Click = btn.MouseButton1Click:Connect(function()
         if dropdownOpen then
@@ -778,7 +783,7 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
         end
     end)
 
-    function frame.Update(newOptions: { Title: string?, Values: { string }?, SelectedValue: string? })
+    function publicApi.Update(newOptions: { Title: string?, Values: { string }?, SelectedValue: string? })
         if newOptions.Title then
             label.Text = newOptions.Title
         end
@@ -791,7 +796,7 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
         end
     end
 
-    function frame.Destroy()
+    function publicApi.Destroy()
         for _, conn in pairs(connections) do
             if conn.Connected then
                 conn:Disconnect()
@@ -801,7 +806,7 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
     end
 
     table.insert(tab.Components, frame)
-    return frame
+    return publicApi
 end
 
 function UIManager:CreateLabel(tab: any, options: { Title: string, Desc: string? })
@@ -849,7 +854,9 @@ function UIManager:CreateLabel(tab: any, options: { Title: string, Desc: string?
         container.Size = UDim2.new(1, 0, 0, listLayout.AbsoluteContentSize.Y)
     end)
 
-    function container.Update(newOptions: { Title: string?, Desc: string? })
+    local publicApi = {}
+
+    function publicApi.Update(newOptions: { Title: string?, Desc: string? })
         if newOptions.Title then
             titleLabel.Text = newOptions.Title
         end
@@ -876,13 +883,13 @@ function UIManager:CreateLabel(tab: any, options: { Title: string, Desc: string?
         end
     end
 
-    function container.Destroy()
+    function publicApi.Destroy()
         layoutConnection:Disconnect()
         container:Destroy()
     end
 
     table.insert(tab.Components, container)
-    return container
+    return publicApi
 end
 
 function UIManager:CreateTag(tab: any, options: { Text: string, Color: Color3? })
@@ -900,7 +907,9 @@ function UIManager:CreateTag(tab: any, options: { Text: string, Color: Color3? }
     tag.Parent = tab.Container
     addRoundedCorners(tag, DESIGN.CornerRadius / 2)
 
-    function tag.Update(newOptions: { Text: string?, Color: Color3? })
+    local publicApi = {}
+
+    function publicApi.Update(newOptions: { Text: string?, Color: Color3? })
         if newOptions.Text then
             tag.Text = newOptions.Text
         end
@@ -909,12 +918,12 @@ function UIManager:CreateTag(tab: any, options: { Text: string, Color: Color3? }
         end
     end
 
-    function tag.Destroy()
+    function publicApi.Destroy()
         tag:Destroy()
     end
 
     table.insert(tab.Components, tag)
-    return tag
+    return publicApi
 end
 
 function UIManager:CreateInput(tab: any, options: { Text: string, Placeholder: string, Callback: (value: any) -> (), Type: string? })
@@ -952,6 +961,7 @@ function UIManager:CreateInput(tab: any, options: { Text: string, Placeholder: s
     addRoundedCorners(textbox, DESIGN.CornerRadius)
 
     local connections = {}
+    local publicApi = {}
 
     if options.Type and options.Type:lower() == "number" then
         connections.Changed = textbox:GetPropertyChangedSignal("Text"):Connect(function()
@@ -974,7 +984,7 @@ function UIManager:CreateInput(tab: any, options: { Text: string, Placeholder: s
         end)
     end
 
-    function inputContainer.Update(newOptions: { Text: string?, Placeholder: string?, Value: any? })
+    function publicApi.Update(newOptions: { Text: string?, Placeholder: string?, Value: any? })
         if newOptions.Text then
             label.Text = newOptions.Text
         end
@@ -992,7 +1002,7 @@ function UIManager:CreateInput(tab: any, options: { Text: string, Placeholder: s
         end
     end
 
-    function inputContainer.Destroy()
+    function publicApi.Destroy()
         for _, conn in pairs(connections) do
             if conn.Connected then
                 conn:Disconnect()
@@ -1002,7 +1012,7 @@ function UIManager:CreateInput(tab: any, options: { Text: string, Placeholder: s
     end
 
     table.insert(tab.Components, inputContainer)
-    return inputContainer
+    return publicApi
 end
 
 function UIManager:CreateHR(tab: any, options: {})
@@ -1013,16 +1023,18 @@ function UIManager:CreateHR(tab: any, options: {})
     hr.Parent = tab.Container
     addRoundedCorners(hr, DESIGN.HRHeight / 2)
 
-    function hr.Update(newOptions: {})
+    local publicApi = {}
+
+    function publicApi.Update(newOptions: {})
         -- Não há propriedades para atualizar, mas mantemos a função
     end
 
-    function hr.Destroy()
+    function publicApi.Destroy()
         hr:Destroy()
     end
 
     table.insert(tab.Components, hr)
-    return hr
+    return publicApi
 end
 
 function UIManager:Notify(options: { Text: string, Duration: number? })
