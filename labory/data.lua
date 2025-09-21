@@ -534,7 +534,7 @@ function UIManager:CreateToggle(tab, text, callback)
     frame.BackgroundTransparency = 1
     frame.Parent = tab.Container
 
-    -- Label do texto
+    -- Label
     local label = Instance.new("TextLabel")
     label.Text = text or "Toggle"
     label.Size = UDim2.new(0.7, 0, 1, 0)
@@ -545,11 +545,13 @@ function UIManager:CreateToggle(tab, text, callback)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = frame
 
-    -- Switch principal (a cápsula)
-    local switch = Instance.new("Frame")
+    -- Cápsula do switch (agora botão clicável)
+    local switch = Instance.new("TextButton")
     switch.Size = UDim2.new(0, 50, 0, 24)
     switch.Position = UDim2.new(0.7, 0, 0.5, -12)
     switch.BackgroundColor3 = DESIGN.InactiveToggleColor
+    switch.Text = "" -- sem texto
+    switch.AutoButtonColor = false
     switch.Parent = frame
     switch.ClipsDescendants = true
 
@@ -588,11 +590,9 @@ function UIManager:CreateToggle(tab, text, callback)
         end
     end
 
-    -- Clicar na cápsula alterna
-    switch.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            toggle(not state)
-        end
+    -- Evento de clique (funciona no PC e mobile)
+    switch.MouseButton1Click:Connect(function()
+        toggle(not state)
     end)
 
     table.insert(tab.Components, frame)
