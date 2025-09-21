@@ -1,3 +1,4 @@
+--!strict
 local UIManager = {}
 UIManager.__index = UIManager
 
@@ -21,7 +22,10 @@ local DESIGN = {
     NotifyBackground = Color3.fromRGB(50, 50, 50),
     NotifyTextColor = Color3.fromRGB(255, 255, 255),
     TagBackground = Color3.fromRGB(70, 160, 255),
-
+    InputBackgroundColor = Color3.fromRGB(40, 40, 40),
+    InputTextColor = Color3.fromRGB(255, 255, 255),
+    HRColor = Color3.fromRGB(70, 70, 70),
+    
     -- Tamanhos e Dimensões
     WindowSize = UDim2.new(0, 500, 0, 400),
     MinWindowSize = Vector2.new(300, 250),
@@ -38,7 +42,8 @@ local DESIGN = {
     NotifyHeight = 40,
     TagHeight = 25,
     TagWidth = 100,
-
+    HRHeight = 2,
+    
     -- Outros
     CornerRadius = 10
 }
@@ -51,13 +56,13 @@ local TweenService = game:GetService("TweenService")
 -- Funções de Criação de Componentes
 ---
 
-local function addRoundedCorners(instance, radius)
+local function addRoundedCorners(instance: Instance, radius: number?)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius or DESIGN.CornerRadius)
     corner.Parent = instance
 end
 
-local function addHoverEffect(button, originalColor, hoverColor)
+local function addHoverEffect(button: GuiObject, originalColor: Color3, hoverColor: Color3)
     button.MouseEnter:Connect(function()
         local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {BackgroundColor3 = hoverColor})
         tween:Play()
@@ -68,7 +73,7 @@ local function addHoverEffect(button, originalColor, hoverColor)
     end)
 end
 
-local function createButton(text, size, parent)
+local function createButton(text: string, size: UDim2, parent: Instance)
     local btn = Instance.new("TextButton")
     btn.Text = text
     btn.Size = size or UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
@@ -91,8 +96,13 @@ end
 local Tab = {}
 Tab.__index = Tab
 
-function Tab.new(name, parent)
-    local self = setmetatable({}, Tab)
+function Tab.new(name: string, parent: Instance)
+    local self = setmetatable({} :: {
+        Name: string,
+        Container: ScrollingFrame,
+        Components: {Instance},
+        Button: TextButton?
+    }, Tab)
     
     self.Name = name
     self.Container = Instance.new("ScrollingFrame")
@@ -128,12 +138,27 @@ end
 ---
 -- Construtor da GUI
 ---
-function UIManager.new(name, parent)
-    local self = setmetatable({}, UIManager)
+function UIManager.new(options: {Name: string, Parent: Instance})
+    options = options or {}
+    local self = setmetatable({} :: {
+        ScreenGui: ScreenGui,
+        IsMinimized: boolean,
+        Tabs: {[string]: any},
+        CurrentTab: any?,
+        IsDragging: boolean,
+        IsResizing: boolean,
+        Window: Frame,
+        TitleBar: Frame,
+        TabContainer: Frame,
+        TabContentContainer: Frame,
+        ResizeHandle: Frame,
+        FloatButton: Frame,
+        NotifyContainer: Frame,
+    }, UIManager)
     
     self.ScreenGui = Instance.new("ScreenGui")
-    self.ScreenGui.Name = name or "UIManager"
-    self.ScreenGui.Parent = parent or game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    self.ScreenGui.Name = options.Name or "UIManager"
+    self.ScreenGui.Parent = options.Parent or game.Players.LocalPlayer:WaitForChild("PlayerGui")
     
     self.IsMinimized = false
     self.Tabs = {}
@@ -168,7 +193,7 @@ function UIManager.new(name, parent)
     self.TitleBar.Parent = self.Window
 
     local title = Instance.new("TextLabel")
-    title.Text = name or "UIManager"
+    title.Text = options.Name or "UIManager"
     title.Size = UDim2.new(1, -DESIGN.TitleHeight, 1, 0)
     title.Position = UDim2.new(0, 10, 0, 0)
     title.BackgroundTransparency = 1
@@ -435,7 +460,7 @@ end
 ---
 -- Lógica de Abas
 ---
-function UIManager:CreateTab(options)
+function UIManager:CreateTab(options: {Title: string})
     local tabTitle = options.Title or "Nova Aba"
     local tab = Tab.new(tabTitle, self.TabContentContainer)
     self.Tabs[tabTitle] = tab
@@ -466,7 +491,7 @@ function UIManager:CreateTab(options)
     return tab
 end
 
-function UIManager:SetActiveTab(tab)
+function UIManager:SetActiveTab(tab: any)
     -- Desativar aba atual
     if self.CurrentTab then
         self.CurrentTab.Container.Visible = false
@@ -535,8 +560,8 @@ end
 -- Funções Públicas para criar componentes
 ---
 
-function UIManager:CreateButton(tab, text, callback)
-    local btn = createButton(text, nil, tab.Container)
+function UIManager:CreateButton(tab: any, options: {Text: string, Callback: () -> ()})
+    local btn = createButton(options.Text, nil, tab.Container)
     btn.MouseButton1Click:Connect(function()
         -- Feedback visual
         local feedbackTween = TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
@@ -551,13 +576,13 @@ function UIManager:CreateButton(tab, text, callback)
             returnTween:Play()
         end)
         
-        if callback then callback() end
+        if options.Callback then options.Callback() end
     end)
     table.insert(tab.Components, btn)
     return btn
 end
 
-function UIManager:CreateToggle(tab, text, callback)    
+function UIManager:CreateToggle(tab: any, options: {Text: string, Callback: (state: boolean) -> ()})    
     local frame = Instance.new("Frame")    
     frame.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)    
     frame.BackgroundTransparency = 1    
@@ -565,7 +590,7 @@ function UIManager:CreateToggle(tab, text, callback)
     
     -- Label    
     local label = Instance.new("TextLabel")    
-    label.Text = text or "Toggle"    
+    label.Text = options.Text or "Toggle"    
     label.Size = UDim2.new(0.7, 0, 1, 0)    
     label.BackgroundTransparency = 1    
     label.TextColor3 = DESIGN.ComponentTextColor    
@@ -601,7 +626,7 @@ function UIManager:CreateToggle(tab, text, callback)
     local state = false    
     local TweenService = game:GetService("TweenService")    
     
-    local function toggle(newState)    
+    local function toggle(newState: boolean)    
         state = newState    
     
         -- cor da cápsula    
@@ -614,8 +639,8 @@ function UIManager:CreateToggle(tab, text, callback)
             Position = state and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)    
         }):Play()    
     
-        if callback then    
-            callback(state)    
+        if options.Callback then    
+            options.Callback(state)    
         end    
     end    
     
@@ -628,14 +653,14 @@ function UIManager:CreateToggle(tab, text, callback)
     return frame    
 end
 
-function UIManager:CreateDropdown(tab, title, values, callback)
+function UIManager:CreateDropdown(tab: any, options: {Title: string, Values: {string}, Callback: (value: string) -> ()})
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
     frame.BackgroundTransparency = 1
     frame.Parent = tab.Container
     
     local label = Instance.new("TextLabel")
-    label.Text = title or "Dropdown"
+    label.Text = options.Title or "Dropdown"
     label.Size = UDim2.new(1, 0, 0.4, 0)
     label.BackgroundTransparency = 1
     label.TextColor3 = DESIGN.ComponentTextColor
@@ -678,7 +703,7 @@ function UIManager:CreateDropdown(tab, title, values, callback)
             dropdownLayout.Padding = UDim.new(0, 2)
             dropdownLayout.Parent = dropdownFrame
 
-            for _, v in ipairs(values) do
+            for _, v in ipairs(options.Values) do
                 local option = createButton(v, UDim2.new(1, 0, 0, DESIGN.ComponentHeight-2), dropdownFrame)
                 
                 option.MouseButton1Click:Connect(function()
@@ -693,12 +718,12 @@ function UIManager:CreateDropdown(tab, title, values, callback)
                         dropdownFrame:Destroy()
                     end)
                     
-                    if callback then callback(v) end
+                    if options.Callback then options.Callback(v) end
                 end)
             end
             
             local openTween = TweenService:Create(dropdownFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-                Size = UDim2.new(1, 0, 0, #values * DESIGN.ComponentHeight)
+                Size = UDim2.new(1, 0, 0, #options.Values * DESIGN.ComponentHeight)
             })
             openTween:Play()
             dropdownOpen = true
@@ -709,29 +734,58 @@ function UIManager:CreateDropdown(tab, title, values, callback)
     return frame
 end
 
-function UIManager:CreateLabel(tab, text)
-    local label = Instance.new("TextLabel")
-    label.Text = text or "Label"
-    label.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
-    label.BackgroundColor3 = DESIGN.ComponentBackground
-    label.TextColor3 = DESIGN.ComponentTextColor
-    label.Font = Enum.Font.Roboto
-    label.TextScaled = true
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.BorderSizePixel = 0
-    label.Parent = tab.Container
+function UIManager:CreateLabel(tab: any, options: {Title: string, Desc: string?})
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = tab.Container
 
-    addRoundedCorners(label, DESIGN.CornerRadius)
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, 5)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Parent = container
 
-    table.insert(tab.Components, label)
-    return label
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Text = options.Title or "Título"
+    titleLabel.Size = UDim2.new(1, 0, 0, 20)
+    titleLabel.BackgroundColor3 = DESIGN.ComponentBackground
+    titleLabel.TextColor3 = DESIGN.ComponentTextColor
+    titleLabel.Font = Enum.Font.Roboto
+    titleLabel.TextScaled = true
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.BorderSizePixel = 0
+    titleLabel.Parent = container
+
+    addRoundedCorners(titleLabel, DESIGN.CornerRadius)
+
+    if options.Desc then
+        local descLabel = Instance.new("TextLabel")
+        descLabel.Text = options.Desc
+        descLabel.Size = UDim2.new(1, 0, 0, 15)
+        descLabel.BackgroundColor3 = DESIGN.ComponentBackground
+        descLabel.TextColor3 = Color3.new(0.6, 0.6, 0.6)
+        descLabel.Font = Enum.Font.Roboto
+        descLabel.TextScaled = true
+        descLabel.TextXAlignment = Enum.TextXAlignment.Left
+        descLabel.TextWrap = true
+        descLabel.BorderSizePixel = 0
+        descLabel.Parent = container
+        addRoundedCorners(descLabel, DESIGN.CornerRadius)
+    end
+
+    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        container.Size = UDim2.new(1, 0, 0, listLayout.AbsoluteContentSize.Y)
+    end)
+
+    table.insert(tab.Components, container)
+    return container
 end
 
-function UIManager:CreateTag(tab, text, color)
+function UIManager:CreateTag(tab: any, options: {Text: string, Color: Color3})
     local tag = Instance.new("TextLabel")
-    tag.Text = text or "Tag"
+    tag.Text = options.Text or "Tag"
     tag.Size = UDim2.new(0, DESIGN.TagWidth, 0, DESIGN.TagHeight)
-    tag.BackgroundColor3 = color or DESIGN.TagBackground
+    tag.BackgroundColor3 = options.Color or DESIGN.TagBackground
     tag.TextColor3 = DESIGN.ComponentTextColor
     tag.Font = Enum.Font.Roboto
     tag.TextScaled = true
@@ -739,13 +793,84 @@ function UIManager:CreateTag(tab, text, color)
     tag.BorderSizePixel = 0
     tag.Parent = tab.Container
 
-    addRoundedCorners(tag, DESIGN.CornerRadius / 2)  -- Mais arredondado para tags
+    addRoundedCorners(tag, DESIGN.CornerRadius / 2)
 
     table.insert(tab.Components, tag)
     return tag
 end
 
-function UIManager:Notify(text, duration)
+function UIManager:CreateInput(tab: any, options: {Text: string, Placeholder: string, Callback: (text: string) -> (), Type: string?})
+    local inputContainer = Instance.new("Frame")
+    inputContainer.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
+    inputContainer.BackgroundTransparency = 1
+    inputContainer.Parent = tab.Container
+
+    local label = Instance.new("TextLabel")
+    label.Text = options.Text or "Input"
+    label.Size = UDim2.new(1, 0, 0.4, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = DESIGN.ComponentTextColor
+    label.Font = Enum.Font.Roboto
+    label.TextScaled = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = inputContainer
+
+    local textbox = Instance.new("TextBox")
+    textbox.Size = UDim2.new(1, 0, 0.6, 0)
+    textbox.Position = UDim2.new(0, 0, 0.4, 0)
+    textbox.BackgroundColor3 = DESIGN.InputBackgroundColor
+    textbox.PlaceholderText = options.Placeholder or ""
+    textbox.PlaceholderColor3 = Color3.new(0.5, 0.5, 0.5)
+    textbox.TextColor3 = DESIGN.InputTextColor
+    textbox.TextScaled = true
+    textbox.Font = Enum.Font.Roboto
+    textbox.TextXAlignment = Enum.TextXAlignment.Left
+    textbox.TextYAlignment = Enum.TextYAlignment.Center
+    textbox.BorderSizePixel = 0
+    textbox.Text = ""
+    textbox.Parent = inputContainer
+
+    addRoundedCorners(textbox, DESIGN.CornerRadius)
+
+    -- Detectar tipo de input (número ou texto)
+    if options.Type and options.Type == "Number" then
+        textbox.Text = tonumber(textbox.Text) or 0
+        textbox:GetPropertyChangedSignal("Text"):Connect(function()
+            local newText = textbox.Text
+            if tonumber(newText) or newText == "" then
+                if options.Callback then
+                    options.Callback(tonumber(newText) or 0)
+                end
+            else
+                textbox.Text = newText:sub(1, #newText - 1)
+            end
+        end)
+    else
+        textbox.FocusLost:Connect(function(enterPressed)
+            if enterPressed then
+                if options.Callback then
+                    options.Callback(textbox.Text)
+                end
+            end
+        end)
+    end
+    
+    table.insert(tab.Components, inputContainer)
+    return inputContainer
+end
+
+function UIManager:CreateHR(tab: any)
+    local hr = Instance.new("Frame")
+    hr.Size = UDim2.new(1, 0, 0, DESIGN.HRHeight)
+    hr.BackgroundColor3 = DESIGN.HRColor
+    hr.BorderSizePixel = 0
+    hr.Parent = tab.Container
+    addRoundedCorners(hr, DESIGN.HRHeight/2)
+    table.insert(tab.Components, hr)
+    return hr
+end
+
+function UIManager:Notify(options: {Text: string, Duration: number})
     local notifyFrame = Instance.new("Frame")
     notifyFrame.Size = UDim2.new(1, 0, 0, DESIGN.NotifyHeight)
     notifyFrame.BackgroundColor3 = DESIGN.NotifyBackground
@@ -754,7 +879,7 @@ function UIManager:Notify(text, duration)
     addRoundedCorners(notifyFrame, DESIGN.CornerRadius)
 
     local notifyText = Instance.new("TextLabel")
-    notifyText.Text = text or "Notificação"
+    notifyText.Text = options.Text or "Notificação"
     notifyText.Size = UDim2.new(1, 0, 1, 0)
     notifyText.BackgroundTransparency = 1
     notifyText.TextColor3 = DESIGN.NotifyTextColor
@@ -775,7 +900,7 @@ function UIManager:Notify(text, duration)
 
     -- Agendar saída
     spawn(function()
-        wait(duration or 5)
+        wait(options.Duration or 5)
         local tweenOutBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1})
         local tweenOutText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1})
         tweenOutBg:Play()
