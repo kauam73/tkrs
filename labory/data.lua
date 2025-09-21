@@ -2,6 +2,13 @@
 local UIManager = {}
 UIManager.__index = UIManager
 
+-- Services
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local localPlayer = Players.LocalPlayer
+
 -- Tabela de Constantes de Design
 local DESIGN = {
     -- Cores
@@ -26,6 +33,7 @@ local DESIGN = {
     InputBackgroundColor = Color3.fromRGB(40, 40, 40),
     InputTextColor = Color3.fromRGB(255, 255, 255),
     HRColor = Color3.fromRGB(70, 70, 70),
+    BlockScreenColor = Color3.new(0, 0, 0),
 
     -- Tamanhos e Dimensões
     WindowSize = UDim2.new(0, 500, 0, 400),
@@ -44,17 +52,12 @@ local DESIGN = {
     TagHeight = 25,
     TagWidth = 100,
     HRHeight = 2,
+    HRTextPadding = 10,
 
     -- Outros
     CornerRadius = 10,
     ButtonIconSize = 25
 }
-
--- Services
-local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
-local localPlayer = Players.LocalPlayer
 
 ---
 -- Funções de Criação de Componentes
@@ -67,13 +70,32 @@ local function addRoundedCorners(instance: Instance, radius: number?)
 end
 
 local function addHoverEffect(button: GuiObject, originalColor: Color3, hoverColor: Color3)
+    local isHovering = false
+    local isDown = false
+
     button.MouseEnter:Connect(function()
-        local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = hoverColor })
-        tween:Play()
+        isHovering = true
+        if not isDown then
+            local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = hoverColor })
+            tween:Play()
+        end
     end)
     button.MouseLeave:Connect(function()
-        local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = originalColor })
-        tween:Play()
+        isHovering = false
+        if not isDown then
+            local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = originalColor })
+            tween:Play()
+        end
+    end)
+    button.MouseButton1Down:Connect(function()
+        isDown = true
+    end)
+    button.MouseButton1Up:Connect(function()
+        isDown = false
+        if not isHovering then
+            local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = originalColor })
+            tween:Play()
+        end
     end)
 end
 
@@ -104,7 +126,7 @@ function Tab.new(name: string, parent: Instance)
     local self = setmetatable({} :: {
         Name: string,
         Container: ScrollingFrame,
-        Components: {Instance},
+        Components: {any},
         Button: TextButton?
     }, Tab)
 
@@ -158,12 +180,15 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
         ResizeHandle: Frame,
         FloatButton: Frame,
         NotifyContainer: Frame,
-        Connections: { any }
+        Connections: { any },
+        BlockScreen: Frame?,
+        Blocked: boolean,
+        startTab: string?
     }, UIManager)
 
     self.ScreenGui = Instance.new("ScreenGui")
     self.ScreenGui.Name = options.Name or "UIManager"
-    self.ScreenGui.ResetOnSpawn = false -- Não reseta ao morrer!
+    self.ScreenGui.ResetOnSpawn = false
     self.ScreenGui.Parent = options.Parent or localPlayer:WaitForChild("PlayerGui")
 
     self.IsMinimized = false
@@ -173,6 +198,7 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
     self.IsResizing = false
     self.Connections = {}
     self.startTab = options.startTab
+    self.Blocked = false
 
     -- Container principal da janela
     self.Window = Instance.new("Frame")
@@ -304,6 +330,15 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
     notifyPadding.PaddingRight = UDim.new(0, 10)
     notifyPadding.Parent = self.NotifyContainer
 
+    -- Tela de bloqueio
+    self.BlockScreen = Instance.new("Frame")
+    self.BlockScreen.Size = UDim2.new(1, 0, 1, 0)
+    self.BlockScreen.BackgroundTransparency = 0.5
+    self.BlockScreen.BackgroundColor3 = DESIGN.BlockScreenColor
+    self.BlockScreen.ZIndex = 10
+    self.BlockScreen.Visible = false
+    self.BlockScreen.Parent = self.ScreenGui
+
     -- Conexão para garantir que o painel persista
     self.Connections.PlayerRemoving = Players.PlayerRemoving:Connect(function(player)
         if player == localPlayer then
@@ -320,7 +355,7 @@ function UIManager:Destroy()
     end
     -- Limpa referências para garbage collection
     for _, connection in pairs(self.Connections) do
-        if connection.Connected then
+        if connection and connection.Connected then
             connection:Disconnect()
         end
     end
@@ -335,16 +370,18 @@ function UIManager:SetupDragSystem()
     local startPos = nil
 
     self.Connections.DragBegin = self.TitleBar.InputBegan:Connect(function(input)
+        if self.Blocked then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             self.IsDragging = true
-            dragStart = input.Position
+            dragStart = UserInputService:GetMouseLocation()
             startPos = self.Window.Position
         end
     end)
 
     self.Connections.DragChanged = UserInputService.InputChanged:Connect(function(input)
+        if self.Blocked then return end
         if self.IsDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - dragStart
+            local delta = UserInputService:GetMouseLocation() - dragStart
             local newPos = UDim2.new(
                 startPos.X.Scale,
                 startPos.X.Offset + delta.X,
@@ -358,6 +395,7 @@ function UIManager:SetupDragSystem()
     end)
 
     self.Connections.DragEnded = UserInputService.InputEnded:Connect(function(input)
+        if self.Blocked then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             self.IsDragging = false
         end
@@ -392,16 +430,18 @@ function UIManager:SetupResizeSystem()
     local startSize = nil
 
     self.Connections.ResizeBegin = self.ResizeHandle.InputBegan:Connect(function(input)
+        if self.Blocked then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             self.IsResizing = true
-            resizeStart = input.Position
+            resizeStart = UserInputService:GetMouseLocation()
             startSize = self.Window.Size
         end
     end)
 
     self.Connections.ResizeChanged = UserInputService.InputChanged:Connect(function(input)
+        if self.Blocked then return end
         if self.IsResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - resizeStart
+            local delta = UserInputService:GetMouseLocation() - resizeStart
             local newWidth = math.clamp(startSize.X.Offset + delta.X, DESIGN.MinWindowSize.X, DESIGN.MaxWindowSize.X)
             local newHeight = math.clamp(startSize.Y.Offset + delta.Y, DESIGN.MinWindowSize.Y, DESIGN.MaxWindowSize.Y)
 
@@ -414,6 +454,7 @@ function UIManager:SetupResizeSystem()
     end)
 
     self.Connections.ResizeEnded = UserInputService.InputEnded:Connect(function(input)
+        if self.Blocked then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             self.IsResizing = false
         end
@@ -458,6 +499,7 @@ function UIManager:SetupFloatButton(text: string)
     addHoverEffect(self.FloatButton, DESIGN.FloatButtonColor, DESIGN.ComponentHoverColor)
 
     self.Connections.ExpandBtn = expandBtn.MouseButton1Click:Connect(function()
+        if self.Blocked then return end
         self:Expand()
     end)
 
@@ -466,16 +508,18 @@ function UIManager:SetupFloatButton(text: string)
     local floatIsDragging = false
 
     self.Connections.FloatDragBegin = expandBtn.InputBegan:Connect(function(input)
+        if self.Blocked then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             floatIsDragging = true
-            floatDragStart = input.Position
+            floatDragStart = UserInputService:GetMouseLocation()
             floatStartPos = self.FloatButton.Position
         end
     end)
 
     self.Connections.FloatDragChanged = UserInputService.InputChanged:Connect(function(input)
+        if self.Blocked then return end
         if floatIsDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - floatDragStart
+            local delta = UserInputService:GetMouseLocation() - floatDragStart
             local newPos = UDim2.new(
                 floatStartPos.X.Scale,
                 floatStartPos.X.Offset + delta.X,
@@ -487,6 +531,7 @@ function UIManager:SetupFloatButton(text: string)
     end)
 
     self.Connections.FloatDragEnded = UserInputService.InputEnded:Connect(function(input)
+        if self.Blocked then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             floatIsDragging = false
         end
@@ -511,29 +556,39 @@ function UIManager:CreateTab(options: { Title: string })
     tabButton.TextScaled = true
     tabButton.BorderSizePixel = 0
     tabButton.Parent = self.TabContainer
+    tab.Button = tabButton
 
     addRoundedCorners(tabButton, DESIGN.CornerRadius)
     addHoverEffect(tabButton, DESIGN.TabInactiveColor, DESIGN.ComponentHoverColor)
 
     tabButton.MouseButton1Click:Connect(function()
+        if self.Blocked then return end
         self:SetActiveTab(tab)
     end)
 
-    tab.Button = tabButton
-    tab.Container.Visible = false -- Oculta a aba por padrão
+    tab.Container.Visible = false
 
     if self.startTab and self.startTab == tabTitle then
         self:SetActiveTab(tab)
-    elseif not self.CurrentTab then -- Define a primeira aba criada como ativa se nenhuma foi especificada
+    elseif not self.CurrentTab then
         self:SetActiveTab(tab)
     end
-
+    
     function tab.Destroy()
-        tab.Container:Destroy()
-        tabButton:Destroy()
+        for _, componentApi in pairs(tab.Components) do
+            if componentApi and componentApi.Destroy then
+                componentApi.Destroy()
+            end
+        end
+        if tab.Container then tab.Container:Destroy() end
+        if tabButton then tabButton:Destroy() end
         self.Tabs[tabTitle] = nil
         if self.CurrentTab == tab then
             self.CurrentTab = nil
+            local firstTab = next(self.Tabs)
+            if firstTab then
+                self:SetActiveTab(self.Tabs[firstTab])
+            end
         end
     end
 
@@ -543,26 +598,22 @@ end
 function UIManager:SetActiveTab(tab: any)
     if self.CurrentTab then
         self.CurrentTab.Container.Visible = false
-        local inactiveTween = TweenService:Create(self.CurrentTab.Button, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-            BackgroundColor3 = DESIGN.TabInactiveColor
-        })
-        inactiveTween:Play()
+        -- Restaura a cor do botão da aba anterior
+        self.CurrentTab.Button.BackgroundColor3 = DESIGN.TabInactiveColor
     end
 
     self.CurrentTab = tab
     self.CurrentTab.Container.Visible = true
 
-    local activeTween = TweenService:Create(self.CurrentTab.Button, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-        BackgroundColor3 = DESIGN.TabActiveColor
-    })
-    activeTween:Play()
+    -- Define a cor do botão da nova aba ativa
+    self.CurrentTab.Button.BackgroundColor3 = DESIGN.TabActiveColor
 end
 
 ---
 -- Funções de Estado (Minimizar/Expandir)
 ---
 function UIManager:Minimize()
-    if self.IsMinimized then return end
+    if self.IsMinimized or self.Blocked then return end
     self.IsMinimized = true
 
     local minimizeTween = TweenService:Create(self.Window, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
@@ -583,7 +634,7 @@ function UIManager:Minimize()
 end
 
 function UIManager:Expand()
-    if not self.IsMinimized then return end
+    if not self.IsMinimized or self.Blocked then return end
     self.IsMinimized = false
 
     local floatTween = TweenService:Create(self.FloatButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
@@ -603,18 +654,27 @@ function UIManager:Expand()
     end)
 end
 
+function UIManager:Block(state: boolean)
+    self.Blocked = state
+    self.BlockScreen.Visible = state
+end
+
 ---
 -- Funções Públicas para criar componentes
 ---
-
 function UIManager:CreateButton(tab: any, options: { Text: string, Callback: () -> () })
+    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateButton")
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateButton")
     local btn = createButton(options.Text, nil, tab.Container)
     local connections = {}
 
-    local publicApi = {}
+    local publicApi = {
+        _instance = btn,
+        _connections = connections
+    }
 
     connections.Click = btn.MouseButton1Click:Connect(function()
+        if self.Blocked then return end
         local feedbackTween = TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {
             Size = UDim2.new(0.95, 0, 0, DESIGN.ComponentHeight * 0.9)
         })
@@ -637,19 +697,24 @@ function UIManager:CreateButton(tab: any, options: { Text: string, Callback: () 
     end
 
     function publicApi.Destroy()
-        for _, conn in pairs(connections) do
-            if conn.Connected then
-                conn:Disconnect()
+        if publicApi._instance then
+            for _, conn in pairs(publicApi._connections) do
+                if conn and conn.Connected then
+                    conn:Disconnect()
+                end
             end
+            publicApi._instance:Destroy()
+            publicApi._instance = nil
+            publicApi._connections = nil
         end
-        btn:Destroy()
     end
 
-    table.insert(tab.Components, btn)
+    table.insert(tab.Components, publicApi)
     return publicApi
 end
 
 function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (state: boolean) -> () })
+    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateToggle")
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateToggle")
 
     local frame = Instance.new("Frame")
@@ -686,7 +751,10 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
 
     local state = false
     local connections = {}
-    local publicApi = {}
+    local publicApi = {
+        _instance = frame,
+        _connections = connections
+    }
 
     local function toggle(newState: boolean)
         state = newState
@@ -696,6 +764,7 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
     end
 
     connections.Click = switch.MouseButton1Click:Connect(function()
+        if self.Blocked then return end
         toggle(not state)
     end)
 
@@ -709,19 +778,24 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
     end
 
     function publicApi.Destroy()
-        for _, conn in pairs(connections) do
-            if conn.Connected then
-                conn:Disconnect()
+        if publicApi._instance then
+            for _, conn in pairs(publicApi._connections) do
+                if conn and conn.Connected then
+                    conn:Disconnect()
+                end
             end
+            publicApi._instance:Destroy()
+            publicApi._instance = nil
+            publicApi._connections = nil
         end
-        frame:Destroy()
     end
 
-    table.insert(tab.Components, frame)
+    table.insert(tab.Components, publicApi)
     return publicApi
 end
 
 function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { string }, Callback: (value: string) -> () })
+    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateDropdown")
     assert(type(options) == "table" and type(options.Title) == "string" and type(options.Values) == "table", "Invalid arguments for CreateDropdown")
 
     local frame = Instance.new("Frame")
@@ -746,26 +820,43 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
     local dropdownFrame
     local connections = {}
     local currentValues = options.Values
-    local currentValue = currentValues[1] or ""
+    local currentValue = options.SelectedValue or currentValues[1] or ""
+    btn.Text = currentValue .. " ▼"
 
-    local publicApi = {}
+    local publicApi = {
+        _instance = frame,
+        _connections = connections
+    }
 
-    connections.Click = btn.MouseButton1Click:Connect(function()
-        if dropdownOpen then
-            if dropdownFrame then
-                dropdownFrame:Destroy()
+    local function closeDropdown()
+        if dropdownFrame then
+            dropdownFrame:Destroy()
+        end
+        dropdownOpen = false
+        btn.Text = currentValue .. " ▼"
+    end
+    
+    connections.InputBegan = UserInputService.InputBegan:Connect(function(input)
+        if dropdownOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
+            if not btn:IsAncestorOf(input.Target) and (not dropdownFrame or not dropdownFrame:IsAncestorOf(input.Target)) then
+                closeDropdown()
             end
-            dropdownOpen = false
-            btn.Text = currentValue .. " ▼"
+        end
+    end)
+    
+    connections.Click = btn.MouseButton1Click:Connect(function()
+        if self.Blocked then return end
+        if dropdownOpen then
+            closeDropdown()
         else
             btn.Text = currentValue .. " ▲"
-            -- Cria o dropdown em um ScreenGui separado para ficar na frente de tudo
             dropdownFrame = Instance.new("ScreenGui")
             dropdownFrame.Name = "DropdownOverlay"
+            dropdownFrame.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
             dropdownFrame.Parent = localPlayer:WaitForChild("PlayerGui")
             
             local dropdownHolder = Instance.new("Frame")
-            dropdownHolder.Size = UDim2.new(1, 0, 0, 0)
+            dropdownHolder.Size = UDim2.new(1, 0, 1, 0)
             dropdownHolder.Position = UDim2.new(0, 0, 0, 0)
             dropdownHolder.BackgroundTransparency = 1
             dropdownHolder.Parent = dropdownFrame
@@ -789,14 +880,12 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
                 local option = createButton(v, UDim2.new(1, 0, 0, DESIGN.ComponentHeight - 2), listFrame)
                 option.MouseButton1Click:Connect(function()
                     currentValue = v
-                    btn.Text = v .. " ▼"
-                    dropdownOpen = false
-                    dropdownFrame:Destroy()
                     if options.Callback then options.Callback(v) end
+                    closeDropdown()
                 end)
             end
             
-            local totalHeight = #currentValues * DESIGN.ComponentHeight + dropdownLayout.Padding.Offset * (#currentValues - 1)
+            local totalHeight = #currentValues * (DESIGN.ComponentHeight - 2) + dropdownLayout.Padding.Offset * (#currentValues - 1)
             local openTween = TweenService:Create(listFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = UDim2.new(0, size.X, 0, totalHeight) })
             openTween:Play()
             
@@ -818,19 +907,25 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
     end
 
     function publicApi.Destroy()
-        for _, conn in pairs(connections) do
-            if conn.Connected then
-                conn:Disconnect()
+        if publicApi._instance then
+            for _, conn in pairs(publicApi._connections) do
+                if conn and conn.Connected then
+                    conn:Disconnect()
+                end
             end
+            closeDropdown()
+            publicApi._instance:Destroy()
+            publicApi._instance = nil
+            publicApi._connections = nil
         end
-        frame:Destroy()
     end
 
-    table.insert(tab.Components, frame)
+    table.insert(tab.Components, publicApi)
     return publicApi
 end
 
 function UIManager:CreateLabel(tab: any, options: { Title: string, Desc: string? })
+    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateLabel")
     assert(type(options) == "table" and type(options.Title) == "string", "Invalid arguments for CreateLabel")
 
     local container = Instance.new("Frame")
@@ -875,7 +970,10 @@ function UIManager:CreateLabel(tab: any, options: { Title: string, Desc: string?
         container.Size = UDim2.new(1, 0, 0, listLayout.AbsoluteContentSize.Y)
     end)
 
-    local publicApi = {}
+    local publicApi = {
+        _instance = container,
+        _connections = { layoutConnection }
+    }
 
     function publicApi.Update(newOptions: { Title: string?, Desc: string? })
         if newOptions.Title then
@@ -905,15 +1003,24 @@ function UIManager:CreateLabel(tab: any, options: { Title: string, Desc: string?
     end
 
     function publicApi.Destroy()
-        layoutConnection:Disconnect()
-        container:Destroy()
+        if publicApi._instance then
+            for _, conn in pairs(publicApi._connections) do
+                if conn and conn.Connected then
+                    conn:Disconnect()
+                end
+            end
+            publicApi._instance:Destroy()
+            publicApi._instance = nil
+            publicApi._connections = nil
+        end
     end
 
-    table.insert(tab.Components, container)
+    table.insert(tab.Components, publicApi)
     return publicApi
 end
 
 function UIManager:CreateTag(tab: any, options: { Text: string, Color: Color3? })
+    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateTag")
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateTag")
 
     local tag = Instance.new("TextLabel")
@@ -928,7 +1035,9 @@ function UIManager:CreateTag(tab: any, options: { Text: string, Color: Color3? }
     tag.Parent = tab.Container
     addRoundedCorners(tag, DESIGN.CornerRadius / 2)
 
-    local publicApi = {}
+    local publicApi = {
+        _instance = tag
+    }
 
     function publicApi.Update(newOptions: { Text: string?, Color: Color3? })
         if newOptions.Text then
@@ -940,14 +1049,18 @@ function UIManager:CreateTag(tab: any, options: { Text: string, Color: Color3? }
     end
 
     function publicApi.Destroy()
-        tag:Destroy()
+        if publicApi._instance then
+            publicApi._instance:Destroy()
+            publicApi._instance = nil
+        end
     end
 
-    table.insert(tab.Components, tag)
+    table.insert(tab.Components, publicApi)
     return publicApi
 end
 
 function UIManager:CreateInput(tab: any, options: { Text: string, Placeholder: string, Callback: (value: any) -> (), Type: string? })
+    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateInput")
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateInput")
 
     local inputContainer = Instance.new("Frame")
@@ -982,12 +1095,16 @@ function UIManager:CreateInput(tab: any, options: { Text: string, Placeholder: s
     addRoundedCorners(textbox, DESIGN.CornerRadius)
 
     local connections = {}
-    local publicApi = {}
+    local publicApi = {
+        _instance = inputContainer,
+        _connections = connections
+    }
 
     if options.Type and options.Type:lower() == "number" then
         connections.Changed = textbox:GetPropertyChangedSignal("Text"):Connect(function()
+            if self.Blocked then return end
             local newText = textbox.Text
-            if tonumber(newText) or newText == "" then
+            if tonumber(newText) or newText == "" or newText == "-" then
                 if options.Callback then
                     options.Callback(tonumber(newText) or 0)
                 end
@@ -997,6 +1114,7 @@ function UIManager:CreateInput(tab: any, options: { Text: string, Placeholder: s
         end)
     else
         connections.FocusLost = textbox.FocusLost:Connect(function(enterPressed)
+            if self.Blocked then return end
             if enterPressed then
                 if options.Callback then
                     options.Callback(textbox.Text)
@@ -1024,37 +1142,152 @@ function UIManager:CreateInput(tab: any, options: { Text: string, Placeholder: s
     end
 
     function publicApi.Destroy()
-        for _, conn in pairs(connections) do
-            if conn.Connected then
-                conn:Disconnect()
+        if publicApi._instance then
+            for _, conn in pairs(publicApi._connections) do
+                if conn and conn.Connected then
+                    conn:Disconnect()
+                end
             end
+            publicApi._instance:Destroy()
+            publicApi._instance = nil
+            publicApi._connections = nil
         end
-        inputContainer:Destroy()
     end
 
-    table.insert(tab.Components, inputContainer)
+    table.insert(tab.Components, publicApi)
     return publicApi
 end
 
-function UIManager:CreateHR(tab: any, options: {})
-    local hr = Instance.new("Frame")
-    hr.Size = UDim2.new(1, 0, 0, DESIGN.HRHeight)
-    hr.BackgroundColor3 = DESIGN.HRColor
-    hr.BorderSizePixel = 0
-    hr.Parent = tab.Container
-    addRoundedCorners(hr, DESIGN.HRHeight / 2)
+function UIManager:CreateHR(tab: any, options: { Text: string? })
+    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateHR")
+    local hrContainer = Instance.new("Frame")
+    hrContainer.Size = UDim2.new(1, 0, 0, DESIGN.HRHeight)
+    hrContainer.BackgroundTransparency = 1
+    hrContainer.Parent = tab.Container
 
-    local publicApi = {}
+    local line1 = Instance.new("Frame")
+    line1.Size = UDim2.new(0.5, 0, 1, 0)
+    line1.Position = UDim2.new(0, 0, 0, 0)
+    line1.BackgroundColor3 = DESIGN.HRColor
+    line1.BorderSizePixel = 0
+    line1.Parent = hrContainer
 
-    function publicApi.Update(newOptions: {})
-        -- Não há propriedades para atualizar, mas mantemos a função
+    local line2 = Instance.new("Frame")
+    line2.Size = UDim2.new(0.5, 0, 1, 0)
+    line2.Position = UDim2.new(0.5, 0, 0, 0)
+    line2.BackgroundColor3 = DESIGN.HRColor
+    line2.BorderSizePixel = 0
+    line2.Parent = hrContainer
+
+    local textLabel
+    if options and options.Text and options.Text ~= "" then
+        textLabel = Instance.new("TextLabel")
+        textLabel.Text = options.Text
+        textLabel.BackgroundTransparency = 1
+        textLabel.TextColor3 = DESIGN.ComponentTextColor
+        textLabel.Font = Enum.Font.Roboto
+        textLabel.TextScaled = true
+        textLabel.TextXAlignment = Enum.TextXAlignment.Center
+        textLabel.TextYAlignment = Enum.TextYAlignment.Center
+        textLabel.Size = UDim2.new(0, 0, 0, 20)
+        textLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+        textLabel.Parent = hrContainer
+
+        local textBounds = textLabel.TextBounds.X
+        textLabel.Size = UDim2.new(0, textBounds + DESIGN.HRTextPadding, 0, 20)
+        textLabel.Position = UDim2.new(0.5, -textBounds / 2 - DESIGN.HRTextPadding / 2, 0, 0)
+
+        local lineSize = (hrContainer.AbsoluteSize.X - textBounds - DESIGN.HRTextPadding) / 2
+        line1.Size = UDim2.new(0, lineSize, 1, 0)
+        line2.Size = UDim2.new(0, lineSize, 1, 0)
+        line2.Position = UDim2.new(0, lineSize + textBounds + DESIGN.HRTextPadding, 0, 0)
+
+        task.spawn(function()
+            local connection = RunService.RenderStepped:Connect(function()
+                local newTextBounds = textLabel.TextBounds.X
+                if newTextBounds ~= textBounds then
+                    textBounds = newTextBounds
+                    textLabel.Size = UDim2.new(0, textBounds + DESIGN.HRTextPadding, 0, 20)
+                    textLabel.Position = UDim2.new(0.5, -textBounds / 2 - DESIGN.HRTextPadding / 2, 0, 0)
+
+                    local newSize = (hrContainer.AbsoluteSize.X - textBounds - DESIGN.HRTextPadding) / 2
+                    line1.Size = UDim2.new(0, newSize, 1, 0)
+                    line2.Size = UDim2.new(0, newSize, 1, 0)
+                    line2.Position = UDim2.new(0, newSize + textBounds + DESIGN.HRTextPadding, 0, 0)
+                end
+            end)
+            hrContainer.AncestryChanged:Connect(function()
+                if not hrContainer.Parent then
+                    connection:Disconnect()
+                end
+            end)
+        end)
+    else
+        line1.Size = UDim2.new(1, 0, 1, 0)
+        line2:Destroy()
+    end
+
+    local publicApi = {
+        _instance = hrContainer,
+        _connections = {}
+    }
+
+    function publicApi.Update(newOptions: { Text: string? })
+        -- Remova o texto e as linhas existentes
+        if textLabel then textLabel:Destroy() end
+        line1:Destroy()
+        if line2 then line2:Destroy() end
+
+        -- Crie as novas linhas e texto com base na nova opção
+        line1 = Instance.new("Frame")
+        line1.Size = UDim2.new(0.5, 0, 1, 0)
+        line1.Position = UDim2.new(0, 0, 0, 0)
+        line1.BackgroundColor3 = DESIGN.HRColor
+        line1.BorderSizePixel = 0
+        line1.Parent = hrContainer
+
+        line2 = Instance.new("Frame")
+        line2.Size = UDim2.new(0.5, 0, 1, 0)
+        line2.Position = UDim2.new(0.5, 0, 0, 0)
+        line2.BackgroundColor3 = DESIGN.HRColor
+        line2.BorderSizePixel = 0
+        line2.Parent = hrContainer
+
+        if newOptions and newOptions.Text and newOptions.Text ~= "" then
+            textLabel = Instance.new("TextLabel")
+            textLabel.Text = newOptions.Text
+            textLabel.BackgroundTransparency = 1
+            textLabel.TextColor3 = DESIGN.ComponentTextColor
+            textLabel.Font = Enum.Font.Roboto
+            textLabel.TextScaled = true
+            textLabel.TextXAlignment = Enum.TextXAlignment.Center
+            textLabel.TextYAlignment = Enum.TextYAlignment.Center
+            textLabel.Size = UDim2.new(0, 0, 0, 20)
+            textLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+            textLabel.Parent = hrContainer
+            
+            local textBounds = textLabel.TextBounds.X
+            textLabel.Size = UDim2.new(0, textBounds + DESIGN.HRTextPadding, 0, 20)
+            textLabel.Position = UDim2.new(0.5, -textBounds / 2 - DESIGN.HRTextPadding / 2, 0, 0)
+            
+            local lineSize = (hrContainer.AbsoluteSize.X - textBounds - DESIGN.HRTextPadding) / 2
+            line1.Size = UDim2.new(0, lineSize, 1, 0)
+            line2.Size = UDim2.new(0, lineSize, 1, 0)
+            line2.Position = UDim2.new(0, lineSize + textBounds + DESIGN.HRTextPadding, 0, 0)
+        else
+            line1.Size = UDim2.new(1, 0, 1, 0)
+            line2:Destroy()
+        end
     end
 
     function publicApi.Destroy()
-        hr:Destroy()
+        if publicApi._instance then
+            publicApi._instance:Destroy()
+            publicApi._instance = nil
+        end
     end
 
-    table.insert(tab.Components, hr)
+    table.insert(tab.Components, publicApi)
     return publicApi
 end
 
@@ -1088,7 +1321,7 @@ function UIManager:Notify(options: { Text: string, Duration: number? })
     tweenInText:Play()
 
     spawn(function()
-        wait(options.Duration or 5)
+        task.wait(options.Duration or 5)
         local tweenOutBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { BackgroundTransparency = 1 })
         local tweenOutText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { TextTransparency = 1 })
         tweenOutBg:Play()
