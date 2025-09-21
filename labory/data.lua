@@ -424,7 +424,7 @@ function UIManager:SetupResizeSystem()
     resizeIcon.Font = Enum.Font.Roboto
     resizeIcon.Parent = self.ResizeHandle
 
-    addHoverEffect(self.ResizeHandle, DESIGN.ResizeHandleColor, DESIGN.ComponentHoverColor)
+    -- Não é necessário addHoverEffect aqui, pois a funcionalidade de redimensionamento já controla o mouse.
 
     local resizeStart = nil
     local startSize = nil
@@ -496,7 +496,7 @@ function UIManager:SetupFloatButton(text: string)
     expandBtn.TextScaled = true
     expandBtn.Parent = self.FloatButton
 
-    addHoverEffect(self.FloatButton, DESIGN.FloatButtonColor, DESIGN.ComponentHoverColor)
+    addHoverEffect(expandBtn, DESIGN.FloatButton.BackgroundColor3, DESIGN.ComponentHoverColor)
 
     self.Connections.ExpandBtn = expandBtn.MouseButton1Click:Connect(function()
         if self.Blocked then return end
@@ -794,7 +794,7 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
     return publicApi
 end
 
-function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { string }, Callback: (value: string) -> () })
+function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { string }, Callback: (value: string) -> (), SelectedValue: string? })
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateDropdown")
     assert(type(options) == "table" and type(options.Title) == "string" and type(options.Values) == "table", "Invalid arguments for CreateDropdown")
 
@@ -820,7 +820,7 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
     local dropdownFrame
     local connections = {}
     local currentValues = options.Values
-    local currentValue = options.SelectedValue or currentValues[1] or ""
+    local currentValue = options.SelectedValue or (currentValues[1] and currentValues[1] or "")
     btn.Text = currentValue .. " ▼"
 
     local publicApi = {
@@ -900,9 +900,18 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
         if newOptions.Values then
             currentValues = newOptions.Values
         end
-        if newOptions.SelectedValue and table.find(currentValues, newOptions.SelectedValue) then
-            currentValue = newOptions.SelectedValue
-            btn.Text = currentValue .. " ▼"
+        if newOptions.SelectedValue then
+            local valueExists = false
+            for _, v in ipairs(currentValues) do
+                if v == newOptions.SelectedValue then
+                    valueExists = true
+                    break
+                end
+            end
+            if valueExists then
+                currentValue = newOptions.SelectedValue
+                btn.Text = currentValue .. " ▼"
+            end
         end
     end
 
