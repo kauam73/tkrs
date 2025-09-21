@@ -2,15 +2,17 @@
 local UIManager = {}
 UIManager.__index = UIManager
 
--- Tabela de Constantes de Design para fácil modificação
+-- Tabela de Constantes de Design
 local DESIGN = {
     -- Cores
-    WindowColor = Color3.fromRGB(35, 35, 35),
+    WindowColor1 = Color3.fromRGB(35, 35, 35), -- Cor do gradiente 1
+    WindowColor2 = Color3.fromRGB(25, 25, 25), -- Cor do gradiente 2
     TitleColor = Color3.fromRGB(255, 255, 255),
     ComponentBackground = Color3.fromRGB(50, 50, 50),
     ComponentTextColor = Color3.fromRGB(255, 255, 255),
-    ActiveToggleColor = Color3.fromRGB(70, 160, 255), -- Cor do toggle ativado
-    InactiveToggleColor = Color3.fromRGB(70, 70, 70), -- Cor do toggle desativado
+    ComponentHoverColor = Color3.fromRGB(70, 70, 70), -- Nova cor de hover
+    ActiveToggleColor = Color3.fromRGB(70, 160, 255),
+    InactiveToggleColor = Color3.fromRGB(70, 70, 70),
     DropdownHoverColor = Color3.fromRGB(60, 60, 60),
 
     -- Tamanhos e Dimensões
@@ -21,21 +23,30 @@ local DESIGN = {
     ContainerPadding = 10,
 
     -- Outros
-    CornerRadius = 8 -- Cantos arredondados em pixels
+    CornerRadius = 8
 }
 
 ---
 -- Funções de Criação de Componentes
 ---
 
--- Função auxiliar para adicionar um UICorner
 local function addRoundedCorners(instance, radius)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius)
     corner.Parent = instance
 end
 
--- Cria um botão base para reutilização
+-- Novo: Função para adicionar efeitos de hover
+local function addHoverEffect(button, originalColor, hoverColor)
+    button.MouseEnter:Connect(function()
+        button.BackgroundColor3 = hoverColor
+    end)
+    button.MouseLeave:Connect(function()
+        button.BackgroundColor3 = originalColor
+    end)
+end
+
+-- Cria um botão base
 local function createButton(text, size, parent)
     local btn = Instance.new("TextButton")
     btn.Text = text
@@ -43,9 +54,11 @@ local function createButton(text, size, parent)
     btn.BackgroundColor3 = DESIGN.ComponentBackground
     btn.TextColor3 = DESIGN.ComponentTextColor
     btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.Roboto
     btn.Parent = parent
 
     addRoundedCorners(btn, DESIGN.CornerRadius)
+    addHoverEffect(btn, DESIGN.ComponentBackground, DESIGN.ComponentHoverColor)
 
     return btn
 end
@@ -63,11 +76,20 @@ function UIManager.new(name, parent)
     self.Window = Instance.new("Frame")
     self.Window.Size = DESIGN.WindowSize
     self.Window.Position = UDim2.new(0.5, -DESIGN.WindowSize.X.Offset / 2, 0.5, -DESIGN.WindowSize.Y.Offset / 2)
-    self.Window.BackgroundColor3 = DESIGN.WindowColor
+    self.Window.BackgroundColor3 = DESIGN.WindowColor1 -- A cor base, o gradiente vai sobrepor
     self.Window.BorderSizePixel = 0
     self.Window.Parent = self.ScreenGui
 
     addRoundedCorners(self.Window, DESIGN.CornerRadius)
+
+    -- Novo: Gradiente de cor
+    local windowGradient = Instance.new("UIGradient")
+    windowGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, DESIGN.WindowColor1),
+        ColorSequenceKeypoint.new(1, DESIGN.WindowColor2)
+    })
+    windowGradient.Rotation = 90
+    windowGradient.Parent = self.Window
 
     local title = Instance.new("TextLabel")
     title.Text = name or "UIManager"
@@ -76,13 +98,22 @@ function UIManager.new(name, parent)
     title.BackgroundTransparency = 1
     title.TextColor3 = DESIGN.TitleColor
     title.TextScaled = true
+    title.Font = Enum.Font.Roboto
     title.Parent = self.Window
 
     self.ComponentContainer = Instance.new("Frame")
-    self.ComponentContainer.Size = UDim2.new(1, -DESIGN.ContainerPadding * 2, 1, -DESIGN.TitleHeight - DESIGN.ContainerPadding * 2)
-    self.ComponentContainer.Position = UDim2.new(0, DESIGN.ContainerPadding, 0, DESIGN.TitleHeight + DESIGN.ContainerPadding)
+    self.ComponentContainer.Size = UDim2.new(1, 0, 1, 0)
+    self.ComponentContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight)
     self.ComponentContainer.BackgroundTransparency = 1
     self.ComponentContainer.Parent = self.Window
+
+    -- Novo: UIPadding para margens internas
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, DESIGN.ContainerPadding)
+    padding.PaddingLeft = UDim.new(0, DESIGN.ContainerPadding)
+    padding.PaddingRight = UDim.new(0, DESIGN.ContainerPadding)
+    padding.PaddingBottom = UDim.new(0, DESIGN.ContainerPadding)
+    padding.Parent = self.ComponentContainer
 
     -- UIListLayout para organizar os componentes automaticamente
     local listLayout = Instance.new("UIListLayout")
@@ -119,11 +150,13 @@ function UIManager:CreateToggle(text, callback)
     label.Size = UDim2.new(0.7, 0, 1, 0)
     label.BackgroundTransparency = 1
     label.TextColor3 = DESIGN.ComponentTextColor
+    label.Font = Enum.Font.Roboto
     label.Parent = frame
 
     local btn = createButton("Off", UDim2.new(0.3, 0, 1, 0), frame)
     btn.Position = UDim2.new(0.7, 0, 0, 0)
     btn.BackgroundColor3 = DESIGN.InactiveToggleColor
+    addHoverEffect(btn, DESIGN.InactiveToggleColor, DESIGN.ComponentHoverColor)
 
     local state = false
     btn.MouseButton1Click:Connect(function()
@@ -148,6 +181,7 @@ function UIManager:CreateDropdown(title, values, callback)
     label.Size = UDim2.new(1, 0, 0.5, 0)
     label.BackgroundTransparency = 1
     label.TextColor3 = DESIGN.ComponentTextColor
+    label.Font = Enum.Font.Roboto
     label.Parent = frame
 
     local btn = createButton("Select", UDim2.new(1, 0, 0.5, 0), frame)
@@ -166,6 +200,7 @@ function UIManager:CreateDropdown(title, values, callback)
             dropdownFrame.Position = UDim2.new(0, 0, 1, 0)
             dropdownFrame.BackgroundColor3 = DESIGN.ComponentBackground
             dropdownFrame.Parent = frame
+            addRoundedCorners(dropdownFrame, DESIGN.CornerRadius)
 
             local dropdownLayout = Instance.new("UIListLayout")
             dropdownLayout.Padding = UDim.new(0, 2)
