@@ -14,8 +14,10 @@ local DESIGN = {
     ActiveToggleColor = Color3.fromRGB(70, 160, 255),
     InactiveToggleColor = Color3.fromRGB(70, 70, 70),
     DropdownHoverColor = Color3.fromRGB(60, 60, 60),
-    MinimizeButtonColor = Color3.fromRGB(255, 50, 50), -- Cor do botão de fechar
-    FloatButtonColor = Color3.fromRGB(50, 50, 50), -- Cor do botão flutuante
+    MinimizeButtonColor = Color3.fromRGB(255, 50, 50),
+    FloatButtonColor = Color3.fromRGB(50, 50, 50),
+    TabActiveColor = Color3.fromRGB(70, 70, 70),
+    TabInactiveColor = Color3.fromRGB(40, 40, 40),
 
     -- Tamanhos e Dimensões
     WindowSize = UDim2.new(0, 400, 0, 500),
@@ -23,7 +25,8 @@ local DESIGN = {
     ComponentHeight = 40,
     ComponentPadding = 10,
     ContainerPadding = 10,
-    FloatButtonSize = UDim2.new(0, 50, 0, 50), -- Tamanho do botão flutuante
+    FloatButtonSize = UDim2.new(0, 50, 0, 50),
+    TabButtonHeight = 30,
 
     -- Outros
     CornerRadius = 8
@@ -65,6 +68,37 @@ local function createButton(text, size, parent)
 end
 
 ---
+-- Lógica do Tab
+---
+local Tab = {}
+Tab.__index = Tab
+
+function Tab.new(name, parent)
+    local self = setmetatable({}, Tab)
+    
+    self.Name = name
+    self.Container = Instance.new("Frame")
+    self.Container.Size = UDim2.new(1, 0, 1, 0)
+    self.Container.Position = UDim2.new(0, 0, 0, 0)
+    self.Container.BackgroundTransparency = 1
+    self.Container.Parent = parent
+    
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, DESIGN.ContainerPadding)
+    padding.PaddingLeft = UDim.new(0, DESIGN.ContainerPadding)
+    padding.PaddingRight = UDim.new(0, DESIGN.ContainerPadding)
+    padding.PaddingBottom = UDim.new(0, DESIGN.ContainerPadding)
+    padding.Parent = self.Container
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, DESIGN.ComponentPadding)
+    listLayout.Parent = self.Container
+    
+    self.Components = {}
+    return self
+end
+
+---
 -- Construtor da GUI
 ---
 function UIManager.new(name, parent)
@@ -74,10 +108,10 @@ function UIManager.new(name, parent)
     self.ScreenGui.Name = name or "UIManager"
     self.ScreenGui.Parent = parent or game.Players.LocalPlayer:WaitForChild("PlayerGui")
     
-    -- Estado da GUI
     self.IsMinimized = false
-
-    -- Window Principal
+    self.Tabs = {}
+    self.CurrentTab = nil
+    
     self.Window = Instance.new("Frame")
     self.Window.Size = DESIGN.WindowSize
     self.Window.Position = UDim2.new(0.5, -DESIGN.WindowSize.X.Offset / 2, 0.5, -DESIGN.WindowSize.Y.Offset / 2)
@@ -102,9 +136,8 @@ function UIManager.new(name, parent)
     title.Font = Enum.Font.Roboto
     title.Parent = self.Window
 
-    -- Botão de Minimizar
     local minimizeBtn = Instance.new("TextButton")
-    minimizeBtn.Text = "–" -- Símbolo de minimização
+    minimizeBtn.Text = "–"
     minimizeBtn.Size = UDim2.new(0, DESIGN.TitleHeight, 0, DESIGN.TitleHeight)
     minimizeBtn.Position = UDim2.new(1, -DESIGN.TitleHeight, 0, 0)
     minimizeBtn.BackgroundColor3 = DESIGN.MinimizeButtonColor
@@ -120,31 +153,26 @@ function UIManager.new(name, parent)
     addRoundedCorners(minimizeBtn, DESIGN.CornerRadius)
     addHoverEffect(minimizeBtn, DESIGN.MinimizeButtonColor, DESIGN.ComponentHoverColor)
 
-    -- Floating Button
     self.FloatButton = Instance.new("Frame")
-    self.FloatButton.Size = UDim2.new(0, 100, 0, 50) -- Novo tamanho para acomodar 2 botões
-    self.FloatButton.Position = UDim2.new(0.5, -25, 1, -100)
+    self.FloatButton.Size = UDim2.new(0, 100, 0, 50)
+    self.FloatButton.Position = UDim2.new(0.5, -50, 1, -100)
     self.FloatButton.BackgroundTransparency = 1
     self.FloatButton.Visible = false
     self.FloatButton.Parent = self.ScreenGui
     
-    local expandBtn = createButton(">", UDim2.new(0.5, 0, 1, 0), self.FloatButton)
-    expandBtn.Text = "Expandir"
+    local expandBtn = createButton("Expandir", UDim2.new(0.5, 0, 1, 0), self.FloatButton)
     expandBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     expandBtn.Font = Enum.Font.Roboto
     
     local dragBtn = createButton("Arrastar", UDim2.new(0.5, 0, 1, 0), self.FloatButton)
-    dragBtn.Text = "Arrastar"
     dragBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     dragBtn.Font = Enum.Font.Roboto
     dragBtn.Position = UDim2.new(0.5, 0, 0, 0)
 
-    -- Adicionar UILisLayout ao FloatButton
     local floatLayout = Instance.new("UIListLayout")
     floatLayout.FillDirection = Enum.FillDirection.Horizontal
     floatLayout.Parent = self.FloatButton
 
-    -- Lógica de Arrastar
     local isDragging = false
     local dragStartPosition = Vector2.new()
     dragBtn.MouseButton1Down:Connect(function(x, y)
@@ -169,25 +197,66 @@ function UIManager.new(name, parent)
         self:Expand()
     end)
 
-    self.ComponentContainer = Instance.new("Frame")
-    self.ComponentContainer.Size = UDim2.new(1, 0, 1, -DESIGN.TitleHeight) -- Ajuste de tamanho
-    self.ComponentContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight)
-    self.ComponentContainer.BackgroundTransparency = 1
-    self.ComponentContainer.Parent = self.Window
-
-    local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, DESIGN.ContainerPadding)
-    padding.PaddingLeft = UDim.new(0, DESIGN.ContainerPadding)
-    padding.PaddingRight = UDim.new(0, DESIGN.ContainerPadding)
-    padding.PaddingBottom = UDim.new(0, DESIGN.ContainerPadding)
-    padding.Parent = self.ComponentContainer
-
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, DESIGN.ComponentPadding)
-    listLayout.Parent = self.ComponentContainer
+    -- Containers para os botões das abas e o conteúdo das abas
+    self.TabButtonContainer = Instance.new("Frame")
+    self.TabButtonContainer.Size = UDim2.new(1, 0, 0, DESIGN.TabButtonHeight)
+    self.TabButtonContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight)
+    self.TabButtonContainer.BackgroundTransparency = 1
+    self.TabButtonContainer.Parent = self.Window
     
-    self.Components = {}
+    local tabLayout = Instance.new("UIListLayout")
+    tabLayout.FillDirection = Enum.FillDirection.Horizontal
+    tabLayout.Padding = UDim.new(0, 5)
+    tabLayout.Parent = self.TabButtonContainer
+
+    self.TabContentContainer = Instance.new("Frame")
+    self.TabContentContainer.Size = UDim2.new(1, 0, 1, -DESIGN.TitleHeight - DESIGN.TabButtonHeight)
+    self.TabContentContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight + DESIGN.TabButtonHeight)
+    self.TabContentContainer.BackgroundTransparency = 1
+    self.TabContentContainer.Parent = self.Window
+    
     return self
+end
+
+---
+-- Lógica de Abas
+---
+
+function UIManager:CreateTab(options)
+    local tabTitle = options.Title or "Nova Aba"
+    local tab = Tab.new(tabTitle, self.TabContentContainer)
+    self.Tabs[tabTitle] = tab
+
+    local tabButton = Instance.new("TextButton")
+    tabButton.Text = tabTitle
+    tabButton.Size = UDim2.new(0, 80, 1, 0)
+    tabButton.BackgroundColor3 = DESIGN.TabInactiveColor
+    tabButton.TextColor3 = DESIGN.ComponentTextColor
+    tabButton.Parent = self.TabButtonContainer
+    addRoundedCorners(tabButton, 6)
+
+    tabButton.MouseButton1Click:Connect(function()
+        self:SetActiveTab(tab)
+    end)
+    
+    tab.Button = tabButton
+
+    if #self.Tabs == 1 then
+        self:SetActiveTab(tab)
+    end
+    
+    return tab
+end
+
+function UIManager:SetActiveTab(tab)
+    if self.CurrentTab then
+        self.CurrentTab.Container.Visible = false
+        self.CurrentTab.Button.BackgroundColor3 = DESIGN.TabInactiveColor
+    end
+    
+    self.CurrentTab = tab
+    self.CurrentTab.Container.Visible = true
+    self.CurrentTab.Button.BackgroundColor3 = DESIGN.TabActiveColor
 end
 
 ---
@@ -209,25 +278,23 @@ end
 
 ---
 -- Funções Públicas para criar componentes
+-- Adaptadas para receber uma 'Tab' como primeiro argumento
 ---
--- (O restante das funções de criação de componentes permanecem as mesmas)
 
-function UIManager:CreateButton(text, callback)
-    local btn = createButton(text, nil, self.ComponentContainer)
-
+function UIManager:CreateButton(tab, text, callback)
+    local btn = createButton(text, nil, tab.Container)
     btn.MouseButton1Click:Connect(function()
         if callback then callback() end
     end)
-
-    table.insert(self.Components, btn)
+    table.insert(tab.Components, btn)
     return btn
 end
 
-function UIManager:CreateToggle(text, callback)
+function UIManager:CreateToggle(tab, text, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
     frame.BackgroundTransparency = 1
-    frame.Parent = self.ComponentContainer
+    frame.Parent = tab.Container
 
     local label = Instance.new("TextLabel")
     label.Text = text or "Toggle"
@@ -250,15 +317,15 @@ function UIManager:CreateToggle(text, callback)
         if callback then callback(state) end
     end)
     
-    table.insert(self.Components, frame)
+    table.insert(tab.Components, frame)
     return frame
 end
 
-function UIManager:CreateDropdown(title, values, callback)
+function UIManager:CreateDropdown(tab, title, values, callback)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
     frame.BackgroundTransparency = 1
-    frame.Parent = self.ComponentContainer
+    frame.Parent = tab.Container
     
     local label = Instance.new("TextLabel")
     label.Text = title or "Dropdown"
@@ -304,7 +371,7 @@ function UIManager:CreateDropdown(title, values, callback)
         end
     end)
     
-    table.insert(self.Components, frame)
+    table.insert(tab.Components, frame)
     return frame
 end
 
