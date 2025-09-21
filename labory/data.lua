@@ -53,6 +53,8 @@ local DESIGN = {
 -- Services
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
 
 ---
 -- Funções de Criação de Componentes
@@ -140,7 +142,7 @@ end
 ---
 -- Construtor da GUI
 ---
-function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: string? })
+function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: string?, startTab: string? })
     options = options or {}
     local self = setmetatable({} :: {
         ScreenGui: ScreenGui,
@@ -161,7 +163,8 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
 
     self.ScreenGui = Instance.new("ScreenGui")
     self.ScreenGui.Name = options.Name or "UIManager"
-    self.ScreenGui.Parent = options.Parent or game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    self.ScreenGui.ResetOnSpawn = false -- Não reseta ao morrer!
+    self.ScreenGui.Parent = options.Parent or localPlayer:WaitForChild("PlayerGui")
 
     self.IsMinimized = false
     self.Tabs = {}
@@ -169,6 +172,7 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
     self.IsDragging = false
     self.IsResizing = false
     self.Connections = {}
+    self.startTab = options.startTab
 
     -- Container principal da janela
     self.Window = Instance.new("Frame")
@@ -300,6 +304,13 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
     notifyPadding.PaddingRight = UDim.new(0, 10)
     notifyPadding.Parent = self.NotifyContainer
 
+    -- Conexão para garantir que o painel persista
+    self.Connections.PlayerRemoving = Players.PlayerRemoving:Connect(function(player)
+        if player == localPlayer then
+            self:Destroy()
+        end
+    end)
+    
     return self
 end
 
@@ -509,8 +520,11 @@ function UIManager:CreateTab(options: { Title: string })
     end)
 
     tab.Button = tabButton
+    tab.Container.Visible = false -- Oculta a aba por padrão
 
-    if not self.CurrentTab then
+    if self.startTab and self.startTab == tabTitle then
+        self:SetActiveTab(tab)
+    elseif not self.CurrentTab then -- Define a primeira aba criada como ativa se nenhuma foi especificada
         self:SetActiveTab(tab)
     end
 
@@ -732,53 +746,60 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
     local dropdownFrame
     local connections = {}
     local currentValues = options.Values
-    local currentValue = currentValues[1]
+    local currentValue = currentValues[1] or ""
 
     local publicApi = {}
 
     connections.Click = btn.MouseButton1Click:Connect(function()
         if dropdownOpen then
             if dropdownFrame then
-                local closeTween = TweenService:Create(dropdownFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { Size = UDim2.new(1, 0, 0, 0) })
-                closeTween:Play()
-                closeTween.Completed:Connect(function()
-                    dropdownFrame:Destroy()
-                end)
+                dropdownFrame:Destroy()
             end
             dropdownOpen = false
             btn.Text = currentValue .. " ▼"
         else
             btn.Text = currentValue .. " ▲"
-            dropdownFrame = Instance.new("Frame")
-            dropdownFrame.Size = UDim2.new(1, 0, 0, 0)
-            dropdownFrame.Position = UDim2.new(0, 0, 1, 0)
-            dropdownFrame.BackgroundColor3 = DESIGN.ComponentBackground
-            dropdownFrame.BorderSizePixel = 0
-            dropdownFrame.Parent = frame
-            dropdownFrame.ClipsDescendants = true
-            addRoundedCorners(dropdownFrame, DESIGN.CornerRadius)
+            -- Cria o dropdown em um ScreenGui separado para ficar na frente de tudo
+            dropdownFrame = Instance.new("ScreenGui")
+            dropdownFrame.Name = "DropdownOverlay"
+            dropdownFrame.Parent = localPlayer:WaitForChild("PlayerGui")
+            
+            local dropdownHolder = Instance.new("Frame")
+            dropdownHolder.Size = UDim2.new(1, 0, 0, 0)
+            dropdownHolder.Position = UDim2.new(0, 0, 0, 0)
+            dropdownHolder.BackgroundTransparency = 1
+            dropdownHolder.Parent = dropdownFrame
+
+            local pos, size = btn.AbsolutePosition, btn.AbsoluteSize
+            
+            local listFrame = Instance.new("Frame")
+            listFrame.Size = UDim2.new(0, size.X, 0, 0)
+            listFrame.Position = UDim2.new(0, pos.X, 0, pos.Y + size.Y)
+            listFrame.BackgroundColor3 = DESIGN.ComponentBackground
+            listFrame.BorderSizePixel = 0
+            listFrame.Parent = dropdownHolder
+            listFrame.ClipsDescendants = true
+            addRoundedCorners(listFrame, DESIGN.CornerRadius)
 
             local dropdownLayout = Instance.new("UIListLayout")
             dropdownLayout.Padding = UDim.new(0, 2)
-            dropdownLayout.Parent = dropdownFrame
+            dropdownLayout.Parent = listFrame
 
             for _, v in ipairs(currentValues) do
-                local option = createButton(v, UDim2.new(1, 0, 0, DESIGN.ComponentHeight - 2), dropdownFrame)
+                local option = createButton(v, UDim2.new(1, 0, 0, DESIGN.ComponentHeight - 2), listFrame)
                 option.MouseButton1Click:Connect(function()
                     currentValue = v
                     btn.Text = v .. " ▼"
                     dropdownOpen = false
-                    local closeTween = TweenService:Create(dropdownFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { Size = UDim2.new(1, 0, 0, 0) })
-                    closeTween:Play()
-                    closeTween.Completed:Connect(function()
-                        dropdownFrame:Destroy()
-                    end)
+                    dropdownFrame:Destroy()
                     if options.Callback then options.Callback(v) end
                 end)
             end
-
-            local openTween = TweenService:Create(dropdownFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = UDim2.new(1, 0, 0, #currentValues * DESIGN.ComponentHeight) })
+            
+            local totalHeight = #currentValues * DESIGN.ComponentHeight + dropdownLayout.Padding.Offset * (#currentValues - 1)
+            local openTween = TweenService:Create(listFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = UDim2.new(0, size.X, 0, totalHeight) })
             openTween:Play()
+            
             dropdownOpen = true
         end
     end)
