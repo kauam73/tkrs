@@ -56,7 +56,10 @@ local DESIGN = {
 
     -- Outros
     CornerRadius = 10,
-    ButtonIconSize = 25
+    ButtonIconSize = 25,
+
+    -- Blur
+    BlurEffectSize = 10,
 }
 
 ---
@@ -339,6 +342,12 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
     self.BlockScreen.Visible = false
     self.BlockScreen.Parent = self.ScreenGui
 
+    -- Adicionar o efeito de borrão
+    local blur = Instance.new("BlurEffect")
+    blur.Size = 0
+    blur.Parent = self.BlockScreen
+    self.BlurEffect = blur
+
     -- Conexão para garantir que o painel persista
     self.Connections.PlayerRemoving = Players.PlayerRemoving:Connect(function(player)
         if player == localPlayer then
@@ -469,160 +478,71 @@ end
 -- Float Button Melhorado
 ---
 function UIManager:SetupFloatButton(text: string)
-    local UserInputService = game:GetService("UserInputService")
-    local Players = game:GetService("Players")
-    if not self.Connections then self.Connections = {} end
-
-    local size = DESIGN.FloatButtonSize or UDim2.new(0, 120, 0, 40)
-    local pos = DESIGN.FloatButtonPosition or UDim2.new(1, -130, 1, -60)
-    local bgColor = DESIGN.FloatButtonColor or Color3.fromRGB(40, 40, 40)
-    local windowColor2 = DESIGN.WindowColor2 or bgColor
-    local textColor = DESIGN.ComponentTextColor or Color3.fromRGB(255, 255, 255)
-    local hoverColor = DESIGN.ComponentHoverColor or Color3.fromRGB(200, 200, 200)
-    local cornerRadius = DESIGN.CornerRadius or 8
-
-    -- cria frame do float
-    if self.FloatButton and typeof(self.FloatButton) == "Instance" then
-        self.FloatButton:Destroy()
-    end
-
     self.FloatButton = Instance.new("Frame")
-    self.FloatButton.Name = "FloatButton"
-    self.FloatButton.Size = size
-    self.FloatButton.Position = pos
-    self.FloatButton.AnchorPoint = Vector2.new(0, 0)
-    self.FloatButton.BackgroundColor3 = bgColor
+    self.FloatButton.Size = DESIGN.FloatButtonSize
+    self.FloatButton.Position = UDim2.new(1, -130, 1, -60)
+    self.FloatButton.BackgroundColor3 = DESIGN.FloatButtonColor
     self.FloatButton.BorderSizePixel = 0
-    self.FloatButton.ZIndex = 50
     self.FloatButton.Visible = false
-    self.FloatButton.Parent = self.ScreenGui or (Players.LocalPlayer and Players.LocalPlayer:FindFirstChild("PlayerGui"))
+    self.FloatButton.Parent = self.ScreenGui
 
-    addRoundedCorners(self.FloatButton, cornerRadius)
+    addRoundedCorners(self.FloatButton, DESIGN.CornerRadius)
 
     local floatGradient = Instance.new("UIGradient")
-    floatGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, bgColor),
-        ColorSequenceKeypoint.new(1, windowColor2)
-    }
+    floatGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, DESIGN.FloatButtonColor),
+        ColorSequenceKeypoint.new(1, DESIGN.WindowColor2)
+    })
     floatGradient.Rotation = 45
     floatGradient.Parent = self.FloatButton
 
     local expandBtn = Instance.new("TextButton")
-    expandBtn.Name = "ExpandBtn"
-    expandBtn.Text = text or "📋"
+    expandBtn.Text = text
     expandBtn.Size = UDim2.new(1, 0, 1, 0)
     expandBtn.BackgroundTransparency = 1
-    expandBtn.TextColor3 = textColor
+    expandBtn.TextColor3 = DESIGN.ComponentTextColor
     expandBtn.Font = Enum.Font.Roboto
     expandBtn.TextScaled = true
-    expandBtn.BorderSizePixel = 0
     expandBtn.Parent = self.FloatButton
 
-    -- tenta usar addHoverEffect, senão fallback simples
-    local ok = pcall(function()
-        addHoverEffect(expandBtn, bgColor, hoverColor)
-    end)
-    if not ok then
-        if self.Connections.FloatHoverIn then
-            if typeof(self.Connections.FloatHoverIn) == "RBXScriptConnection" and self.Connections.FloatHoverIn.Connected then
-                self.Connections.FloatHoverIn:Disconnect()
-            end
-        end
-        if self.Connections.FloatHoverOut then
-            if typeof(self.Connections.FloatHoverOut) == "RBXScriptConnection" and self.Connections.FloatHoverOut.Connected then
-                self.Connections.FloatHoverOut:Disconnect()
-            end
-        end
-        self.Connections.FloatHoverIn = expandBtn.MouseEnter:Connect(function()
-            expandBtn.TextColor3 = hoverColor
-        end)
-        self.Connections.FloatHoverOut = expandBtn.MouseLeave:Connect(function()
-            expandBtn.TextColor3 = textColor
-        end)
-    end
+    addHoverEffect(expandBtn, expandBtn.BackgroundColor3, DESIGN.ComponentHoverColor)
 
-    if self.Connections.ExpandBtn then
-        if typeof(self.Connections.ExpandBtn) == "RBXScriptConnection" and self.Connections.ExpandBtn.Connected then
-            self.Connections.ExpandBtn:Disconnect()
-        end
-    end
     self.Connections.ExpandBtn = expandBtn.MouseButton1Click:Connect(function()
         if self.Blocked then return end
-        if self.Expand then
-            self:Expand()
-        end
+        self:Expand()
     end)
 
     local floatDragStart = nil
     local floatStartPos = nil
     local floatIsDragging = false
 
-    if self.Connections.FloatDragBegin then
-        if typeof(self.Connections.FloatDragBegin) == "RBXScriptConnection" and self.Connections.FloatDragBegin.Connected then
-            self.Connections.FloatDragBegin:Disconnect()
-        end
-    end
     self.Connections.FloatDragBegin = expandBtn.InputBegan:Connect(function(input)
         if self.Blocked then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             floatIsDragging = true
-            if input.UserInputType == Enum.UserInputType.Touch and input.Position then
-                floatDragStart = Vector2.new(input.Position.X, input.Position.Y)
-            else
-                floatDragStart = UserInputService:GetMouseLocation()
-            end
+            floatDragStart = UserInputService:GetMouseLocation()
             floatStartPos = self.FloatButton.Position
         end
     end)
 
-    if self.Connections.FloatDragChanged then
-        if typeof(self.Connections.FloatDragChanged) == "RBXScriptConnection" and self.Connections.FloatDragChanged.Connected then
-            self.Connections.FloatDragChanged:Disconnect()
-        end
-    end
     self.Connections.FloatDragChanged = UserInputService.InputChanged:Connect(function(input)
         if self.Blocked then return end
-        if not floatIsDragging then return end
-        if input.UserInputType ~= Enum.UserInputType.MouseMovement and input.UserInputType ~= Enum.UserInputType.Touch then return end
-
-        local currentPos
-        if input.UserInputType == Enum.UserInputType.Touch and input.Position then
-            currentPos = Vector2.new(input.Position.X, input.Position.Y)
-        else
-            currentPos = UserInputService:GetMouseLocation()
+        if floatIsDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = UserInputService:GetMouseLocation() - floatDragStart
+            local newPos = UDim2.new(
+                floatStartPos.X.Scale,
+                floatStartPos.X.Offset + delta.X,
+                floatStartPos.Y.Scale,
+                floatStartPos.Y.Offset + delta.Y
+            )
+            self.FloatButton.Position = newPos
         end
-
-        local delta = currentPos - floatDragStart
-        local newX = (floatStartPos.X.Offset or 0) + delta.X
-        local newY = (floatStartPos.Y.Offset or 0) + delta.Y
-
-        local viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(1920, 1080)
-        local width = self.FloatButton.AbsoluteSize.X
-        local height = self.FloatButton.AbsoluteSize.Y
-        newX = math.clamp(newX, 0, math.max(0, viewport.X - width))
-        newY = math.clamp(newY, 0, math.max(0, viewport.Y - height))
-
-        self.FloatButton.Position = UDim2.new(0, newX, 0, newY)
     end)
 
-    if self.Connections.FloatDragEnded then
-        if typeof(self.Connections.FloatDragEnded) == "RBXScriptConnection" and self.Connections.FloatDragEnded.Connected then
-            self.Connections.FloatDragEnded:Disconnect()
-        end
-    end
     self.Connections.FloatDragEnded = UserInputService.InputEnded:Connect(function(input)
         if self.Blocked then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             floatIsDragging = false
-
-            local screenW = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.X or 1920
-            local centerX = self.FloatButton.AbsolutePosition.X + (self.FloatButton.AbsoluteSize.X / 2)
-            local yPixel = self.FloatButton.AbsolutePosition.Y
-            if centerX > (screenW / 2) then
-                self.FloatButton.Position = UDim2.new(1, -self.FloatButton.AbsoluteSize.X - 10, 0, yPixel)
-            else
-                self.FloatButton.Position = UDim2.new(0, 10, 0, yPixel)
-            end
         end
     end)
 end
@@ -746,6 +666,13 @@ end
 function UIManager:Block(state: boolean)
     self.Blocked = state
     self.BlockScreen.Visible = state
+    if state then
+        -- Suaviza a entrada do borrão
+        TweenService:Create(self.BlurEffect, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Size = DESIGN.BlurEffectSize}):Play()
+    else
+        -- Suaviza a saída do borrão
+        TweenService:Create(self.BlurEffect, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Size = 0}):Play()
+    end
 end
 
 ---
@@ -1369,9 +1296,9 @@ function UIManager:CreateHR(tab: any, options: { Text: string? })
             textLabel.Position = UDim2.new(0.5, -textBounds / 2 - DESIGN.HRTextPadding / 2, 0, 0)
             
             local lineSize = (hrContainer.AbsoluteSize.X - textBounds - DESIGN.HRTextPadding) / 2
-            line1.Size = UDim2.new(0, lineSize, 1, 0)
-            line2.Size = UDim2.new(0, lineSize, 1, 0)
-            line2.Position = UDim2.new(0, lineSize + textBounds + DESIGN.HRTextPadding, 0, 0)
+            line1.Size = UDim2.new(0, newSize, 1, 0)
+            line2.Size = UDim2.new(0, newSize, 1, 0)
+            line2.Position = UDim2.new(0, newSize + textBounds + DESIGN.HRTextPadding, 0, 0)
         else
             line1.Size = UDim2.new(1, 0, 1, 0)
             line2:Destroy()
