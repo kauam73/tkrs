@@ -18,26 +18,27 @@ local DESIGN = {
     FloatButtonColor = Color3.fromRGB(50, 50, 50),
     TabActiveColor = Color3.fromRGB(70, 70, 70),
     TabInactiveColor = Color3.fromRGB(40, 40, 40),
-    ResizeBarColor = Color3.fromRGB(70, 70, 70),
+    ResizeHandleColor = Color3.fromRGB(150, 150, 150),
 
     -- Tamanhos e Dimensões
     WindowSize = UDim2.new(0, 400, 0, 500),
+    WindowMinSize = Vector2.new(300, 400),
     TitleHeight = 30,
     ComponentHeight = 40,
     ComponentPadding = 10,
     ContainerPadding = 10,
-    FloatButtonSize = UDim2.new(0, 50, 0, 50),
-    TabButtonWidth = 80, -- Largura do botão da aba
-    TabPanelWidth = 100, -- Largura do painel de abas
+    FloatButtonSize = UDim2.new(0, 100, 0, 50),
+    TabButtonWidth = 80, -- Largura da aba na lateral
     ResizeHandleSize = 10,
-
-    -- Outros
-    CornerRadius = 8
 }
+
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 ---
 -- Funções de Criação de Componentes
 ---
+
 local function addRoundedCorners(instance, radius)
     local corner = Instance.new("UICorner")
     corner.CornerRadius = UDim.new(0, radius)
@@ -128,13 +129,11 @@ function UIManager.new(name, parent)
     windowGradient.Rotation = 90
     windowGradient.Parent = self.Window
 
-    -- Barra de Título para arrastar
     local titleBar = Instance.new("Frame")
     titleBar.Size = UDim2.new(1, 0, 0, DESIGN.TitleHeight)
-    titleBar.Position = UDim2.new(0, 0, 0, 0)
     titleBar.BackgroundTransparency = 1
     titleBar.Parent = self.Window
-    
+
     local title = Instance.new("TextLabel")
     title.Text = name or "UIManager"
     title.Size = UDim2.new(1, -DESIGN.TitleHeight, 0, DESIGN.TitleHeight)
@@ -146,23 +145,23 @@ function UIManager.new(name, parent)
     title.Parent = titleBar
 
     -- Lógica de arrastar a janela
-    local isDragging = false
-    local dragStartPos = Vector2.new()
-    titleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isDragging = true
-            dragStartPos = game:GetService("UserInputService"):GetMouseLocation() - self.Window.AbsolutePosition
-        end
-    end)
-    titleBar.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isDragging = false
-        end
-    end)
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if isDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            self.Window.Position = UDim2.new(0, input.Position.X - dragStartPos.X, 0, input.Position.Y - dragStartPos.Y)
-        end
+    local isDraggingWindow = false
+    local dragStartPositionWindow = Vector2.new()
+    titleBar.MouseButton1Down:Connect(function(x, y)
+        isDraggingWindow = true
+        dragStartPositionWindow = Vector2.new(x, y) - self.Window.AbsolutePosition
+        local dragConnection = UserInputService.InputChanged:Connect(function(input)
+            if isDraggingWindow and input.UserInputType == Enum.UserInputType.MouseMovement then
+                local newPos = input.Position - dragStartPositionWindow
+                self.Window.Position = UDim2.new(0, newPos.X, 0, newPos.Y)
+            end
+        end)
+        UserInputService.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                isDraggingWindow = false
+                dragConnection:Disconnect()
+            end
+        end)
     end)
 
     local minimizeBtn = Instance.new("TextButton")
@@ -174,111 +173,97 @@ function UIManager.new(name, parent)
     minimizeBtn.Font = Enum.Font.Roboto
     minimizeBtn.TextScaled = true
     minimizeBtn.Parent = titleBar
-
-    minimizeBtn.MouseButton1Click:Connect(function()
-        self:Minimize()
-    end)
-    
+    minimizeBtn.MouseButton1Click:Connect(function() self:Minimize() end)
     addRoundedCorners(minimizeBtn, DESIGN.CornerRadius)
     addHoverEffect(minimizeBtn, DESIGN.MinimizeButtonColor, DESIGN.ComponentHoverColor)
 
-    -- Float Button com lógica de arrastar melhorada
+    -- Floating Button
     self.FloatButton = Instance.new("Frame")
-    self.FloatButton.Size = UDim2.new(0, 100, 0, 50)
-    self.FloatButton.Position = UDim2.new(0.5, -50, 1, -100)
+    self.FloatButton.Size = DESIGN.FloatButtonSize
+    self.FloatButton.Position = UDim2.new(0.5, -DESIGN.FloatButtonSize.X.Offset / 2, 1, -DESIGN.FloatButtonSize.Y.Offset - 10)
     self.FloatButton.BackgroundColor3 = DESIGN.FloatButtonColor
     self.FloatButton.Visible = false
     self.FloatButton.Parent = self.ScreenGui
     addRoundedCorners(self.FloatButton, DESIGN.CornerRadius)
 
-    local dragPart = Instance.new("Frame")
-    dragPart.Size = UDim2.new(1, -50, 1, 0)
-    dragPart.BackgroundTransparency = 1
-    dragPart.Parent = self.FloatButton
-    local isFloatDragging = false
-    local floatDragStartPos = Vector2.new()
+    local floatLayout = Instance.new("UIListLayout")
+    floatLayout.FillDirection = Enum.FillDirection.Horizontal
+    floatLayout.Parent = self.FloatButton
 
-    dragPart.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isFloatDragging = true
-            floatDragStartPos = game:GetService("UserInputService"):GetMouseLocation() - self.FloatButton.AbsolutePosition
-        end
-    end)
-    dragPart.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isFloatDragging = false
-        end
-    end)
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if isFloatDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            self.FloatButton.Position = UDim2.new(0, input.Position.X - floatDragStartPos.X, 0, input.Position.Y - floatDragStartPos.Y)
-        end
-    end)
-    
-    local expandBtn = createButton(">", UDim2.new(0, 50, 1, 0), self.FloatButton)
-    expandBtn.Text = "Abrir"
+    local expandBtn = createButton("Expandir", UDim2.new(0.5, 0, 1, 0), self.FloatButton)
     expandBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     expandBtn.Font = Enum.Font.Roboto
-    expandBtn.Position = UDim2.new(1, -50, 0, 0)
+    expandBtn.MouseButton1Click:Connect(function() self:Expand() end)
 
-    expandBtn.MouseButton1Click:Connect(function()
-        self:Expand()
+    local dragBtn = createButton("Arrastar", UDim2.new(0.5, 0, 1, 0), self.FloatButton)
+    dragBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    dragBtn.Font = Enum.Font.Roboto
+
+    -- Lógica de Arrastar o FloatButton
+    local isDraggingFloat = false
+    local dragStartPositionFloat = Vector2.new()
+    dragBtn.MouseButton1Down:Connect(function(x, y)
+        isDraggingFloat = true
+        dragStartPositionFloat = Vector2.new(x, y) - self.FloatButton.AbsolutePosition
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if isDraggingFloat and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local newPos = input.Position - dragStartPositionFloat
+            self.FloatButton.Position = UDim2.new(0, newPos.X, 0, newPos.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDraggingFloat = false
+        end
     end)
 
-    -- Nova Estrutura de Tabs
+    -- Barra de Redimensionamento
+    local resizeHandle = Instance.new("Frame")
+    resizeHandle.Size = UDim2.new(0, DESIGN.ResizeHandleSize, 0, DESIGN.ResizeHandleSize)
+    resizeHandle.Position = UDim2.new(1, -DESIGN.ResizeHandleSize, 1, -DESIGN.ResizeHandleSize)
+    resizeHandle.BackgroundColor3 = DESIGN.ResizeHandleColor
+    resizeHandle.Parent = self.Window
+    addRoundedCorners(resizeHandle, 3)
+
+    -- Lógica de Redimensionar
+    local isResizing = false
+    resizeHandle.MouseButton1Down:Connect(function()
+        isResizing = true
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if isResizing and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local newSize = input.Position - self.Window.AbsolutePosition
+            local clampedSize = Vector2.new(
+                math.max(newSize.X, DESIGN.WindowMinSize.X),
+                math.max(newSize.Y, DESIGN.WindowMinSize.Y)
+            )
+            self.Window.Size = UDim2.new(0, clampedSize.X, 0, clampedSize.Y)
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isResizing = false
+        end
+    end)
+
+    -- Containers para os botões das abas e o conteúdo das abas
     self.TabButtonContainer = Instance.new("Frame")
-    self.TabButtonContainer.Size = UDim2.new(0, DESIGN.TabPanelWidth, 1, -DESIGN.TitleHeight)
-    self.TabButtonContainer.Position = UDim2.new(1, -DESIGN.TabPanelWidth, 0, DESIGN.TitleHeight)
-    self.TabButtonContainer.BackgroundColor3 = DESIGN.TabInactiveColor
+    self.TabButtonContainer.Size = UDim2.new(0, DESIGN.TabButtonWidth, 1, -DESIGN.TitleHeight)
+    self.TabButtonContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight)
+    self.TabButtonContainer.BackgroundTransparency = 1
     self.TabButtonContainer.Parent = self.Window
     
     local tabLayout = Instance.new("UIListLayout")
+    tabLayout.FillDirection = Enum.FillDirection.Vertical
     tabLayout.Padding = UDim.new(0, 5)
     tabLayout.Parent = self.TabButtonContainer
 
     self.TabContentContainer = Instance.new("Frame")
-    self.TabContentContainer.Size = UDim2.new(1, -DESIGN.TabPanelWidth, 1, -DESIGN.TitleHeight)
-    self.TabContentContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight)
+    self.TabContentContainer.Size = UDim2.new(1, -DESIGN.TabButtonWidth, 1, -DESIGN.TitleHeight)
+    self.TabContentContainer.Position = UDim2.new(0, DESIGN.TabButtonWidth, 0, DESIGN.TitleHeight)
     self.TabContentContainer.BackgroundTransparency = 1
     self.TabContentContainer.Parent = self.Window
-
-    -- Barra de Redimensionar
-    local resizeHandle = Instance.new("Frame")
-    resizeHandle.Size = UDim2.new(0, DESIGN.ResizeHandleSize, 0, DESIGN.ResizeHandleSize)
-    resizeHandle.Position = UDim2.new(1, -DESIGN.ResizeHandleSize, 1, -DESIGN.ResizeHandleSize)
-    resizeHandle.BackgroundColor3 = DESIGN.ResizeBarColor
-    resizeHandle.Parent = self.Window
-    addRoundedCorners(resizeHandle, 5)
-
-    local isResizing = false
-    local resizeStartPos = Vector2.new()
-    local originalSize = Vector2.new()
-
-    resizeHandle.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isResizing = true
-            resizeStartPos = game:GetService("UserInputService"):GetMouseLocation()
-            originalSize = self.Window.AbsoluteSize
-        end
-    end)
-    resizeHandle.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            isResizing = false
-        end
-    end)
-    game:GetService("UserInputService").InputChanged:Connect(function(input)
-        if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local mousePos = input.Position
-            local newSizeX = originalSize.X + (mousePos.X - resizeStartPos.X)
-            local newSizeY = originalSize.Y + (mousePos.Y - resizeStartPos.Y)
-            
-            -- Limites de tamanho (opcional, mas recomendado)
-            newSizeX = math.max(newSizeX, 200)
-            newSizeY = math.max(newSizeY, 200)
-
-            self.Window.Size = UDim2.new(0, newSizeX, 0, newSizeY)
-        end
-    end)
     
     return self
 end
@@ -286,6 +271,7 @@ end
 ---
 -- Lógica de Abas
 ---
+
 function UIManager:CreateTab(options)
     local tabTitle = options.Title or "Nova Aba"
     local tab = Tab.new(tabTitle, self.TabContentContainer)
@@ -293,12 +279,11 @@ function UIManager:CreateTab(options)
 
     local tabButton = Instance.new("TextButton")
     tabButton.Text = tabTitle
-    tabButton.Size = UDim2.new(1, 0, 0, DESIGN.TabButtonWidth) -- Tamanho na vertical
+    tabButton.Size = UDim2.new(1, 0, 0, DESIGN.TabButtonWidth) -- Adaptação para layout vertical
     tabButton.BackgroundColor3 = DESIGN.TabInactiveColor
     tabButton.TextColor3 = DESIGN.ComponentTextColor
     tabButton.Parent = self.TabButtonContainer
     addRoundedCorners(tabButton, 6)
-    addHoverEffect(tabButton, DESIGN.TabInactiveColor, DESIGN.TabActiveColor)
 
     tabButton.MouseButton1Click:Connect(function()
         self:SetActiveTab(tab)
@@ -306,7 +291,7 @@ function UIManager:CreateTab(options)
     
     tab.Button = tabButton
 
-    if #self.Tabs == 1 then
+    if next(self.Tabs) == tabTitle then
         self:SetActiveTab(tab)
     end
     
@@ -330,14 +315,24 @@ end
 function UIManager:Minimize()
     if self.IsMinimized then return end
     self.IsMinimized = true
-    self.Window.Visible = false
+    local TweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    TweenService:Create(self.Window, TweenInfo, {BackgroundTransparency = 1}):Play()
+    TweenService:Create(self.Window, TweenInfo, {Size = UDim2.new(0, 0, 0, 0)}):Play()
+
+    -- Oculta e move o float button
+    self.FloatButton.Position = UDim2.new(0.5, -DESIGN.FloatButtonSize.X.Offset / 2, 1, -DESIGN.FloatButtonSize.Y.Offset - 10)
     self.FloatButton.Visible = true
 end
 
 function UIManager:Expand()
     if not self.IsMinimized then return end
     self.IsMinimized = false
-    self.Window.Visible = true
+    
+    local TweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    TweenService:Create(self.Window, TweenInfo, {BackgroundTransparency = 0}):Play()
+    TweenService:Create(self.Window, TweenInfo, {Size = DESIGN.WindowSize}):Play()
+
+    -- Oculta o float button
     self.FloatButton.Visible = false
 end
 
