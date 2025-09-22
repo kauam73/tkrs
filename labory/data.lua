@@ -1307,6 +1307,7 @@ function UIManager:Notify(options: {
 })
     assert(type(options) == "table" and (options.Title or options.Desc), "Invalid arguments for Notify: Title or Desc required")
 
+    local TweenService = game:GetService("TweenService")
     local NotifyHeight = 50
     local padding = 10
     local cornerPosition = options.Position or 1
@@ -1314,7 +1315,7 @@ function UIManager:Notify(options: {
     -- Pilhas por canto
     self._notifyStacks = self._notifyStacks or { [1]={}, [2]={}, [3]={}, [4]={} }
 
-    -- Container
+    -- Container da notificação
     local notifyFrame = Instance.new("Frame")
     notifyFrame.BackgroundColor3 = DESIGN.NotifyBackground
     notifyFrame.BackgroundTransparency = 1
@@ -1404,38 +1405,43 @@ function UIManager:Notify(options: {
     local stack = self._notifyStacks[cornerPosition]
     local yOffset = 0
     for _, nf in ipairs(stack) do
-        yOffset = yOffset + nf.Size.Y.Offset + 5
+        yOffset = yOffset + nf.AbsoluteSize.Y + 5
     end
 
-    if cornerPosition == 1 then -- bottom-right
+    if cornerPosition == 1 then
         notifyFrame.AnchorPoint = Vector2.new(1,1)
         notifyFrame.Position = UDim2.new(1, -padding, 1, -padding - yOffset)
-    elseif cornerPosition == 2 then -- top-right
+    elseif cornerPosition == 2 then
         notifyFrame.AnchorPoint = Vector2.new(1,0)
         notifyFrame.Position = UDim2.new(1, -padding, 0, padding + yOffset)
-    elseif cornerPosition == 3 then -- top-left
+    elseif cornerPosition == 3 then
         notifyFrame.AnchorPoint = Vector2.new(0,0)
         notifyFrame.Position = UDim2.new(0, padding, 0, padding + yOffset)
-    elseif cornerPosition == 4 then -- bottom-left
+    elseif cornerPosition == 4 then
         notifyFrame.AnchorPoint = Vector2.new(0,1)
         notifyFrame.Position = UDim2.new(0, padding, 1, -padding - yOffset)
     end
 
     table.insert(stack, notifyFrame)
 
-    -- Fecha notificação
+    -- Fecha notificação de forma segura
     local function closeNotification()
-        notifyFrame:Destroy()
-        for i, nf in ipairs(stack) do
-            if nf == notifyFrame then
-                table.remove(stack, i)
-                break
+        if notifyFrame and notifyFrame.Parent then
+            notifyFrame:Destroy()
+            for i, nf in ipairs(stack) do
+                if nf == notifyFrame then
+                    table.remove(stack, i)
+                    break
+                end
             end
         end
     end
 
+    -- Tween de entrada suave
+    TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
+
     if not options.Persistent then
-        spawn(function()
+        task.spawn(function()
             task.wait(options.Duration or 5)
             closeNotification()
         end)
