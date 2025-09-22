@@ -1311,7 +1311,10 @@ function UIManager:Notify(options: {
     local padding = 10
     local cornerPosition = options.Position or 1
 
-    -- Container da notificação
+    -- Pilhas por canto
+    self._notifyStacks = self._notifyStacks or { [1]={}, [2]={}, [3]={}, [4]={} }
+
+    -- Container
     local notifyFrame = Instance.new("Frame")
     notifyFrame.BackgroundColor3 = DESIGN.NotifyBackground
     notifyFrame.BackgroundTransparency = 1
@@ -1388,9 +1391,8 @@ function UIManager:Notify(options: {
         totalHeight = totalHeight + 30
     end
 
-    notifyFrame.Size = UDim2.new(0, 300, 0, math.max(totalHeight + padding, NotifyHeight)) -- largura fixa, altura ajusta
+    notifyFrame.Size = UDim2.new(0, 300, 0, math.max(totalHeight + padding, NotifyHeight))
 
-    -- Posicionamento da imagem e botão
     if notifyImage then
         notifyImage.Position = UDim2.new(1, -(notifyImage.Size.X.Offset + padding), 0.5, -notifyImage.Size.Y.Offset/2)
     end
@@ -1398,35 +1400,38 @@ function UIManager:Notify(options: {
         actionButton.Position = UDim2.new(1, -(actionButton.Size.X.Offset + padding), 0.5, -actionButton.Size.Y.Offset/2)
     end
 
-    -- Posição da notificação na tela
-    local x, y
-    local currentOffset = #self.NotifyContainer:GetChildren() * (notifyFrame.Size.Y.Offset + 5)
-    if cornerPosition == 1 then -- bottom-right
-        x = 1
-        y = 1
-        notifyFrame.AnchorPoint = Vector2.new(1,1)
-        notifyFrame.Position = UDim2.new(1, -padding, 1, -padding - currentOffset)
-    elseif cornerPosition == 2 then -- top-right
-        x = 1
-        y = 0
-        notifyFrame.AnchorPoint = Vector2.new(1,0)
-        notifyFrame.Position = UDim2.new(1, -padding, 0, padding + currentOffset)
-    elseif cornerPosition == 3 then -- top-left
-        x = 0
-        y = 0
-        notifyFrame.AnchorPoint = Vector2.new(0,0)
-        notifyFrame.Position = UDim2.new(0, padding, 0, padding + currentOffset)
-    elseif cornerPosition == 4 then -- bottom-left
-        x = 0
-        y = 1
-        notifyFrame.AnchorPoint = Vector2.new(0,1)
-        notifyFrame.Position = UDim2.new(0, padding, 1, -padding - currentOffset)
+    -- Calcula offset baseado na pilha correta
+    local stack = self._notifyStacks[cornerPosition]
+    local yOffset = 0
+    for _, nf in ipairs(stack) do
+        yOffset = yOffset + nf.Size.Y.Offset + 5
     end
 
-    -- Tween de entrada e fechamento
+    if cornerPosition == 1 then -- bottom-right
+        notifyFrame.AnchorPoint = Vector2.new(1,1)
+        notifyFrame.Position = UDim2.new(1, -padding, 1, -padding - yOffset)
+    elseif cornerPosition == 2 then -- top-right
+        notifyFrame.AnchorPoint = Vector2.new(1,0)
+        notifyFrame.Position = UDim2.new(1, -padding, 0, padding + yOffset)
+    elseif cornerPosition == 3 then -- top-left
+        notifyFrame.AnchorPoint = Vector2.new(0,0)
+        notifyFrame.Position = UDim2.new(0, padding, 0, padding + yOffset)
+    elseif cornerPosition == 4 then -- bottom-left
+        notifyFrame.AnchorPoint = Vector2.new(0,1)
+        notifyFrame.Position = UDim2.new(0, padding, 1, -padding - yOffset)
+    end
+
+    table.insert(stack, notifyFrame)
+
+    -- Fecha notificação
     local function closeNotification()
-        TweenService:Create(notifyFrame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
         notifyFrame:Destroy()
+        for i, nf in ipairs(stack) do
+            if nf == notifyFrame then
+                table.remove(stack, i)
+                break
+            end
+        end
     end
 
     if not options.Persistent then
@@ -1435,6 +1440,8 @@ function UIManager:Notify(options: {
             closeNotification()
         end)
     end
+
+    return notifyFrame
 end
 
 return UIManager
