@@ -1298,16 +1298,19 @@ end
 function UIManager:Notify(options: { Text: string, Duration: number?, Callback: (() -> ())?, ButtonText: string?, Persistent: boolean? })
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for Notify")
 
+    -- Container da notificação
     local notifyFrame = Instance.new("Frame")
     notifyFrame.Size = UDim2.new(1, 0, 0, DESIGN.NotifyHeight)
     notifyFrame.BackgroundColor3 = DESIGN.NotifyBackground
     notifyFrame.BackgroundTransparency = 1
     notifyFrame.BorderSizePixel = 0
     addRoundedCorners(notifyFrame, DESIGN.CornerRadius)
+    notifyFrame.Parent = self.NotifyContainer
 
+    -- Texto
     local notifyText = Instance.new("TextLabel")
     notifyText.Text = options.Text
-    notifyText.Size = UDim2.new(1, 0, 1, 0)
+    notifyText.Size = UDim2.new(1, -90, 1, 0) -- deixa espaço para o botão se houver
     notifyText.BackgroundTransparency = 1
     notifyText.TextColor3 = DESIGN.NotifyTextColor
     notifyText.TextTransparency = 1
@@ -1317,51 +1320,44 @@ function UIManager:Notify(options: { Text: string, Duration: number?, Callback: 
     notifyText.TextYAlignment = Enum.TextYAlignment.Center
     notifyText.Parent = notifyFrame
 
-    -- Se houver botão, adiciona
-    local actionButton
+    -- Função para remover suavemente
+    local function closeNotification()
+        local tweenOutBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 })
+        local tweenOutText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { TextTransparency = 1 })
+        tweenOutBg:Play()
+        tweenOutText:Play()
+        tweenOutBg.Completed:Wait()
+        notifyFrame:Destroy()
+    end
+
+    -- Botão opcional
     if options.ButtonText then
-        actionButton = Instance.new("TextButton")
+        local actionButton = Instance.new("TextButton")
         actionButton.Text = options.ButtonText
         actionButton.Size = UDim2.new(0, 80, 0, 24)
         actionButton.Position = UDim2.new(1, -85, 0.5, -12)
         actionButton.BackgroundColor3 = DESIGN.ActiveToggleColor
-        actionButton.TextColor3 = Color3.new(1,1,1)
+        actionButton.TextColor3 = Color3.new(1, 1, 1)
         addRoundedCorners(actionButton, DESIGN.CornerRadius)
         actionButton.Parent = notifyFrame
 
         actionButton.MouseButton1Click:Connect(function()
             if options.Callback then
                 options.Callback()
-            else
-                -- Se não houver callback, remove suavemente
-                local tweenOutBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 })
-                local tweenOutText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { TextTransparency = 1 })
-                tweenOutBg:Play()
-                tweenOutText:Play()
-                tweenOutBg.Completed:Wait()
-                notifyFrame:Destroy()
             end
+            closeNotification()
         end)
     end
 
-    notifyFrame.Parent = self.NotifyContainer
-
     -- Tween de entrada
-    local tweenInBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0 })
-    local tweenInText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 })
-    tweenInBg:Play()
-    tweenInText:Play()
+    TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0 }):Play()
+    TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
 
     -- Fecha automaticamente se não for persistente
     if not options.Persistent then
         spawn(function()
             task.wait(options.Duration or 5)
-            local tweenOutBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { BackgroundTransparency = 1 })
-            local tweenOutText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { TextTransparency = 1 })
-            tweenOutBg:Play()
-            tweenOutText:Play()
-            tweenOutBg.Completed:Wait()
-            notifyFrame:Destroy()
+            closeNotification()
         end)
     end
 end
