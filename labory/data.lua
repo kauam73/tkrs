@@ -1302,18 +1302,12 @@ function UIManager:Notify(options: {
     Callback: (() -> ())?, 
     ButtonText: string?, 
     Persistent: boolean?, 
-    ImageId: string?,
-    Position: number? -- 1: bottom-right, 2: top-right, 3: top-left, 4: bottom-left
+    ImageId: string? 
 })
     assert(type(options) == "table" and (options.Title or options.Desc), "Invalid arguments for Notify: Title or Desc required")
 
-    local TweenService = game:GetService("TweenService")
-    local NotifyHeight = 50
+    local NotifyHeight = 50 -- altura mínima
     local padding = 10
-    local cornerPosition = options.Position or 1
-
-    -- Pilhas por canto
-    self._notifyStacks = self._notifyStacks or { [1]={}, [2]={}, [3]={}, [4]={} }
 
     -- Container da notificação
     local notifyFrame = Instance.new("Frame")
@@ -1331,7 +1325,7 @@ function UIManager:Notify(options: {
         actionButton.Text = options.ButtonText
         actionButton.Size = UDim2.new(0, 80, 0, 24)
         actionButton.BackgroundColor3 = DESIGN.ActiveToggleColor
-        actionButton.TextColor3 = Color3.new(1,1,1)
+        actionButton.TextColor3 = Color3.new(1, 1, 1)
         addRoundedCorners(actionButton, DESIGN.CornerRadius)
         actionButton.Parent = notifyFrame
         actionButton.AutoButtonColor = true
@@ -1339,7 +1333,7 @@ function UIManager:Notify(options: {
         actionButton.TextWrapped = true
     end
 
-    -- Imagem opcional
+    -- Imagem opcional (direita)
     local notifyImage
     if options.ImageId then
         notifyImage = Instance.new("ImageLabel")
@@ -1358,10 +1352,11 @@ function UIManager:Notify(options: {
     local textWidthOffset = padding
     if notifyImage then textWidthOffset = textWidthOffset + NotifyHeight end
     if actionButton then textWidthOffset = textWidthOffset + 90 end
+
     textContainer.Size = UDim2.new(1, -textWidthOffset, 1, 0)
     textContainer.Position = UDim2.new(0, padding, 0, padding/2)
 
-    -- Título e descrição
+    -- Título
     local totalHeight = 0
     if options.Title then
         local titleLabel = Instance.new("TextLabel")
@@ -1374,26 +1369,29 @@ function UIManager:Notify(options: {
         titleLabel.TextYAlignment = Enum.TextYAlignment.Top
         titleLabel.TextWrapped = true
         titleLabel.Parent = textContainer
-        titleLabel.Size = UDim2.new(1,0,0,20)
+        titleLabel.Size = UDim2.new(1, 0, 0, 20)
         totalHeight = totalHeight + 20
     end
+
+    -- Descrição
     if options.Desc then
         local descLabel = Instance.new("TextLabel")
         descLabel.Text = options.Desc
         descLabel.BackgroundTransparency = 1
-        descLabel.TextColor3 = Color3.new(0.8,0.8,0.8)
+        descLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
         descLabel.Font = Enum.Font.SourceSans
         descLabel.TextScaled = true
         descLabel.TextXAlignment = Enum.TextXAlignment.Left
         descLabel.TextYAlignment = Enum.TextYAlignment.Top
         descLabel.TextWrapped = true
         descLabel.Parent = textContainer
-        descLabel.Size = UDim2.new(1,0,0,30)
+        descLabel.Size = UDim2.new(1, 0, 0, 30)
         totalHeight = totalHeight + 30
     end
 
-    notifyFrame.Size = UDim2.new(0, 300, 0, math.max(totalHeight + padding, NotifyHeight))
+    notifyFrame.Size = UDim2.new(1, 0, 0, math.max(totalHeight + padding, NotifyHeight))
 
+    -- Posicionamento da imagem e botão
     if notifyImage then
         notifyImage.Position = UDim2.new(1, -(notifyImage.Size.X.Offset + padding), 0.5, -notifyImage.Size.Y.Offset/2)
     end
@@ -1401,53 +1399,18 @@ function UIManager:Notify(options: {
         actionButton.Position = UDim2.new(1, -(actionButton.Size.X.Offset + padding), 0.5, -actionButton.Size.Y.Offset/2)
     end
 
-    -- Calcula offset baseado na pilha correta
-    local stack = self._notifyStacks[cornerPosition]
-    local yOffset = 0
-    for _, nf in ipairs(stack) do
-        yOffset = yOffset + nf.AbsoluteSize.Y + 5
-    end
-
-    if cornerPosition == 1 then
-        notifyFrame.AnchorPoint = Vector2.new(1,1)
-        notifyFrame.Position = UDim2.new(1, -padding, 1, -padding - yOffset)
-    elseif cornerPosition == 2 then
-        notifyFrame.AnchorPoint = Vector2.new(1,0)
-        notifyFrame.Position = UDim2.new(1, -padding, 0, padding + yOffset)
-    elseif cornerPosition == 3 then
-        notifyFrame.AnchorPoint = Vector2.new(0,0)
-        notifyFrame.Position = UDim2.new(0, padding, 0, padding + yOffset)
-    elseif cornerPosition == 4 then
-        notifyFrame.AnchorPoint = Vector2.new(0,1)
-        notifyFrame.Position = UDim2.new(0, padding, 1, -padding - yOffset)
-    end
-
-    table.insert(stack, notifyFrame)
-
-    -- Fecha notificação de forma segura
+    -- Tween de entrada e fechamento
     local function closeNotification()
-        if notifyFrame and notifyFrame.Parent then
-            notifyFrame:Destroy()
-            for i, nf in ipairs(stack) do
-                if nf == notifyFrame then
-                    table.remove(stack, i)
-                    break
-                end
-            end
-        end
+        TweenService:Create(notifyFrame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+        notifyFrame:Destroy()
     end
-
-    -- Tween de entrada suave
-    TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0}):Play()
 
     if not options.Persistent then
-        task.spawn(function()
+        spawn(function()
             task.wait(options.Duration or 5)
             closeNotification()
         end)
     end
-
-    return notifyFrame
 end
 
 return UIManager
