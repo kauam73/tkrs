@@ -833,7 +833,7 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
     btn.Position = UDim2.new(0, 0, 0.4, 0)
 
     local dropdownOpen = false
-    local dropdownContainer: ScreenGui?
+    local listFrame: Frame?
     local connections = {}
     local currentValues = options.Values
     local currentValue = options.SelectedValue or (currentValues[1] and currentValues[1] or "")
@@ -845,52 +845,34 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
     }
 
     local function closeDropdown()
-        if dropdownContainer then
-            dropdownContainer:Destroy()
+        if listFrame then
+            listFrame:Destroy()
+            listFrame = nil
         end
         dropdownOpen = false
         btn.Text = currentValue .. " ▼"
-        
-        -- Garante que o painel principal possa ser arrastado novamente
-        self.Window.Draggable = true
-        self.ResizeHandle.Draggable = true
     end
-    
-    connections.InputBegan = UserInputService.InputBegan:Connect(function(input)
-        if dropdownOpen and input.UserInputType == Enum.UserInputType.MouseButton1 then
-            if not btn:IsAncestorOf(input.Target) and (not dropdownContainer or not dropdownContainer.Parent:IsAncestorOf(input.Target)) then
-                closeDropdown()
-            end
-        end
-    end)
-    
+
     connections.Click = btn.MouseButton1Click:Connect(function()
         if self.Blocked then return end
         if dropdownOpen then
             closeDropdown()
         else
-            -- Bloqueia o arrasto e redimensionamento do painel principal
-            self.Window.Draggable = false
-            self.ResizeHandle.Draggable = false
-            
             btn.Text = currentValue .. " ▲"
-            dropdownContainer = Instance.new("ScreenGui")
-            dropdownContainer.Name = "DropdownOverlay"
-            dropdownContainer.Parent = self.ScreenGui
-            
-            local listFrame = Instance.new("Frame")
-            listFrame.Size = UDim2.new(0, btn.AbsoluteSize.X, 0, 0)
-            listFrame.Position = UDim2.new(0, btn.AbsolutePosition.X, 0, btn.AbsolutePosition.Y + btn.AbsoluteSize.Y)
+
+            listFrame = Instance.new("Frame")
+            listFrame.Size = UDim2.new(1, 0, 0, 0)
+            listFrame.Position = UDim2.new(0, 0, 1, 0) -- aparece logo abaixo do botão
             listFrame.BackgroundColor3 = DESIGN.ComponentBackground
             listFrame.BorderSizePixel = 0
-            listFrame.Parent = dropdownContainer
+            listFrame.Parent = frame -- <- agora faz parte do mesmo container
             listFrame.ClipsDescendants = true
             addRoundedCorners(listFrame, DESIGN.CornerRadius)
-            
+
             local dropdownLayout = Instance.new("UIListLayout")
             dropdownLayout.Padding = UDim.new(0, 2)
             dropdownLayout.Parent = listFrame
-            
+
             for _, v in ipairs(currentValues) do
                 local option = createButton(v, UDim2.new(1, 0, 0, DESIGN.ComponentHeight - 2), listFrame)
                 option.MouseButton1Click:Connect(function()
@@ -899,11 +881,10 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
                     closeDropdown()
                 end)
             end
-            
+
             local totalHeight = #currentValues * (DESIGN.ComponentHeight - 2) + dropdownLayout.Padding.Offset * (#currentValues - 1)
-            local openTween = TweenService:Create(listFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = UDim2.new(0, btn.AbsoluteSize.X, 0, totalHeight) })
-            openTween:Play()
-            
+            TweenService:Create(listFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = UDim2.new(1, 0, 0, totalHeight) }):Play()
+
             dropdownOpen = true
         end
     end)
@@ -916,16 +897,12 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
             currentValues = newOptions.Values
         end
         if newOptions.SelectedValue then
-            local valueExists = false
             for _, v in ipairs(currentValues) do
                 if v == newOptions.SelectedValue then
-                    valueExists = true
+                    currentValue = newOptions.SelectedValue
+                    btn.Text = currentValue .. " ▼"
                     break
                 end
-            end
-            if valueExists then
-                currentValue = newOptions.SelectedValue
-                btn.Text = currentValue .. " ▼"
             end
         end
     end
@@ -947,6 +924,7 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
     table.insert(tab.Components, publicApi)
     return publicApi
 end
+
 
 function UIManager:CreateLabel(tab: any, options: { Title: string, Desc: string? })
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateLabel")
@@ -1184,43 +1162,45 @@ end
 
 function UIManager:CreateHR(tab: any, options: { Text: string? })
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateHR")
+
     local hrContainer = Instance.new("Frame")
     hrContainer.Size = UDim2.new(1, 0, 0, DESIGN.HRHeight)
     hrContainer.BackgroundTransparency = 1
     hrContainer.Parent = tab.Container
 
     local line1 = Instance.new("Frame")
-    line1.Size = UDim2.new(0.5, 0, 1, 0)
-    line1.Position = UDim2.new(0, 0, 0, 0)
     line1.BackgroundColor3 = DESIGN.HRColor
     line1.BorderSizePixel = 0
     line1.Parent = hrContainer
 
     local line2 = Instance.new("Frame")
-    line2.Size = UDim2.new(0.5, 0, 1, 0)
-    line2.Position = UDim2.new(0.5, 0, 0, 0)
     line2.BackgroundColor3 = DESIGN.HRColor
     line2.BorderSizePixel = 0
     line2.Parent = hrContainer
 
     local textLabel
-    local textBoundsConnection = nil
-    
+    local textBoundsConnection
+
     local function updateHRLayout()
-        local parentAbsoluteSize = hrContainer.AbsoluteSize.X
+        local parentWidth = hrContainer.AbsoluteSize.X
         if textLabel then
-            local textBounds = textLabel.TextBounds.X
-            local lineSize = (parentAbsoluteSize - textBounds - DESIGN.HRTextPadding) / 2
-            
-            line1.Size = UDim2.new(0, math.max(0, lineSize), 1, 0)
-            line2.Size = UDim2.new(0, math.max(0, lineSize), 1, 0)
-            line2.Position = UDim2.new(0, math.max(0, lineSize) + textBounds + DESIGN.HRTextPadding, 0, 0)
-            
-            textLabel.Size = UDim2.new(0, textBounds + DESIGN.HRTextPadding, 0, 20)
-            textLabel.Position = UDim2.new(0.5, -textBounds / 2 - DESIGN.HRTextPadding / 2, 0, 0)
+            local textWidth = textLabel.TextBounds.X
+            local padding = DESIGN.HRTextPadding
+            local lineWidth = (parentWidth - textWidth - padding * 2) / 2
+
+            line1.Size = UDim2.new(0, math.max(0, lineWidth), 0, 1)
+            line1.Position = UDim2.new(0, 0, 0.5, 0)
+
+            line2.Size = UDim2.new(0, math.max(0, lineWidth), 0, 1)
+            line2.Position = UDim2.new(1, -lineWidth, 0.5, 0)
+
+            textLabel.Position = UDim2.new(0.5, -textWidth / 2, 0.5, -textLabel.TextBounds.Y/2)
+            textLabel.Size = UDim2.new(0, textWidth, 0, textLabel.TextBounds.Y)
         else
-            line1.Size = UDim2.new(1, 0, 1, 0)
-            line2.Size = UDim2.new(0, 0, 1, 0)
+            line1.Size = UDim2.new(1, 0, 0, 1)
+            line1.Position = UDim2.new(0, 0, 0.5, 0)
+
+            line2.Size = UDim2.new(0, 0, 0, 1)
         end
     end
 
@@ -1231,12 +1211,12 @@ function UIManager:CreateHR(tab: any, options: { Text: string? })
             textLabel.BackgroundTransparency = 1
             textLabel.TextColor3 = DESIGN.ComponentTextColor
             textLabel.Font = Enum.Font.Roboto
-            textLabel.TextScaled = true
+            textLabel.TextScaled = false
+            textLabel.TextSize = DESIGN.ComponentTextSize
             textLabel.TextXAlignment = Enum.TextXAlignment.Center
             textLabel.TextYAlignment = Enum.TextYAlignment.Center
-            textLabel.Size = UDim2.new(0, 1, 0, 20) -- Tamanho inicial para calcular o TextBounds
             textLabel.Parent = hrContainer
-            
+
             textBoundsConnection = textLabel:GetPropertyChangedSignal("TextBounds"):Connect(updateHRLayout)
             updateHRLayout()
         else
@@ -1258,6 +1238,7 @@ function UIManager:CreateHR(tab: any, options: { Text: string? })
             textBoundsConnection:Disconnect()
         end
         if textLabel then textLabel:Destroy() end
+        options = newOptions
         setupText()
     end
 
