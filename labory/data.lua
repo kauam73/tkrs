@@ -1295,7 +1295,14 @@ function UIManager:CreateHR(tab: any, options: { Text: string? })
     return publicApi
 end
 
-function UIManager:Notify(options: { Text: string, Duration: number?, Callback: (() -> ())?, ButtonText: string?, Persistent: boolean? })
+function UIManager:Notify(options: { 
+    Text: string, 
+    Duration: number?, 
+    Callback: (() -> ())?, 
+    ButtonText: string?, 
+    Persistent: boolean?, 
+    ImageId: string? 
+})
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for Notify")
 
     -- Container da notificação
@@ -1306,33 +1313,46 @@ function UIManager:Notify(options: { Text: string, Duration: number?, Callback: 
     notifyFrame.BorderSizePixel = 0
     addRoundedCorners(notifyFrame, DESIGN.CornerRadius)
     notifyFrame.Parent = self.NotifyContainer
+    notifyFrame.ClipsDescendants = true
+
+    -- Imagem opcional
+    local notifyImage
+    if options.ImageId then
+        notifyImage = Instance.new("ImageLabel")
+        notifyImage.Size = UDim2.new(0, DESIGN.NotifyHeight - 8, 0, DESIGN.NotifyHeight - 8)
+        notifyImage.Position = UDim2.new(1, - (DESIGN.NotifyHeight - 8) - 5, 0.5, -(DESIGN.NotifyHeight - 8)/2)
+        notifyImage.BackgroundTransparency = 1
+        notifyImage.Image = options.ImageId
+        addRoundedCorners(notifyImage, DESIGN.CornerRadius)
+        notifyImage.Parent = notifyFrame
+        notifyImage.ImageTransparency = 1
+    end
 
     -- Texto
+    local textOffset = 10
+    if options.ButtonText then
+        textOffset = 100 -- espaço para botão
+    elseif options.ImageId then
+        textOffset = DESIGN.NotifyHeight -- espaço para imagem
+    end
+
     local notifyText = Instance.new("TextLabel")
     notifyText.Text = options.Text
-    notifyText.Size = UDim2.new(1, -90, 1, 0) -- deixa espaço para o botão se houver
+    notifyText.Size = UDim2.new(1, -textOffset, 1, 0)
+    notifyText.Position = UDim2.new(0, 5, 0, 0)
     notifyText.BackgroundTransparency = 1
     notifyText.TextColor3 = DESIGN.NotifyTextColor
     notifyText.TextTransparency = 1
     notifyText.Font = Enum.Font.Roboto
     notifyText.TextScaled = true
-    notifyText.TextXAlignment = Enum.TextXAlignment.Center
+    notifyText.TextXAlignment = Enum.TextXAlignment.Left
     notifyText.TextYAlignment = Enum.TextYAlignment.Center
     notifyText.Parent = notifyFrame
 
-    -- Função para remover suavemente
-    local function closeNotification()
-        local tweenOutBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 })
-        local tweenOutText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { TextTransparency = 1 })
-        tweenOutBg:Play()
-        tweenOutText:Play()
-        tweenOutBg.Completed:Wait()
-        notifyFrame:Destroy()
-    end
-
     -- Botão opcional
+    local actionButton
     if options.ButtonText then
-        local actionButton = Instance.new("TextButton")
+        actionButton = Instance.new("TextButton")
         actionButton.Text = options.ButtonText
         actionButton.Size = UDim2.new(0, 80, 0, 24)
         actionButton.Position = UDim2.new(1, -85, 0.5, -12)
@@ -1340,18 +1360,56 @@ function UIManager:Notify(options: { Text: string, Duration: number?, Callback: 
         actionButton.TextColor3 = Color3.new(1, 1, 1)
         addRoundedCorners(actionButton, DESIGN.CornerRadius)
         actionButton.Parent = notifyFrame
+        actionButton.AutoButtonColor = true
+        actionButton.TextScaled = true
+        actionButton.TextWrapped = true
+    end
 
+    -- Função para remover suavemente
+    local function closeNotification()
+        local tweens = {}
+
+        table.insert(tweens, TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 }))
+        table.insert(tweens, TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { TextTransparency = 1 }))
+
+        if actionButton then
+            table.insert(tweens, TweenService:Create(actionButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { BackgroundTransparency = 1, TextTransparency = 1 }))
+        end
+        if notifyImage then
+            table.insert(tweens, TweenService:Create(notifyImage, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { ImageTransparency = 1 }))
+        end
+
+        for _, t in pairs(tweens) do t:Play() end
+        tweens[1].Completed:Wait()
+        notifyFrame:Destroy()
+    end
+
+    -- Evento do botão
+    if actionButton then
         actionButton.MouseButton1Click:Connect(function()
             if options.Callback then
                 options.Callback()
             end
             closeNotification()
         end)
+    elseif options.Callback then
+        notifyFrame.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                options.Callback()
+                closeNotification()
+            end
+        end)
     end
 
     -- Tween de entrada
-    TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0 }):Play()
-    TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
+    TweenService:Create(notifyFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0 }):Play()
+    TweenService:Create(notifyText, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
+    if notifyImage then
+        TweenService:Create(notifyImage, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 0 }):Play()
+    end
+    if actionButton then
+        TweenService:Create(actionButton, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0, TextTransparency = 0 }):Play()
+    end
 
     -- Fecha automaticamente se não for persistente
     if not options.Persistent then
