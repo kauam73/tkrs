@@ -936,50 +936,63 @@ function UIManager:CreateLabel(tab: any, options: { Title: string, Desc: string?
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateLabel")
     assert(type(options) == "table" and type(options.Title) == "string", "Invalid arguments for CreateLabel")
 
+    -- Box externo (vai englobar o título + descrição)
+    local outerBox = Instance.new("Frame")
+    outerBox.Size = UDim2.new(1, 0, 0, 0)
+    outerBox.BackgroundColor3 = DESIGN.ComponentBackground
+    outerBox.BorderSizePixel = 0
+    outerBox.Parent = tab.Container
+    addRoundedCorners(outerBox, DESIGN.CornerRadius)
+
+    -- Container interno (vai organizar os labels dentro do box)
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 0)
+    container.Size = UDim2.new(1, -DESIGN.ComponentPadding * 2, 0, 0)
+    container.Position = UDim2.new(0, DESIGN.ComponentPadding, 0, DESIGN.ComponentPadding)
     container.BackgroundTransparency = 1
-    container.Parent = tab.Container
+    container.Parent = outerBox
 
     local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, 5)
+    listLayout.Padding = UDim.new(0, 4)
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Parent = container
 
+    -- Título
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Text = options.Title
     titleLabel.Size = UDim2.new(1, 0, 0, 20)
-    titleLabel.BackgroundColor3 = DESIGN.ComponentBackground
+    titleLabel.BackgroundTransparency = 1
     titleLabel.TextColor3 = DESIGN.ComponentTextColor
     titleLabel.Font = Enum.Font.Roboto
     titleLabel.TextScaled = true
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.BorderSizePixel = 0
     titleLabel.Parent = container
-    addRoundedCorners(titleLabel, DESIGN.CornerRadius)
 
+    -- Descrição opcional
     local descLabel
     if options.Desc then
         descLabel = Instance.new("TextLabel")
         descLabel.Text = options.Desc
         descLabel.Size = UDim2.new(1, 0, 0, 15)
-        descLabel.BackgroundColor3 = DESIGN.ComponentBackground
-        descLabel.TextColor3 = Color3.new(0.6, 0.6, 0.6)
+        descLabel.BackgroundTransparency = 1
+        descLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
         descLabel.Font = Enum.Font.Roboto
         descLabel.TextScaled = true
         descLabel.TextXAlignment = Enum.TextXAlignment.Left
-        descLabel.TextWrap = true
+        descLabel.TextWrapped = true
         descLabel.BorderSizePixel = 0
         descLabel.Parent = container
-        addRoundedCorners(descLabel, DESIGN.CornerRadius)
     end
 
+    -- Ajusta o tamanho do container e do outerBox automaticamente
     local layoutConnection = listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        container.Size = UDim2.new(1, 0, 0, listLayout.AbsoluteContentSize.Y)
+        container.Size = UDim2.new(1, -DESIGN.ComponentPadding * 2, 0, listLayout.AbsoluteContentSize.Y)
+        outerBox.Size = UDim2.new(1, 0, 0, container.Size.Y.Offset + DESIGN.ComponentPadding * 2)
     end)
 
+    -- API pública
     local publicApi = {
-        _instance = container,
+        _instance = outerBox,
         _connections = { layoutConnection }
     }
 
@@ -992,15 +1005,13 @@ function UIManager:CreateLabel(tab: any, options: { Title: string, Desc: string?
                 descLabel = Instance.new("TextLabel")
                 descLabel.Text = newOptions.Desc
                 descLabel.Size = UDim2.new(1, 0, 0, 15)
-                descLabel.BackgroundColor3 = DESIGN.ComponentBackground
-                descLabel.TextColor3 = Color3.new(0.6, 0.6, 0.6)
+                descLabel.BackgroundTransparency = 1
+                descLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
                 descLabel.Font = Enum.Font.Roboto
                 descLabel.TextScaled = true
                 descLabel.TextXAlignment = Enum.TextXAlignment.Left
-                descLabel.TextWrap = true
-                descLabel.BorderSizePixel = 0
+                descLabel.TextWrapped = true
                 descLabel.Parent = container
-                addRoundedCorners(descLabel, DESIGN.CornerRadius)
             elseif newOptions.Desc and descLabel then
                 descLabel.Text = newOptions.Desc
             elseif not newOptions.Desc and descLabel then
