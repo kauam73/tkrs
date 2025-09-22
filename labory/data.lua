@@ -862,12 +862,14 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
 
             listFrame = Instance.new("Frame")
             listFrame.Size = UDim2.new(1, 0, 0, 0)
-            listFrame.Position = UDim2.new(0, 0, 1, 0) -- aparece logo abaixo do botão
+            listFrame.Position = UDim2.new(0, 0, 1, 0) -- abre logo abaixo do botão
             listFrame.BackgroundColor3 = DESIGN.ComponentBackground
             listFrame.BorderSizePixel = 0
-            listFrame.Parent = frame -- <- agora faz parte do mesmo container
             listFrame.ClipsDescendants = true
-            addRoundedCorners(listFrame, DESIGN.CornerRadius)
+            listFrame.Parent = frame
+
+            -- garante que fique na frente
+            listFrame.ZIndex = 50
 
             local dropdownLayout = Instance.new("UIListLayout")
             dropdownLayout.Padding = UDim.new(0, 2)
@@ -875,6 +877,7 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
 
             for _, v in ipairs(currentValues) do
                 local option = createButton(v, UDim2.new(1, 0, 0, DESIGN.ComponentHeight - 2), listFrame)
+                option.ZIndex = 51 -- cada opção acima do container
                 option.MouseButton1Click:Connect(function()
                     currentValue = v
                     if options.Callback then options.Callback(v) end
@@ -883,7 +886,9 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
             end
 
             local totalHeight = #currentValues * (DESIGN.ComponentHeight - 2) + dropdownLayout.Padding.Offset * (#currentValues - 1)
-            TweenService:Create(listFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { Size = UDim2.new(1, 0, 0, totalHeight) }):Play()
+            TweenService:Create(listFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                Size = UDim2.new(1, 0, 0, totalHeight)
+            }):Play()
 
             dropdownOpen = true
         end
