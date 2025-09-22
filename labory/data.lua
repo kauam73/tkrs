@@ -1304,7 +1304,8 @@ function UIManager:Notify(options: {
     Persistent: boolean?, 
     ImageId: string? 
 })
-    assert(type(options) == "table" and (options.Title or options.Desc or options.Text), "Invalid arguments for Notify")
+    -- Verifica se há algo para mostrar
+    assert(type(options) == "table" and (options.Title or options.Desc), "Invalid arguments for Notify: Title or Desc required")
 
     -- Container da notificação
     local notifyFrame = Instance.new("Frame")
