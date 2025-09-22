@@ -1296,14 +1296,15 @@ function UIManager:CreateHR(tab: any, options: { Text: string? })
 end
 
 function UIManager:Notify(options: { 
-    Text: string, 
+    Title: string?, 
+    Desc: string?, 
     Duration: number?, 
     Callback: (() -> ())?, 
     ButtonText: string?, 
     Persistent: boolean?, 
     ImageId: string? 
 })
-    assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for Notify")
+    assert(type(options) == "table" and (options.Title or options.Desc or options.Text), "Invalid arguments for Notify")
 
     -- Container da notificação
     local notifyFrame = Instance.new("Frame")
@@ -1315,39 +1316,18 @@ function UIManager:Notify(options: {
     notifyFrame.Parent = self.NotifyContainer
     notifyFrame.ClipsDescendants = true
 
-    -- Imagem opcional
+    -- Imagem opcional (direita)
     local notifyImage
     if options.ImageId then
         notifyImage = Instance.new("ImageLabel")
         notifyImage.Size = UDim2.new(0, DESIGN.NotifyHeight - 8, 0, DESIGN.NotifyHeight - 8)
-        notifyImage.Position = UDim2.new(1, - (DESIGN.NotifyHeight - 8) - 5, 0.5, -(DESIGN.NotifyHeight - 8)/2)
+        notifyImage.Position = UDim2.new(1, -(DESIGN.NotifyHeight - 8) - 5, 0.5, -(DESIGN.NotifyHeight - 8)/2)
         notifyImage.BackgroundTransparency = 1
         notifyImage.Image = options.ImageId
         addRoundedCorners(notifyImage, DESIGN.CornerRadius)
         notifyImage.Parent = notifyFrame
         notifyImage.ImageTransparency = 1
     end
-
-    -- Texto
-    local textOffset = 10
-    if options.ButtonText then
-        textOffset = 100 -- espaço para botão
-    elseif options.ImageId then
-        textOffset = DESIGN.NotifyHeight -- espaço para imagem
-    end
-
-    local notifyText = Instance.new("TextLabel")
-    notifyText.Text = options.Text
-    notifyText.Size = UDim2.new(1, -textOffset, 1, 0)
-    notifyText.Position = UDim2.new(0, 5, 0, 0)
-    notifyText.BackgroundTransparency = 1
-    notifyText.TextColor3 = DESIGN.NotifyTextColor
-    notifyText.TextTransparency = 1
-    notifyText.Font = Enum.Font.Roboto
-    notifyText.TextScaled = true
-    notifyText.TextXAlignment = Enum.TextXAlignment.Left
-    notifyText.TextYAlignment = Enum.TextYAlignment.Center
-    notifyText.Parent = notifyFrame
 
     -- Botão opcional
     local actionButton
@@ -1365,20 +1345,67 @@ function UIManager:Notify(options: {
         actionButton.TextWrapped = true
     end
 
-    -- Função para remover suavemente
+    -- Container de texto
+    local textContainer = Instance.new("Frame")
+    textContainer.Size = UDim2.new(1, -10, 1, 0)
+    textContainer.Position = UDim2.new(0, 5, 0, 0)
+    textContainer.BackgroundTransparency = 1
+    textContainer.Parent = notifyFrame
+
+    if notifyImage then
+        textContainer.Size = UDim2.new(1, -(DESIGN.NotifyHeight + 10), 1, 0)
+    end
+    if actionButton then
+        textContainer.Size = UDim2.new(1, -(85 + 10), 1, 0)
+    end
+
+    -- Título
+    if options.Title then
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Text = options.Title
+        titleLabel.Size = UDim2.new(1, 0, 0.5, 0)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.TextColor3 = DESIGN.NotifyTextColor
+        titleLabel.Font = Enum.Font.RobotoBold
+        titleLabel.TextScaled = true
+        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        titleLabel.TextYAlignment = Enum.TextYAlignment.Top
+        titleLabel.TextTransparency = 1
+        titleLabel.Parent = textContainer
+    end
+
+    -- Descrição
+    if options.Desc then
+        local descLabel = Instance.new("TextLabel")
+        descLabel.Text = options.Desc
+        descLabel.Size = UDim2.new(1, 0, 0.5, 0)
+        descLabel.Position = UDim2.new(0, 0, 0.5, 0)
+        descLabel.BackgroundTransparency = 1
+        descLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
+        descLabel.Font = Enum.Font.Roboto
+        descLabel.TextScaled = true
+        descLabel.TextXAlignment = Enum.TextXAlignment.Left
+        descLabel.TextYAlignment = Enum.TextYAlignment.Top
+        descLabel.TextTransparency = 1
+        descLabel.TextWrapped = true
+        descLabel.Parent = textContainer
+    end
+
+    -- Função para fechar suavemente
     local function closeNotification()
         local tweens = {}
-
-        table.insert(tweens, TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 }))
-        table.insert(tweens, TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { TextTransparency = 1 }))
-
-        if actionButton then
-            table.insert(tweens, TweenService:Create(actionButton, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { BackgroundTransparency = 1, TextTransparency = 1 }))
+        table.insert(tweens, TweenService:Create(notifyFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 }))
+        for _, child in pairs(textContainer:GetChildren()) do
+            if child:IsA("TextLabel") then
+                table.insert(tweens, TweenService:Create(child, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { TextTransparency = 1 }))
+            end
         end
         if notifyImage then
-            table.insert(tweens, TweenService:Create(notifyImage, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { ImageTransparency = 1 }))
+            table.insert(tweens, TweenService:Create(notifyImage, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { ImageTransparency = 1 }))
         end
-
+        if actionButton then
+            table.insert(tweens, TweenService:Create(actionButton, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { BackgroundTransparency = 1, TextTransparency = 1 }))
+        end
         for _, t in pairs(tweens) do t:Play() end
         tweens[1].Completed:Wait()
         notifyFrame:Destroy()
@@ -1387,9 +1414,7 @@ function UIManager:Notify(options: {
     -- Evento do botão
     if actionButton then
         actionButton.MouseButton1Click:Connect(function()
-            if options.Callback then
-                options.Callback()
-            end
+            if options.Callback then options.Callback() end
             closeNotification()
         end)
     elseif options.Callback then
@@ -1403,7 +1428,11 @@ function UIManager:Notify(options: {
 
     -- Tween de entrada
     TweenService:Create(notifyFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0 }):Play()
-    TweenService:Create(notifyText, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
+    for _, child in pairs(textContainer:GetChildren()) do
+        if child:IsA("TextLabel") then
+            TweenService:Create(child, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
+        end
+    end
     if notifyImage then
         TweenService:Create(notifyImage, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 0 }):Play()
     end
