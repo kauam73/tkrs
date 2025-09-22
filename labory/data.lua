@@ -1367,7 +1367,7 @@ function UIManager:Notify(options: {
         titleLabel.Size = UDim2.new(1, 0, 0.5, 0)
         titleLabel.BackgroundTransparency = 1
         titleLabel.TextColor3 = DESIGN.NotifyTextColor
-        titleLabel.Font = Enum.Font.RobotoBold
+        titleLabel.Font = Enum.Font.SourceSansBold -- corrigido
         titleLabel.TextScaled = true
         titleLabel.TextXAlignment = Enum.TextXAlignment.Left
         titleLabel.TextYAlignment = Enum.TextYAlignment.Top
@@ -1383,7 +1383,7 @@ function UIManager:Notify(options: {
         descLabel.Position = UDim2.new(0, 0, 0.5, 0)
         descLabel.BackgroundTransparency = 1
         descLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
-        descLabel.Font = Enum.Font.Roboto
+        descLabel.Font = Enum.Font.SourceSans -- corrigido
         descLabel.TextScaled = true
         descLabel.TextXAlignment = Enum.TextXAlignment.Left
         descLabel.TextYAlignment = Enum.TextYAlignment.Top
