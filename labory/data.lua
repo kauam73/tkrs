@@ -1295,7 +1295,7 @@ function UIManager:CreateHR(tab: any, options: { Text: string? })
     return publicApi
 end
 
-function UIManager:Notify(options: { Text: string, Duration: number? })
+function UIManager:Notify(options: { Text: string, Duration: number?, Callback: (() -> ())?, ButtonText: string?, Persistent: boolean? })
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for Notify")
 
     local notifyFrame = Instance.new("Frame")
@@ -1317,22 +1317,53 @@ function UIManager:Notify(options: { Text: string, Duration: number? })
     notifyText.TextYAlignment = Enum.TextYAlignment.Center
     notifyText.Parent = notifyFrame
 
+    -- Se houver botão, adiciona
+    local actionButton
+    if options.ButtonText then
+        actionButton = Instance.new("TextButton")
+        actionButton.Text = options.ButtonText
+        actionButton.Size = UDim2.new(0, 80, 0, 24)
+        actionButton.Position = UDim2.new(1, -85, 0.5, -12)
+        actionButton.BackgroundColor3 = DESIGN.ActiveToggleColor
+        actionButton.TextColor3 = Color3.new(1,1,1)
+        addRoundedCorners(actionButton, DESIGN.CornerRadius)
+        actionButton.Parent = notifyFrame
+
+        actionButton.MouseButton1Click:Connect(function()
+            if options.Callback then
+                options.Callback()
+            else
+                -- Se não houver callback, remove suavemente
+                local tweenOutBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 })
+                local tweenOutText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad), { TextTransparency = 1 })
+                tweenOutBg:Play()
+                tweenOutText:Play()
+                tweenOutBg.Completed:Wait()
+                notifyFrame:Destroy()
+            end
+        end)
+    end
+
     notifyFrame.Parent = self.NotifyContainer
 
+    -- Tween de entrada
     local tweenInBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0 })
     local tweenInText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 })
     tweenInBg:Play()
     tweenInText:Play()
 
-    spawn(function()
-        task.wait(options.Duration or 5)
-        local tweenOutBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { BackgroundTransparency = 1 })
-        local tweenOutText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { TextTransparency = 1 })
-        tweenOutBg:Play()
-        tweenOutText:Play()
-        tweenOutBg.Completed:Wait()
-        notifyFrame:Destroy()
-    end)
+    -- Fecha automaticamente se não for persistente
+    if not options.Persistent then
+        spawn(function()
+            task.wait(options.Duration or 5)
+            local tweenOutBg = TweenService:Create(notifyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { BackgroundTransparency = 1 })
+            local tweenOutText = TweenService:Create(notifyText, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { TextTransparency = 1 })
+            tweenOutBg:Play()
+            tweenOutText:Play()
+            tweenOutBg.Completed:Wait()
+            notifyFrame:Destroy()
+        end)
+    end
 end
 
 return UIManager
