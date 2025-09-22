@@ -10,56 +10,57 @@ local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
 
 -- Tabela de Constantes de Design
+-- Tabela de Constantes de Design (Tema Dark Clean)
 local DESIGN = {
     -- Cores
-    WindowColor1 = Color3.fromRGB(35, 35, 35),
-    WindowColor2 = Color3.fromRGB(25, 25, 25),
-    TitleColor = Color3.fromRGB(255, 255, 255),
-    ComponentBackground = Color3.fromRGB(50, 50, 50),
-    ComponentTextColor = Color3.fromRGB(255, 255, 255),
-    ComponentHoverColor = Color3.fromRGB(70, 70, 70),
-    ActiveToggleColor = Color3.fromRGB(70, 160, 255),
-    InactiveToggleColor = Color3.fromRGB(70, 70, 70),
-    DropdownHoverColor = Color3.fromRGB(60, 60, 60),
-    MinimizeButtonColor = Color3.fromRGB(255, 50, 50),
-    CloseButtonColor = Color3.fromRGB(255, 50, 50),
-    FloatButtonColor = Color3.fromRGB(50, 50, 50),
-    TabActiveColor = Color3.fromRGB(70, 160, 255),
-    TabInactiveColor = Color3.fromRGB(40, 40, 40),
-    ResizeHandleColor = Color3.fromRGB(70, 70, 70),
-    NotifyBackground = Color3.fromRGB(50, 50, 50),
-    NotifyTextColor = Color3.fromRGB(255, 255, 255),
-    TagBackground = Color3.fromRGB(70, 160, 255),
-    InputBackgroundColor = Color3.fromRGB(40, 40, 40),
-    InputTextColor = Color3.fromRGB(255, 255, 255),
-    HRColor = Color3.fromRGB(70, 70, 70),
-    BlockScreenColor = Color3.new(0, 0, 0),
+    WindowColor1 = Color3.fromRGB(32, 32, 32), -- fundo principal mais neutro
+    WindowColor2 = Color3.fromRGB(24, 24, 24), -- fundo secundário
+    TitleColor = Color3.fromRGB(230, 230, 230), -- branco suave
+    ComponentBackground = Color3.fromRGB(45, 45, 45), -- caixas discretas
+    ComponentTextColor = Color3.fromRGB(230, 230, 230), -- texto levemente cinza
+    ComponentHoverColor = Color3.fromRGB(65, 65, 65), -- hover sutil
+    ActiveToggleColor = Color3.fromRGB(90, 140, 200), -- azul acinzentado elegante
+    InactiveToggleColor = Color3.fromRGB(55, 55, 55), -- cinza apagado
+    DropdownHoverColor = Color3.fromRGB(70, 70, 70), -- hover de opções
+    MinimizeButtonColor = Color3.fromRGB(200, 60, 60), -- vermelho menos saturado
+    CloseButtonColor = Color3.fromRGB(220, 70, 70), -- vermelho suave
+    FloatButtonColor = Color3.fromRGB(50, 50, 50), -- botão flutuante discreto
+    TabActiveColor = Color3.fromRGB(90, 140, 200), -- mesma cor do toggle ativo
+    TabInactiveColor = Color3.fromRGB(35, 35, 35), -- abas inativas bem neutras
+    ResizeHandleColor = Color3.fromRGB(60, 60, 60), -- quase invisível
+    NotifyBackground = Color3.fromRGB(40, 40, 40), -- notificações clean
+    NotifyTextColor = Color3.fromRGB(235, 235, 235), -- texto claro mas suave
+    TagBackground = Color3.fromRGB(90, 140, 200), -- mesma cor do ativo (consistência)
+    InputBackgroundColor = Color3.fromRGB(38, 38, 38), -- inputs discretos
+    InputTextColor = Color3.fromRGB(240, 240, 240), -- texto claro mas não puro branco
+    HRColor = Color3.fromRGB(80, 80, 80), -- divisória mais visível
+    BlockScreenColor = Color3.fromRGB(0, 0, 0), -- overlay preto
 
     -- Tamanhos e Dimensões
     WindowSize = UDim2.new(0, 500, 0, 400),
-    MinWindowSize = Vector2.new(300, 250),
-    MaxWindowSize = Vector2.new(800, 600),
-    TitleHeight = 35,
-    ComponentHeight = 40,
-    ComponentPadding = 10,
-    ContainerPadding = 10,
-    FloatButtonSize = UDim2.new(0, 120, 0, 40),
-    TabButtonWidth = 120,
-    TabButtonHeight = 35,
+    MinWindowSize = Vector2.new(320, 250), -- ligeiramente maior pro clean
+    MaxWindowSize = Vector2.new(900, 650), -- um pouco mais espaçoso
+    TitleHeight = 38, -- barra de título um pouco mais alta
+    ComponentHeight = 42, -- componentes mais confortáveis
+    ComponentPadding = 12, -- mais respiro
+    ContainerPadding = 12,
+    FloatButtonSize = UDim2.new(0, 130, 0, 42),
+    TabButtonWidth = 130,
+    TabButtonHeight = 36,
     ResizeHandleSize = 15,
-    NotifyWidth = 200,
-    NotifyHeight = 40,
-    TagHeight = 25,
-    TagWidth = 100,
+    NotifyWidth = 220,
+    NotifyHeight = 45,
+    TagHeight = 28,
+    TagWidth = 110,
     HRHeight = 2,
-    HRTextPadding = 10,
+    HRTextPadding = 12,
 
     -- Outros
-    CornerRadius = 10,
-    ButtonIconSize = 25,
+    CornerRadius = 8, -- cantos discretamente arredondados
+    ButtonIconSize = 22, -- ícones um pouco menores e elegantes
 
     -- Blur
-    BlurEffectSize = 10,
+    BlurEffectSize = 8, -- desfoque mais suave
 }
 
 ---
@@ -1223,8 +1224,8 @@ function UIManager:CreateHR(tab: any, options: { Text: string? })
 
             -- garante limites de tamanho pro texto
             local sizeConstraint = Instance.new("UITextSizeConstraint")
-            sizeConstraint.MinTextSize = DESIGN.HRMinTextSize or 14
-            sizeConstraint.MaxTextSize = DESIGN.HRMaxTextSize or 22
+            sizeConstraint.MinTextSize = DESIGN.HRMinTextSize or 30
+            sizeConstraint.MaxTextSize = DESIGN.HRMaxTextSize or 50
             sizeConstraint.Parent = textLabel
 
             textBoundsConnection = textLabel:GetPropertyChangedSignal("TextBounds"):Connect(updateHRLayout)
