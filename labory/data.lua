@@ -734,11 +734,22 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateToggle")
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateToggle")
 
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
-    frame.BackgroundTransparency = 1
-    frame.Parent = tab.Container
+    -- Box externo
+    local outerBox = Instance.new("Frame")
+    outerBox.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
+    outerBox.BackgroundColor3 = DESIGN.ComponentBackground
+    outerBox.BorderSizePixel = 0
+    outerBox.Parent = tab.Container
+    addRoundedCorners(outerBox, DESIGN.CornerRadius)
 
+    -- Container interno (padding)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, -DESIGN.ComponentPadding*2, 1, 0)
+    container.Position = UDim2.new(0, DESIGN.ComponentPadding, 0, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = outerBox
+
+    -- Label do toggle
     local label = Instance.new("TextLabel")
     label.Text = options.Text
     label.Size = UDim2.new(0.7, 0, 1, 0)
@@ -747,18 +758,20 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
     label.Font = Enum.Font.Roboto
     label.TextScaled = true
     label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = frame
+    label.Parent = container
 
+    -- Botão do toggle
     local switch = Instance.new("TextButton")
     switch.Size = UDim2.new(0, 50, 0, 24)
     switch.Position = UDim2.new(0.7, 0, 0.5, -12)
     switch.BackgroundColor3 = DESIGN.InactiveToggleColor
     switch.Text = ""
     switch.AutoButtonColor = false
-    switch.Parent = frame
+    switch.Parent = container
     switch.ClipsDescendants = true
     addRoundedCorners(switch, 100)
 
+    -- Knob do toggle
     local knob = Instance.new("Frame")
     knob.Size = UDim2.new(0, 20, 0, 20)
     knob.Position = UDim2.new(0, 2, 0.5, -10)
@@ -769,14 +782,18 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
     local state = false
     local connections = {}
     local publicApi = {
-        _instance = frame,
+        _instance = outerBox,
         _connections = connections
     }
 
     local function toggle(newState: boolean)
         state = newState
-        TweenService:Create(switch, TweenInfo.new(0.25, Enum.EasingStyle.Quad), { BackgroundColor3 = state and DESIGN.ActiveToggleColor or DESIGN.InactiveToggleColor }):Play()
-        TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quad), { Position = state and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10) }):Play()
+        TweenService:Create(switch, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+            BackgroundColor3 = state and DESIGN.ActiveToggleColor or DESIGN.InactiveToggleColor
+        }):Play()
+        TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+            Position = state and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
+        }):Play()
         if options.Callback then options.Callback(state) end
     end
 
