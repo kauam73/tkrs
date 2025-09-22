@@ -1216,11 +1216,16 @@ function UIManager:CreateHR(tab: any, options: { Text: string? })
             textLabel.BackgroundTransparency = 1
             textLabel.TextColor3 = DESIGN.ComponentTextColor
             textLabel.Font = Enum.Font.Roboto
-            textLabel.TextScaled = false
-            textLabel.TextSize = DESIGN.ComponentTextSize
+            textLabel.TextScaled = true
             textLabel.TextXAlignment = Enum.TextXAlignment.Center
             textLabel.TextYAlignment = Enum.TextYAlignment.Center
             textLabel.Parent = hrContainer
+
+            -- garante limites de tamanho pro texto
+            local sizeConstraint = Instance.new("UITextSizeConstraint")
+            sizeConstraint.MinTextSize = DESIGN.HRMinTextSize or 14
+            sizeConstraint.MaxTextSize = DESIGN.HRMaxTextSize or 22
+            sizeConstraint.Parent = textLabel
 
             textBoundsConnection = textLabel:GetPropertyChangedSignal("TextBounds"):Connect(updateHRLayout)
             updateHRLayout()
