@@ -9,16 +9,15 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
 
--- Tabela de Constantes de Design
--- Tabela de Constantes de Design (Tema Dark Clean)
+-- Tabela de Constantes de Design (Tema Dark Clean Otimizado)
 local DESIGN = {
     -- Cores
-    WindowColor1 = Color3.fromRGB(32, 32, 32), -- fundo principal mais neutro
-    WindowColor2 = Color3.fromRGB(24, 24, 24), -- fundo secundário
+    WindowColor = Color3.fromRGB(32, 32, 32), -- fundo principal
+    WindowColorSecondary = Color3.fromRGB(24, 24, 24), -- fundo secundário
     TitleColor = Color3.fromRGB(230, 230, 230), -- branco suave
     ComponentBackground = Color3.fromRGB(45, 45, 45), -- caixas discretas
     ComponentTextColor = Color3.fromRGB(230, 230, 230), -- texto levemente cinza
-    ComponentHoverColor = Color3.fromRGB(65, 65, 65), -- hover sutil
+    ComponentHoverColor = Color3.fromRGB(65, 65, 65), -- hover sutil e rápido
     ActiveToggleColor = Color3.fromRGB(90, 140, 200), -- azul acinzentado elegante
     InactiveToggleColor = Color3.fromRGB(55, 55, 55), -- cinza apagado
     DropdownHoverColor = Color3.fromRGB(70, 70, 70), -- hover de opções
@@ -35,7 +34,7 @@ local DESIGN = {
     InputTextColor = Color3.fromRGB(240, 240, 240), -- texto claro mas não puro branco
     HRColor = Color3.fromRGB(80, 80, 80), -- divisória mais visível
     BlockScreenColor = Color3.fromRGB(0, 0, 0), -- overlay preto
-
+    
     -- Tamanhos e Dimensões
     WindowSize = UDim2.new(0, 500, 0, 400),
     MinWindowSize = Vector2.new(320, 250), -- ligeiramente maior pro clean
@@ -54,13 +53,17 @@ local DESIGN = {
     TagWidth = 110,
     HRHeight = 2,
     HRTextPadding = 12,
-
+    
     -- Outros
     CornerRadius = 8, -- cantos discretamente arredondados
     ButtonIconSize = 22, -- ícones um pouco menores e elegantes
-
+    
     -- Blur
     BlurEffectSize = 8, -- desfoque mais suave
+    
+    -- Tweens (para maior controle e consistência)
+    TweenDuration = 0.25,
+    TweenEasing = Enum.EasingStyle.Quad,
 }
 
 ---
@@ -80,14 +83,14 @@ local function addHoverEffect(button: GuiObject, originalColor: Color3, hoverCol
     button.MouseEnter:Connect(function()
         isHovering = true
         if not isDown then
-            local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = hoverColor })
+            local tween = TweenService:Create(button, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), { BackgroundColor3 = hoverColor })
             tween:Play()
         end
     end)
     button.MouseLeave:Connect(function()
         isHovering = false
         if not isDown then
-            local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = originalColor })
+            local tween = TweenService:Create(button, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), { BackgroundColor3 = originalColor })
             tween:Play()
         end
     end)
@@ -97,7 +100,7 @@ local function addHoverEffect(button: GuiObject, originalColor: Color3, hoverCol
     button.MouseButton1Up:Connect(function()
         isDown = false
         if not isHovering then
-            local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = originalColor })
+            local tween = TweenService:Create(button, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), { BackgroundColor3 = originalColor })
             tween:Play()
         end
     end)
@@ -207,8 +210,9 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
     -- Container principal da janela
     self.Window = Instance.new("Frame")
     self.Window.Size = DESIGN.WindowSize
-    self.Window.Position = UDim2.new(0.5, -DESIGN.WindowSize.X.Offset / 2, 0.5, -DESIGN.WindowSize.Y.Offset / 2)
-    self.Window.BackgroundColor3 = DESIGN.WindowColor1
+    self.Window.Position = UDim2.fromScale(0.5, 0.5) -- Centraliza a posição inicial
+    self.Window.AnchorPoint = Vector2.new(0.5, 0.5) -- Centraliza o AnchorPoint
+    self.Window.BackgroundColor3 = DESIGN.WindowColor
     self.Window.BorderSizePixel = 0
     self.Window.Parent = self.ScreenGui
     self.Window.ClipsDescendants = true
@@ -217,8 +221,8 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
 
     local windowGradient = Instance.new("UIGradient")
     windowGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, DESIGN.WindowColor1),
-        ColorSequenceKeypoint.new(1, DESIGN.WindowColor2)
+        ColorSequenceKeypoint.new(0, DESIGN.WindowColor),
+        ColorSequenceKeypoint.new(1, DESIGN.WindowColorSecondary)
     })
     windowGradient.Rotation = 90
     windowGradient.Parent = self.Window
@@ -284,7 +288,7 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
     self.TabContainer = Instance.new("Frame")
     self.TabContainer.Size = UDim2.new(0, DESIGN.TabButtonWidth, 1, -DESIGN.TitleHeight)
     self.TabContainer.Position = UDim2.new(0, 0, 0, DESIGN.TitleHeight)
-    self.TabContainer.BackgroundColor3 = DESIGN.WindowColor2
+    self.TabContainer.BackgroundColor3 = DESIGN.WindowColorSecondary
     self.TabContainer.BorderSizePixel = 0
     self.TabContainer.Parent = self.Window
 
@@ -378,17 +382,17 @@ end
 function UIManager:SetupDragSystem()
     local dragStart = nil
     local startPos = nil
-
-    self.Connections.DragBegin = self.TitleBar.InputBegan:Connect(function(input)
+    
+    local function onInputBegan(input)
         if self.Blocked then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             self.IsDragging = true
             dragStart = UserInputService:GetMouseLocation()
             startPos = self.Window.Position
         end
-    end)
+    end
 
-    self.Connections.DragChanged = UserInputService.InputChanged:Connect(function(input)
+    local function onInputChanged(input)
         if self.Blocked then return end
         if self.IsDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = UserInputService:GetMouseLocation() - dragStart
@@ -399,17 +403,21 @@ function UIManager:SetupDragSystem()
                 startPos.Y.Offset + delta.Y
             )
 
-            local tween = TweenService:Create(self.Window, TweenInfo.new(0.1, Enum.EasingStyle.Quad), { Position = newPos })
+            local tween = TweenService:Create(self.Window, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), { Position = newPos })
             tween:Play()
         end
-    end)
+    end
 
-    self.Connections.DragEnded = UserInputService.InputEnded:Connect(function(input)
+    local function onInputEnded(input)
         if self.Blocked then return end
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             self.IsDragging = false
         end
-    end)
+    end
+
+    self.Connections.DragBegin = self.TitleBar.InputBegan:Connect(onInputBegan)
+    self.Connections.DragChanged = UserInputService.InputChanged:Connect(onInputChanged)
+    self.Connections.DragEnded = UserInputService.InputEnded:Connect(onInputEnded)
 end
 
 ---
@@ -456,7 +464,7 @@ function UIManager:SetupResizeSystem()
             local newHeight = math.clamp(startSize.Y.Offset + delta.Y, DESIGN.MinWindowSize.Y, DESIGN.MaxWindowSize.Y)
 
             local newSize = UDim2.new(0, newWidth, 0, newHeight)
-            local tween = TweenService:Create(self.Window, TweenInfo.new(0.1, Enum.EasingStyle.Quad), { Size = newSize })
+            local tween = TweenService:Create(self.Window, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), { Size = newSize })
             tween:Play()
 
             self:UpdateContainersSize()
@@ -492,7 +500,7 @@ function UIManager:SetupFloatButton(text: string)
     local floatGradient = Instance.new("UIGradient")
     floatGradient.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, DESIGN.FloatButtonColor),
-        ColorSequenceKeypoint.new(1, DESIGN.WindowColor2)
+        ColorSequenceKeypoint.new(1, DESIGN.WindowColorSecondary)
     })
     floatGradient.Rotation = 45
     floatGradient.Parent = self.FloatButton
@@ -626,9 +634,9 @@ function UIManager:Minimize()
     if self.IsMinimized or self.Blocked then return end
     self.IsMinimized = true
 
-    local minimizeTween = TweenService:Create(self.Window, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
+    local minimizeTween = TweenService:Create(self.Window, TweenInfo.new(DESIGN.TweenDuration, Enum.EasingStyle.Quad), {
         Size = UDim2.new(0, 0, 0, 0),
-        Position = UDim2.new(0.5, 0, 0.5, 0)
+        Position = UDim2.fromScale(0.5, 0.5)
     })
 
     minimizeTween:Play()
@@ -636,8 +644,9 @@ function UIManager:Minimize()
         self.Window.Visible = false
         self.FloatButton.Visible = true
 
-        local floatTween = TweenService:Create(self.FloatButton, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
-            Size = DESIGN.FloatButtonSize
+        local floatTween = TweenService:Create(self.FloatButton, TweenInfo.new(DESIGN.TweenDuration, Enum.EasingStyle.Back), {
+            Size = DESIGN.FloatButtonSize,
+            Position = UDim2.new(1, -130, 1, -60)
         })
         floatTween:Play()
     end)
@@ -647,7 +656,7 @@ function UIManager:Expand()
     if not self.IsMinimized or self.Blocked then return end
     self.IsMinimized = false
 
-    local floatTween = TweenService:Create(self.FloatButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+    local floatTween = TweenService:Create(self.FloatButton, TweenInfo.new(DESIGN.TweenDuration, Enum.EasingStyle.Quad), {
         Size = UDim2.new(0, 0, 0, 0)
     })
     floatTween:Play()
@@ -656,9 +665,9 @@ function UIManager:Expand()
         self.FloatButton.Visible = false
         self.Window.Visible = true
 
-        local expandTween = TweenService:Create(self.Window, TweenInfo.new(0.4, Enum.EasingStyle.Back), {
+        local expandTween = TweenService:Create(self.Window, TweenInfo.new(DESIGN.TweenDuration, Enum.EasingStyle.Back), {
             Size = DESIGN.WindowSize,
-            Position = UDim2.new(0.5, -DESIGN.WindowSize.X.Offset / 2, 0.5, -DESIGN.WindowSize.Y.Offset / 2)
+            Position = UDim2.fromScale(0.5, 0.5)
         })
         expandTween:Play()
     end)
@@ -669,10 +678,10 @@ function UIManager:Block(state: boolean)
     self.BlockScreen.Visible = state
     if state then
         -- Suaviza a entrada do borrão
-        TweenService:Create(self.BlurEffect, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Size = DESIGN.BlurEffectSize}):Play()
+        TweenService:Create(self.BlurEffect, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), {Size = DESIGN.BlurEffectSize}):Play()
     else
         -- Suaviza a saída do borrão
-        TweenService:Create(self.BlurEffect, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Size = 0}):Play()
+        TweenService:Create(self.BlurEffect, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), {Size = 0}):Play()
     end
 end
 
@@ -788,10 +797,10 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
 
     local function toggle(newState: boolean)
         state = newState
-        TweenService:Create(switch, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+        TweenService:Create(switch, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), {
             BackgroundColor3 = state and DESIGN.ActiveToggleColor or DESIGN.InactiveToggleColor
         }):Play()
-        TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+        TweenService:Create(knob, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), {
             Position = state and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
         }):Play()
         if options.Callback then options.Callback(state) end
@@ -904,7 +913,7 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
             end
 
             local totalHeight = #currentValues * (DESIGN.ComponentHeight - 2) + dropdownLayout.Padding.Offset * (#currentValues - 1)
-            TweenService:Create(listFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+            TweenService:Create(listFrame, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), {
                 Size = UDim2.new(1, 0, 0, totalHeight)
             }):Play()
 
@@ -1395,17 +1404,17 @@ function UIManager:Notify(options: {
     -- Função para fechar suavemente
     local function closeNotification()
         local tweens = {}
-        table.insert(tweens, TweenService:Create(notifyFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 }))
+        table.insert(tweens, TweenService:Create(notifyFrame, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), { BackgroundTransparency = 1 }))
         for _, child in pairs(textContainer:GetChildren()) do
             if child:IsA("TextLabel") then
-                table.insert(tweens, TweenService:Create(child, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { TextTransparency = 1 }))
+                table.insert(tweens, TweenService:Create(child, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), { TextTransparency = 1 }))
             end
         end
         if notifyImage then
-            table.insert(tweens, TweenService:Create(notifyImage, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { ImageTransparency = 1 }))
+            table.insert(tweens, TweenService:Create(notifyImage, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), { ImageTransparency = 1 }))
         end
         if actionButton then
-            table.insert(tweens, TweenService:Create(actionButton, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { BackgroundTransparency = 1, TextTransparency = 1 }))
+            table.insert(tweens, TweenService:Create(actionButton, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing), { BackgroundTransparency = 1, TextTransparency = 1 }))
         end
         for _, t in pairs(tweens) do t:Play() end
         tweens[1].Completed:Wait()
@@ -1428,17 +1437,17 @@ function UIManager:Notify(options: {
     end
 
     -- Tween de entrada
-    TweenService:Create(notifyFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0 }):Play()
+    TweenService:Create(notifyFrame, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing, Enum.EasingDirection.Out), { BackgroundTransparency = 0 }):Play()
     for _, child in pairs(textContainer:GetChildren()) do
         if child:IsA("TextLabel") then
-            TweenService:Create(child, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
+            TweenService:Create(child, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
         end
     end
     if notifyImage then
-        TweenService:Create(notifyImage, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 0 }):Play()
+        TweenService:Create(notifyImage, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing, Enum.EasingDirection.Out), { ImageTransparency = 0 }):Play()
     end
     if actionButton then
-        TweenService:Create(actionButton, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0, TextTransparency = 0 }):Play()
+        TweenService:Create(actionButton, TweenInfo.new(DESIGN.TweenDuration, DESIGN.TweenEasing, Enum.EasingDirection.Out), { BackgroundTransparency = 0, TextTransparency = 0 }):Play()
     end
 
     -- Fecha automaticamente se não for persistente
