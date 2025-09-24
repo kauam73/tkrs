@@ -752,21 +752,10 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
     container.BackgroundTransparency = 1
     container.Parent = outerBox
 
-    -- Label do toggle
-    local label = Instance.new("TextLabel")
-    label.Text = options.Text
-    label.Size = UDim2.new(0.7, 0, 1, 0)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = DESIGN.ComponentTextColor
-    label.Font = Enum.Font.Roboto
-    label.TextScaled = true
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = container
-
-    -- Botão do toggle
+    -- Botão do toggle (agora à esquerda)
     local switch = Instance.new("TextButton")
     switch.Size = UDim2.new(0, 50, 0, 24)
-    switch.Position = UDim2.new(0.7, 0, 0.5, -12)
+    switch.Position = UDim2.new(0, 0, 0.5, -12) -- esquerda
     switch.BackgroundColor3 = DESIGN.InactiveToggleColor
     switch.Text = ""
     switch.AutoButtonColor = false
@@ -774,13 +763,25 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
     switch.ClipsDescendants = true
     addRoundedCorners(switch, 100)
 
-    -- Knob do toggle
+    -- Knob do toggle (início à esquerda)
     local knob = Instance.new("Frame")
     knob.Size = UDim2.new(0, 20, 0, 20)
     knob.Position = UDim2.new(0, 2, 0.5, -10)
     knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     knob.Parent = switch
     addRoundedCorners(knob, 100)
+
+    -- Label do toggle (ocupando o restante à direita)
+    local label = Instance.new("TextLabel")
+    label.Text = options.Text
+    label.Size = UDim2.new(1, -60, 1, 0) -- ajusta para não sobrepor o switch
+    label.Position = UDim2.new(0, 60, 0, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = DESIGN.ComponentTextColor
+    label.Font = Enum.Font.Roboto
+    label.TextScaled = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = container
 
     local state = false
     local connections = {}
