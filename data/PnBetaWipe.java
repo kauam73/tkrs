@@ -116,6 +116,8 @@ local Config = {
     COLOR_CARD_TEXT_BG = Color3.fromRGB(0, 0, 0),
     COLOR_CARD_TEXT_STROKE = Color3.fromRGB(50, 50, 50),
     COLOR_CATEGORY_HEADER_BG = Color3.fromRGB(30, 30, 30),
+    COLOR_SYNC_BUTTON_ON = Color3.fromRGB(100, 255, 100),
+    COLOR_SYNC_BUTTON_OFF = Color3.fromRGB(255, 100, 100),
     FONT_HEADER = Enum.Font.GothamBlack,
     FONT_TABS = Enum.Font.GothamBold,
     FONT_DEFAULT = Enum.Font.Gotham,
@@ -127,6 +129,7 @@ local Config = {
     SEARCH_BOX_HEIGHT = 38,
     CARD_SIZE = UDim2.new(0, 120, 0, 140),
     CARD_PADDING = UDim2.new(0, 10, 0, 10),
+    PLAYER_CARD_SIZE = UDim2.new(0, 140, 0, 180),
     DRAG_BUTTON_SIZE_NORMAL = UDim2.new(0, 70, 0, 70),
     DRAG_BUTTON_SIZE_MINIMIZED = UDim2.new(0, 65, 0, 65),
     LOOP_TOGGLE_SIZE = UDim2.new(0, 140, 0, 38),
@@ -342,6 +345,144 @@ function UIBuilder.createCreditsSwitcher(parent, position, creditsList, textSize
 end
 
 --##################################
+-- CRIA UM COMPONENTE DE NOTIFICAÇÃO 
+--##################################
+
+function UIBuilder.createNotificationSystem(position)
+    local TweenService = game:GetService("TweenService")
+    local notifications = {}
+
+    -- Pega a interface do jogador
+    local player = game.Players.LocalPlayer
+    if not player then
+        warn("Não foi possível encontrar o Player local para notificações.")
+        return function() end
+    end
+    local parent = player:WaitForChild("PlayerGui")
+
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 0)
+    container.AutomaticSize = Enum.AutomaticSize.Y
+    container.AnchorPoint = Vector2.new(0.5, 1)
+    container.BackgroundTransparency = 1
+    container.ClipsDescendants = false
+    container.Parent = parent
+
+    -- Garante que position seja UDim2
+    if typeof(position) == "UDim2" then
+        container.Position = position
+    else
+        container.Position = UDim2.new(0.5, 0, 1, -50) -- default
+    end
+
+    local layout = Instance.new("UIListLayout", container)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 6)
+    layout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+
+    local function createNotification(thumbnail, title, subtitle, description, temp)
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, -20, 0, 0)
+        frame.AutomaticSize = Enum.AutomaticSize.Y
+        frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        frame.BorderSizePixel = 0
+        frame.BackgroundTransparency = 0
+        frame.Parent = container
+
+        Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+        local padding = Instance.new("UIPadding", frame)
+        padding.PaddingTop = UDim.new(0, 8)
+        padding.PaddingBottom = UDim.new(0, 8)
+        padding.PaddingLeft = UDim.new(0, 10)
+        padding.PaddingRight = UDim.new(0, 10)
+
+        local innerLayout = Instance.new("UIListLayout", frame)
+        innerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        innerLayout.Padding = UDim.new(0, 4)
+
+        if thumbnail then
+            local img = Instance.new("ImageLabel")
+            img.Size = UDim2.new(0, 50, 0, 50)
+            img.Image = thumbnail
+            img.BackgroundTransparency = 1
+            img.LayoutOrder = 0
+            img.Parent = frame
+        end
+
+        local titleLabel = Instance.new("TextLabel")
+        titleLabel.Text = title or ""
+        titleLabel.TextSize = 18
+        titleLabel.Font = Enum.Font.GothamBold
+        titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+        titleLabel.BackgroundTransparency = 1
+        titleLabel.TextWrapped = true
+        titleLabel.LayoutOrder = 1
+        titleLabel.Parent = frame
+
+        if subtitle then
+            local subLabel = Instance.new("TextLabel")
+            subLabel.Text = subtitle
+            subLabel.TextSize = 14
+            subLabel.Font = Enum.Font.Gotham
+            subLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+            subLabel.BackgroundTransparency = 1
+            subLabel.TextWrapped = true
+            subLabel.LayoutOrder = 2
+            subLabel.Parent = frame
+        end
+
+        if description then
+            local descLabel = Instance.new("TextLabel")
+            descLabel.Text = description
+            descLabel.TextSize = 14
+            descLabel.Font = Enum.Font.Gotham
+            descLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+            descLabel.BackgroundTransparency = 1
+            descLabel.TextWrapped = true
+            descLabel.LayoutOrder = 3
+            descLabel.Parent = frame
+        end
+
+        -- animação de fade in
+        frame.BackgroundTransparency = 1
+        TweenService:Create(frame, TweenInfo.new(0.3), {BackgroundTransparency = 0}):Play()
+
+        for _, child in ipairs(frame:GetChildren()) do
+            if child:IsA("TextLabel") then
+                child.TextTransparency = 1
+                TweenService:Create(child, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
+            end
+        end
+
+        table.insert(notifications, frame)
+
+        -- remover após temp segundos
+        task.delay(temp or 3, function()
+            local tween = TweenService:Create(frame, TweenInfo.new(0.5), {BackgroundTransparency = 1})
+            tween:Play()
+
+            for _, child in ipairs(frame:GetChildren()) do
+                if child:IsA("TextLabel") then
+                    TweenService:Create(child, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
+                end
+            end
+
+            tween.Completed:Wait()
+            frame:Destroy()
+
+            for i, notif in ipairs(notifications) do
+                if notif == frame then
+                    table.remove(notifications, i)
+                    break
+                end
+            end
+        end)
+    end
+
+    return createNotification
+end
+
+--##################################
 -- CRIA UM FRAME CONFIGURADO COM OPCIONAIS
 --##################################
 function UIBuilder.createFrame(
@@ -361,8 +502,10 @@ function UIBuilder.createFrame(
 
     frame.Size = size
     frame.Position = position
+
     frame.BackgroundColor3 = backgroundColor or Color3.fromRGB(255, 255, 255)
     frame.BackgroundTransparency = backgroundTransparency or 0
+
     frame.BorderSizePixel = borderSizePixel or 0
     frame.Active = active or false
     frame.ClipsDescendants = clipsDescendants or false
@@ -479,22 +622,46 @@ function UIBuilder.createDialog(
     showNo,
     closeOnOutside
 )
-    -- Overlay full screen
+    -- Overlay totalmente invisível
     local screen = Instance.new("Frame")
     screen.AnchorPoint = Vector2.new(0,0)
-    screen.Position = UDim2.fromOffset(0,0)
+    screen.Position = UDim2.fromScale(0,0)
     screen.Size = UDim2.fromScale(1,1)
-    screen.BackgroundColor3 = Config.COLOR_BLUR_BACKGROUND
-    screen.BackgroundTransparency = Config.COLOR_BLUR_TRANSPARENCY
+    screen.BackgroundTransparency = 1 -- totalmente invisível
     screen.ZIndex = 999
-    screen.ClipsDescendants = false
     screen.Active = true
+    screen.Name = "DialogOverlay"
     screen.Parent = parent
 
+    -- Impedir movimento do player enquanto aberto
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+
+    local oldWalkSpeed = humanoid.WalkSpeed
+    local oldJumpPower = humanoid.JumpPower
+
+    humanoid.WalkSpeed = 0
+    humanoid.JumpPower = 0
+
+    -- sempre se ajusta ao tamanho do parent
+    local scale = Instance.new("UISizeConstraint")
+    scale.MaxSize = Vector2.new(math.huge, math.huge)
+    scale.Parent = screen
+
+    -- evento de fechar ao clicar fora
     if closeOnOutside then
         screen.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                screen:Destroy()
+                local guiService = game:GetService("UserInputService")
+                local mouse = guiService:GetMouseLocation()
+                local absPos, absSize = dialog.AbsolutePosition, dialog.AbsoluteSize
+                if not (mouse.X >= absPos.X and mouse.X <= absPos.X + absSize.X
+                     and mouse.Y >= absPos.Y and mouse.Y <= absPos.Y + absSize.Y) then
+                    screen:Destroy()
+                    humanoid.WalkSpeed = oldWalkSpeed
+                    humanoid.JumpPower = oldJumpPower
+                end
             end
         end)
     end
@@ -572,6 +739,8 @@ function UIBuilder.createDialog(
         yesButton.MouseButton1Click:Connect(function()
             if callbacks.onYes then callbacks.onYes() end
             screen:Destroy()
+            humanoid.WalkSpeed = oldWalkSpeed
+            humanoid.JumpPower = oldJumpPower
         end)
     end
 
@@ -590,6 +759,8 @@ function UIBuilder.createDialog(
         noButton.MouseButton1Click:Connect(function()
             if callbacks.onNo then callbacks.onNo() end
             screen:Destroy()
+            humanoid.WalkSpeed = oldWalkSpeed
+            humanoid.JumpPower = oldJumpPower
         end)
     end
 
@@ -597,9 +768,14 @@ function UIBuilder.createDialog(
         Frame = screen,
         OnYes = function(fn) callbacks.onYes = fn end,
         OnNo = function(fn) callbacks.onNo = fn end,
-        Close = function() screen:Destroy() end
+        Close = function()
+            screen:Destroy()
+            humanoid.WalkSpeed = oldWalkSpeed
+            humanoid.JumpPower = oldJumpPower
+        end
     }
 end
+
 --##############################
 -- CRIA UM IMAGELABEL CONFIGURADO
 --##############################
@@ -633,7 +809,9 @@ function UIBuilder.createTextBox(
     clearTextOnFocus,
     cornerRadius,
     strokeColor,
-    strokeThickness
+    strokeThickness,
+    animatedText, -- texto animado no placeholder
+    typingSpeed   -- velocidade da digitação
 )
     local textBox = Instance.new("TextBox")
 
@@ -643,7 +821,7 @@ function UIBuilder.createTextBox(
     textBox.Font = font
     textBox.TextSize = textSize
     
-    textBox.Text = "" -- Garante que o texto inicial é vazio
+    textBox.Text = "" -- inicial vazio
 
     textBox.TextColor3 = textColor or Color3.new(1, 1, 1)
     textBox.BackgroundColor3 = backgroundColor or Color3.fromRGB(255, 255, 255)
@@ -659,6 +837,20 @@ function UIBuilder.createTextBox(
 
     if strokeColor then
         UIBuilder.createUIStroke(textBox, strokeColor, strokeThickness)
+    end
+
+    -- animação de placeholder
+    if animatedText then
+        coroutine.wrap(function()
+            while task.wait(typingSpeed or 0.05) do
+                for i = 1, #animatedText do
+                    textBox.PlaceholderText = string.sub(animatedText, 1, i)
+                    task.wait(typingSpeed or 0.05)
+                end
+                task.wait(1) -- pausa quando termina
+                textBox.PlaceholderText = "" -- limpa para recomeçar
+            end
+        end)()
     end
 
     return textBox
@@ -786,7 +978,7 @@ local PlayerController = {}
 
 PlayerController.emoteList = {}
 PlayerController.emoteTrack = nil
-PlayerController.loopEmote = false
+PlayerController.loopEmote = true
 PlayerController.currentEmoteStopConn = nil
 PlayerController.animationList = {}
 PlayerController.customAnimations = {climb = nil, fall = nil, idle = nil, jump = nil, run = nil, swim = nil, walk = nil}
@@ -802,6 +994,12 @@ PlayerController.dragButtonStart = nil
 PlayerController.dragButtonStartPos = nil
 PlayerController.connections = ConnectionManager:New()
 
+-- Variáveis para o sistema de players
+PlayerController.playersList = {}
+PlayerController.selectedPlayer = nil
+PlayerController.syncEnabled = false
+PlayerController.syncConnection = nil
+
 --##############################
 -- INICIALIZA O PLAYERCONTROLLER
 --##############################
@@ -814,6 +1012,7 @@ function PlayerController:init()
     self:createGUI()
     self:setupInteractions()
     self:loadAllData()
+    self:setupPlayersListUpdater()
 end
 
 --########################################################
@@ -881,23 +1080,33 @@ end
 --##############################################################
 function PlayerController:applyCustomAnimationsToCharacter(char)
     local humanoid = char:FindFirstChildOfClass("Humanoid")
-    if not humanoid then
-        return
-    end
+    if not humanoid then return end
 
     -- Bloqueia caso seja R6
     if humanoid.RigType ~= Enum.HumanoidRigType.R15 then
-        -- print("Personagem é R6, animações customizadas não serão aplicadas.")
+        -- Notificação: personagem é R6
+        if self.createNotification then
+            local success, err = pcall(function()
+                self.createNotification(
+                    nil, -- sem thumbnail
+                    "Animações Customizadas",
+                    "Personagem é R6",
+                    "Não é possível aplicar animações personalizadas. Mude para R15/R16.",
+                    5 -- duração em segundos
+                )
+            end)
+            if not success then
+                warn("[Notificação] Falha ao exibir: " .. tostring(err))
+            end
+        else
+            warn("[Notificação] createNotification não definido. Não foi possível exibir a notificação.")
+        end
         return
     end
 
     local animate = char:FindFirstChild("Animate")
-    if not animate then
-        -- warn("Script Animate não encontrado ao aplicar animações.")
-        return
-    end
+    if not animate then return end
 
-    -- Cria ou atualiza uma animação dentro do Animate
     local function ensureAnimationStructure(folderName, animName, id)
         if not id then return end
 
@@ -920,7 +1129,6 @@ function PlayerController:applyCustomAnimationsToCharacter(char)
         end
     end
 
-    -- Aplicação de cada animação customizada
     ensureAnimationStructure("walk",  "WalkAnim",   self.customAnimations.walk)
     ensureAnimationStructure("idle",  "Animation1", self.customAnimations.idle)
     ensureAnimationStructure("idle",  "Animation2", self.customAnimations.idle)
@@ -1110,6 +1318,7 @@ function PlayerController:createGUI()
     self:createHeaderAndTabs()
     self:createEmotePanel()
     self:createAnimationPanel()
+    self:createPlayersPanel()
     self:createConfigPanel()
     self:createDragButton()
 end
@@ -1147,14 +1356,14 @@ function PlayerController:createHeaderAndTabs()
         nil, 1
     )
 
-    local tabWidth = 1 / 3
+    local tabWidth = 1 / 4 -- Agora temos 4 abas
 
     self.emoteTabButton = UIBuilder.createTextButton(
         tabFrame,
-        UDim2.new(tabWidth, -4, 1, 0),
+        UDim2.new(tabWidth, -3, 1, 0),
         UDim2.new(0, 0, 0, 0),
         "Emotes",
-        15, Config.FONT_TABS,
+        14, Config.FONT_TABS,
         Config.COLOR_TEXT_WHITE,
         Config.COLOR_TAB_ACTIVE_BG,
         0, Config.CORNER_RADIUS,
@@ -1165,10 +1374,24 @@ function PlayerController:createHeaderAndTabs()
 
     self.animationTabButton = UIBuilder.createTextButton(
         tabFrame,
-        UDim2.new(tabWidth, -4, 1, 0),
-        UDim2.new(tabWidth, 2, 0, 0),
+        UDim2.new(tabWidth, -3, 1, 0),
+        UDim2.new(tabWidth, 1, 0, 0),
         "Animações",
-        15, Config.FONT_TABS,
+        14, Config.FONT_TABS,
+        Config.COLOR_TEXT_WHITE,
+        Config.COLOR_TAB_INACTIVE_BG,
+        0, Config.CORNER_RADIUS,
+        Config.COLOR_TEXT_STROKE_GREY,
+        Config.SMALL_BORDER_THICKNESS,
+        true
+    )
+
+    self.playersTabButton = UIBuilder.createTextButton(
+        tabFrame,
+        UDim2.new(tabWidth, -3, 1, 0),
+        UDim2.new(tabWidth * 2, 2, 0, 0),
+        "Players",
+        14, Config.FONT_TABS,
         Config.COLOR_TEXT_WHITE,
         Config.COLOR_TAB_INACTIVE_BG,
         0, Config.CORNER_RADIUS,
@@ -1179,10 +1402,10 @@ function PlayerController:createHeaderAndTabs()
 
     self.configTabButton = UIBuilder.createTextButton(
         tabFrame,
-        UDim2.new(tabWidth, -4, 1, 0),
-        UDim2.new(tabWidth * 2, 4, 0, 0),
+        UDim2.new(tabWidth, -3, 1, 0),
+        UDim2.new(tabWidth * 3, 3, 0, 0),
         "Config",
-        15, Config.FONT_TABS,
+        14, Config.FONT_TABS,
         Config.COLOR_TEXT_WHITE,
         Config.COLOR_TAB_INACTIVE_BG,
         0, Config.CORNER_RADIUS,
@@ -1231,6 +1454,7 @@ end
 function PlayerController:createEmotePanel()
     local padding = 10
     local headerOffset = padding + Config.HEADER_HEIGHT + padding + Config.TAB_HEIGHT
+    local player = game.Players.LocalPlayer
 
     self.emotePanel = UIBuilder.createFrame(
         self.mainFrame,
@@ -1240,19 +1464,21 @@ function PlayerController:createEmotePanel()
     )
     self.emotePanel.Visible = true
 
-    -- Caixa de busca
+    -- Caixa de busca com placeholder animado
     self.emoteSearchBox = UIBuilder.createTextBox(
         self.emotePanel,
         UDim2.new(1, -20, 0, Config.SEARCH_BOX_HEIGHT),
         UDim2.new(0, 10, 0, 10),
-        "🔍 Buscar emote...",
+        "🔍 Buscar emote...", -- só aparece caso animatedText seja nil
         16, Config.FONT_DEFAULT,
         Config.COLOR_TEXT_WHITE,
         Config.COLOR_SEARCHBOX_BG,
         0, true,
         Config.CORNER_RADIUS,
         Config.COLOR_STROKE_LIGHT,
-        Config.SMALL_BORDER_THICKNESS
+        Config.SMALL_BORDER_THICKNESS,
+        ("Olá %s, pesquise o emote aqui..."):format(player.Name), -- texto animado
+        0.06 -- velocidade da digitação
     )
 
     -- Área de scroll
@@ -1285,6 +1511,7 @@ end
 function PlayerController:createAnimationPanel()
     local padding = 10
     local headerOffset = padding + Config.HEADER_HEIGHT + padding + Config.TAB_HEIGHT
+    local player = game.Players.LocalPlayer
 
     self.animationPanel = UIBuilder.createFrame(
         self.mainFrame,
@@ -1294,19 +1521,21 @@ function PlayerController:createAnimationPanel()
     )
     self.animationPanel.Visible = false
 
-    -- Caixa de busca
+    -- Caixa de busca com placeholder animado
     self.animationSearchBox = UIBuilder.createTextBox(
         self.animationPanel,
         UDim2.new(1, -20, 0, Config.SEARCH_BOX_HEIGHT),
         UDim2.new(0, 10, 0, 10),
-        "🔍 Buscar animação ou pacote...",
+        "🔍 Buscar animação ou pacote...", -- só aparece caso animatedText seja nil
         16, Config.FONT_DEFAULT,
         Config.COLOR_TEXT_WHITE,
         Config.COLOR_SEARCHBOX_BG,
         0, true,
         Config.CORNER_RADIUS,
         Config.COLOR_STROKE_LIGHT,
-        Config.SMALL_BORDER_THICKNESS
+        Config.SMALL_BORDER_THICKNESS,
+        ("Olá %s, pesquise a animação aqui..."):format(player.Name), -- texto animado
+        0.06 -- velocidade da digitação
     )
 
     -- Área de scroll
@@ -1333,6 +1562,60 @@ function PlayerController:createAnimationPanel()
     )
 end
 
+--########################
+-- PAINEL DE PLAYERS
+--########################
+
+function PlayerController:createPlayersPanel()
+    local padding = 10
+    local headerOffset = padding + Config.HEADER_HEIGHT + padding + Config.TAB_HEIGHT
+
+    self.playersPanel = UIBuilder.createFrame(
+        self.mainFrame,
+        UDim2.new(1, -20, 1, -(headerOffset + padding)),
+        UDim2.new(0, padding, 0, headerOffset),
+        nil, 1, 0, false, false, nil, nil, nil
+    )
+    self.playersPanel.Visible = false
+
+    -- Caixa de busca para players
+    self.playersSearchBox = UIBuilder.createTextBox(
+        self.playersPanel,
+        UDim2.new(1, -20, 0, Config.SEARCH_BOX_HEIGHT),
+        UDim2.new(0, 10, 0, 10),
+        "🔍 Buscar player...",
+        16, Config.FONT_DEFAULT,
+        Config.COLOR_TEXT_WHITE,
+        Config.COLOR_SEARCHBOX_BG,
+        0, true,
+        Config.CORNER_RADIUS,
+        Config.COLOR_STROKE_LIGHT,
+        Config.SMALL_BORDER_THICKNESS
+    )
+
+    -- Área de scroll para players
+    self.playersScrollFrame = UIBuilder.createScrollingFrame(
+        self.playersPanel,
+        UDim2.new(1, 0, 1, -(padding + Config.SEARCH_BOX_HEIGHT + padding)),
+        UDim2.new(0, 0, 0, padding + Config.SEARCH_BOX_HEIGHT),
+        Config.SCROLLBAR_THICKNESS,
+        Config.COLOR_SCROLLBAR,
+        1, true,
+        Enum.ScrollingDirection.Y,
+        Enum.ElasticBehavior.Never
+    )
+    self.playersScrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+    -- Grade de players
+    UIBuilder.createUIGridLayout(
+        self.playersScrollFrame,
+        Config.PLAYER_CARD_SIZE,
+        Config.CARD_PADDING,
+        Enum.StartCorner.TopLeft,
+        Enum.HorizontalAlignment.Center
+    )
+end
+
 --######################
 -- ÁREA DE CONFIGURAÇÕES 
 --######################
@@ -1353,6 +1636,9 @@ function PlayerController:createConfigPanel()
 
     local posY = 10
 
+    -- Criar sistema de notificações dentro do painel
+    self.createNotification = UIBuilder.createNotificationSystem(self.configPanel, UDim2.new(0.5, 0, 1, 0))
+
     UIBuilder.createTextLabel(
         self.configPanel,
         UDim2.new(1, -20, 0, 35),
@@ -1365,11 +1651,11 @@ function PlayerController:createConfigPanel()
     )
     posY += 40
 
-	local credits = {
-	    { title = "Criador", text = "Kauam" },
-	    { title = "TikTok", text = "@Tekscripts" },
-	    { title = "Roblox", text = "FXZGHS1" }
-	}
+    local credits = {
+        { title = "Criador", text = "Kauam" },
+        { title = "TikTok", text = "@Tekscripts" },
+        { title = "Roblox", text = "FXZGHS1" }
+    }
 
     self.creditsSwitcher = UIBuilder.createCreditsSwitcher(
         self.configPanel,
@@ -1378,8 +1664,8 @@ function PlayerController:createConfigPanel()
         16, Config.FONT_DEFAULT,
         Config.COLOR_CREDITS_TEXT,
         15,
-        2,          -- intervalo em segundos
-        "typing"    -- efeito "typing" ou "suav"
+        2,
+        "typing"
     )
     posY += 70
 
@@ -1387,7 +1673,7 @@ function PlayerController:createConfigPanel()
         self.configPanel,
         UDim2.new(1, -20, 0, 40),
         UDim2.new(0, 10, 0, posY),
-        "Loop Emote: Off",
+        "Loop Emote: On",
         14, Config.FONT_DEFAULT,
         Config.COLOR_TEXT_WHITE,
         Config.COLOR_LOOP_TOGGLE_BG,
@@ -1445,12 +1731,14 @@ function PlayerController:setupInteractions()
     local allTabs = {
         emotes = self.emoteTabButton,
         animations = self.animationTabButton,
+        players = self.playersTabButton,
         config = self.configTabButton,
     }
 
     local allPanels = {
         emotes = self.emotePanel,
         animations = self.animationPanel,
+        players = self.playersPanel,
         config = self.configPanel,
     }
 
@@ -1479,14 +1767,17 @@ function PlayerController:setupInteractions()
         end))
     end
 
-    -- Toggle loop do emote
-    self.connections:Add(self.loopToggle.MouseButton1Click:Connect(function()
-        self.loopEmote = not self.loopEmote
-        self.loopToggle.Text = "Loop Emote: " .. (self.loopEmote and "On" or "Off")
-        if self.emoteTrack and self.emoteTrack.IsPlaying then
-            self.emoteTrack.Looped = self.loopEmote
-        end
-    end))
+	if self.emoteTrack and self.emoteTrack.IsPlaying then
+	    self.emoteTrack.Looped = true
+	end
+	
+	self.connections:Add(self.loopToggle.MouseButton1Click:Connect(function()
+	    self.loopEmote = not self.loopEmote
+	    self.loopToggle.Text = "Loop Emote: " .. (self.loopEmote and "On" or "Off")
+	    if self.emoteTrack and self.emoteTrack.IsPlaying then
+	        self.emoteTrack.Looped = self.loopEmote
+	    end
+	end))
 
     -- Fechar GUI com confirmação
 	self.connections:Add(self.closeGuiButton.MouseButton1Click:Connect(function()
@@ -1540,18 +1831,22 @@ function PlayerController:setupInteractions()
     end))
 
     -- Drag movimento
-    self.connections:Add(UserInputService.InputChanged:Connect(function(input)
-        if self.draggingButton and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            local delta = input.Position - self.dragButtonStart
-            local newPos = UDim2.new(
-                self.dragButtonStartPos.X.Scale,
-                self.dragButtonStartPos.X.Offset + delta.X,
-                self.dragButtonStartPos.Y.Scale,
-                self.dragButtonStartPos.Y.Offset + delta.Y
-            )
-            self.dragButton.Position = newPos
-        end
-    end))
+self.connections:Add(UserInputService.InputChanged:Connect(function(input)
+    if self.draggingButton and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - self.dragButtonStart
+        local newPos = UDim2.new(
+            self.dragButtonStartPos.X.Scale,
+            self.dragButtonStartPos.X.Offset + delta.X,
+            self.dragButtonStartPos.Y.Scale,
+            self.dragButtonStartPos.Y.Offset + delta.Y
+        )
+
+        -- Tween suave até a nova posição
+        TweenService:Create(self.dragButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = newPos
+        }):Play()
+    end
+end))
 
     -- Debounce para busca
     local function setupSearchDebounce(searchBox, updateFunction)
@@ -1578,6 +1873,7 @@ function PlayerController:setupInteractions()
 
     setupSearchDebounce(self.emoteSearchBox, self.updateEmoteList)
     setupSearchDebounce(self.animationSearchBox, self.updateAnimationList)
+    setupSearchDebounce(self.playersSearchBox, self.updatePlayersList)
 end
 
 --##########################################
@@ -1799,20 +2095,38 @@ function PlayerController:createEmoteCard(emote)
         TweenService:Create(btn, tweenInfo, { BackgroundColor3 = Config.COLOR_CARD_BG }):Play()
         TweenService:Create(btnStroke, tweenInfo, { Color = Config.COLOR_STROKE_LIGHT }):Play()
     end)
+
+    -- efeito de toque no mobile
+    local inputBeganConn = btn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            TweenService:Create(btn, tweenInfo, { BackgroundColor3 = Config.COLOR_CARD_HOVER }):Play()
+            TweenService:Create(btnStroke, tweenInfo, { Color = Config.COLOR_ACCENT_PRIMARY }):Play()
+        end
+    end)
+    local inputEndedConn = btn.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.Touch then
+            TweenService:Create(btn, tweenInfo, { BackgroundColor3 = Config.COLOR_CARD_BG }):Play()
+            TweenService:Create(btnStroke, tweenInfo, { Color = Config.COLOR_STROKE_LIGHT }):Play()
+        end
+    end)
+
+    -- clique (funciona no pc e mobile)
     local clickConn = btn.MouseButton1Click:Connect(function()
         self:playEmoteAnimation(emote.idEmote)
     end)
 
+    -- gerencia todas as conexões
     local cardConnections = ConnectionManager:New()
     cardConnections:Add(enterConn)
     cardConnections:Add(leaveConn)
+    cardConnections:Add(inputBeganConn)
+    cardConnections:Add(inputEndedConn)
     cardConnections:Add(clickConn)
 
     btn.Destroying:Connect(function()
         cardConnections:DisconnectAll()
     end)
 end
-
 
 --########################
 -- ATUALIZA A LISTA VISUAL DE EMOTES COM BASE EM UM FILTRO
@@ -1937,7 +2251,6 @@ function PlayerController:createAnimationCard(animationData, parentFrame)
     end)
 end
 
-
 function PlayerController:updateAnimationList(filter)
     -- Limpa os elementos antigos
     for _, child in ipairs(self.animationScrollFrame:GetChildren()) do
@@ -2042,6 +2355,212 @@ function PlayerController:updateAnimationList(filter)
 end
 
 --########################
+-- SISTEMA DE PLAYERS
+--########################
+
+function PlayerController:setupPlayersListUpdater()
+    -- Atualiza a lista de players automaticamente
+    local function updatePlayersList()
+        self.playersList = {}
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= player then -- Não incluir o próprio player
+                table.insert(self.playersList, plr)
+            end
+        end
+        self:updatePlayersList("")
+    end
+
+    -- Conecta eventos de entrada e saída de players
+    self.connections:Add(Players.PlayerAdded:Connect(updatePlayersList))
+    self.connections:Add(Players.PlayerRemoving:Connect(updatePlayersList))
+
+    -- Atualização inicial
+    updatePlayersList()
+end
+
+function PlayerController:createPlayerCard(targetPlayer)
+    local btn = Instance.new("ImageButton")
+    btn.Name = targetPlayer.Name
+    btn.BackgroundColor3 = Config.COLOR_CARD_BG
+    btn.Size = Config.PLAYER_CARD_SIZE
+    btn.Parent = self.playersScrollFrame
+
+    UIBuilder.createUICorner(btn, Config.CORNER_RADIUS)
+    local btnStroke = UIBuilder.createUIStroke(btn, Config.COLOR_STROKE_LIGHT, Config.BORDER_THICKNESS)
+
+    -- Avatar do player
+    btn.Image = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. targetPlayer.UserId .. "&width=420&height=420&format=png"
+    btn.ImageTransparency = 0
+
+    -- Container de informações
+    local infoContainer = UIBuilder.createFrame(
+        btn,
+        UDim2.new(1, 0, 0, 60),
+        UDim2.new(0, 0, 1, -60),
+        Config.COLOR_CARD_TEXT_BG,
+        0.3, 0, false, true
+    )
+
+    -- Nome do player
+    local nameLabel = UIBuilder.createTextLabel(
+        infoContainer,
+        UDim2.new(1, -10, 0, 20),
+        UDim2.new(0, 5, 0, 5),
+        targetPlayer.Name,
+        14,
+        Config.FONT_CARD,
+        1,
+        Config.COLOR_TEXT_WHITE,
+        nil, nil,
+        Enum.TextXAlignment.Center,
+        Enum.TextYAlignment.Center,
+        true
+    )
+
+    -- Botão de Teleport
+    local tpButton = UIBuilder.createTextButton(
+        infoContainer,
+        UDim2.new(1, -10, 0, 25),
+        UDim2.new(0, 5, 0, 30),
+        "Teleport",
+        14,
+        Config.FONT_DEFAULT,
+        Config.COLOR_TEXT_WHITE,
+        Config.COLOR_SYNC_BUTTON_OFF,
+        0,
+        Config.CORNER_RADIUS
+    )
+
+    -- Efeitos visuais
+    local tweenInfo = TweenInfo.new(Config.TWEEN_DURATION)
+    local enterConn = btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, tweenInfo, { BackgroundColor3 = Config.COLOR_CARD_HOVER }):Play()
+    end)
+    
+    local leaveConn = btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, tweenInfo, { BackgroundColor3 = Config.COLOR_CARD_BG }):Play()
+    end)
+
+    -- Clique no card (selecionar player)
+    local clickConn = btn.MouseButton1Click:Connect(function()
+        self:selectPlayer(targetPlayer)
+    end)
+
+    -- Clique no botão de Teleport
+    local tpConn = tpButton.MouseButton1Click:Connect(function()
+        local localPlayer = game.Players.LocalPlayer
+        local character = localPlayer.Character
+        local targetChar = targetPlayer.Character
+
+        if character and character:FindFirstChild("HumanoidRootPart") and targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = targetChar.HumanoidRootPart.CFrame
+            self:notify("Teleportado", targetPlayer.Name, "Você foi teleportado para " .. targetPlayer.Name)
+        else
+            self:notify("Erro", "Personagem não encontrado", "Não foi possível teleportar para este player.", 4)
+        end
+    end)
+
+    -- Gerencia conexões
+    local cardConnections = ConnectionManager:New()
+    cardConnections:Add(enterConn)
+    cardConnections:Add(leaveConn)
+    cardConnections:Add(clickConn)
+    cardConnections:Add(tpConn)
+
+    btn.Destroying:Connect(function()
+        cardConnections:DisconnectAll()
+    end)
+end
+
+function PlayerController:notify(title, subtitle, message, duration)
+    if self.createNotification then
+        self.createNotification(nil, title, subtitle, message, duration or 3)
+    end
+end
+
+function PlayerController:selectPlayer(targetPlayer)
+    self.selectedPlayer = targetPlayer
+    self:notify("Player Selecionado", targetPlayer.Name, "Player selecionado para sincronização de emotes.")
+end
+
+function PlayerController:startSyncWithPlayer(targetPlayer)
+    self:stopSync()
+
+    local character = targetPlayer.Character
+    if not character then
+        self:notify("Erro de Sincronização", "Player sem personagem", "O player selecionado não possui um personagem ativo.", 4)
+        return
+    end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then
+        self:notify("Erro de Sincronização", "Humanoid não encontrado", "Não foi possível encontrar o Humanoid do player selecionado.", 4)
+        return
+    end
+
+    local animator = humanoid:FindFirstChildOfClass("Animator")
+    if not animator then
+        animator = Instance.new("Animator")
+        animator.Parent = humanoid
+    end
+
+    self.syncEnabled = true
+    self.selectedPlayer = targetPlayer
+
+    -- Sincroniza animações que já estão tocando
+    for _, track in ipairs(humanoid:GetPlayingAnimationTracks()) do
+        if track.Priority == Enum.AnimationPriority.Action then
+            self:playEmoteAnimation(track.Animation.AnimationId)
+        end
+    end
+
+    -- Monitora novas animações
+    self.syncConnection = animator.AnimationPlayed:Connect(function(track)
+        if self.syncEnabled and track.Priority == Enum.AnimationPriority.Action then
+            self:playEmoteAnimation(track.Animation.AnimationId)
+        end
+    end)
+
+    self:notify("Sincronização Ativada", targetPlayer.Name, "Sincronizando emotes com " .. targetPlayer.Name)
+end
+
+function PlayerController:stopSync()
+    if self.syncConnection then
+        self.syncConnection:Disconnect()
+        self.syncConnection = nil
+    end
+
+    self.syncEnabled = false
+    self.lastSyncedEmoteId = nil
+
+    for _, child in ipairs(self.playersScrollFrame:GetChildren()) do
+        if child:IsA("ImageButton") then
+            local syncButton = child:FindFirstChild("Frame")
+            syncButton = syncButton and syncButton:FindFirstChild("TextButton")
+            if syncButton then
+                syncButton.Text = "Sync: OFF"
+                syncButton.BackgroundColor3 = Config.COLOR_SYNC_BUTTON_OFF
+            end
+        end
+    end
+end
+
+function PlayerController:updatePlayersList(filter)
+    local filterLower = string.lower(filter or "")
+
+    for _, child in ipairs(self.playersScrollFrame:GetChildren()) do
+        if child:IsA("GuiObject") and child.Name ~= "UIGridLayout" then
+            child:Destroy()
+        end
+    end
+
+    for _, plr in ipairs(self.playersList) do
+        if filterLower == "" or string.find(string.lower(plr.Name), filterLower, 1, true) then
+            self:createPlayerCard(plr)
+        end
+    end
+end
+--########################
 -- CARREGA DADOS LOCAIS E REMOTOS DE EMOTES E ANIMAÇÕES
 --########################
 function PlayerController:loadAllData()
@@ -2071,3 +2590,4 @@ function PlayerController:loadAllData()
 end
 
 PlayerController:init()
+
