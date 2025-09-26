@@ -1305,22 +1305,25 @@ function UIManager:Notify(options: {
     Callback: (() -> ())?, 
     ButtonText: string?, 
     Persistent: boolean?, 
-    ImageId: string? 
+    ImageId: string?,
+    BackgroundColor: Color3?, 
+    TitleColor: Color3?, 
+    DescColor: Color3?, 
+    FontTitle: Enum.Font?,
+    FontDesc: Enum.Font?
 })
-    -- Verifica se há algo para mostrar
-    assert(type(options) == "table" and (options.Title or options.Desc), "Invalid arguments for Notify: Title or Desc required")
+    assert(type(options) == "table" and (options.Title or options.Desc), "Title or Desc required")
 
-    -- Container da notificação
     local notifyFrame = Instance.new("Frame")
     notifyFrame.Size = UDim2.new(1, 0, 0, DESIGN.NotifyHeight)
-    notifyFrame.BackgroundColor3 = DESIGN.NotifyBackground
+    notifyFrame.BackgroundColor3 = options.BackgroundColor or DESIGN.NotifyBackground
     notifyFrame.BackgroundTransparency = 1
     notifyFrame.BorderSizePixel = 0
     addRoundedCorners(notifyFrame, DESIGN.CornerRadius)
     notifyFrame.Parent = self.NotifyContainer
     notifyFrame.ClipsDescendants = true
 
-    -- Imagem opcional (direita)
+    local paddingRight = 10
     local notifyImage
     if options.ImageId then
         notifyImage = Instance.new("ImageLabel")
@@ -1331,9 +1334,9 @@ function UIManager:Notify(options: {
         addRoundedCorners(notifyImage, DESIGN.CornerRadius)
         notifyImage.Parent = notifyFrame
         notifyImage.ImageTransparency = 1
+        paddingRight = paddingRight + DESIGN.NotifyHeight + 5
     end
 
-    -- Botão opcional
     local actionButton
     if options.ButtonText then
         actionButton = Instance.new("TextButton")
@@ -1341,36 +1344,32 @@ function UIManager:Notify(options: {
         actionButton.Size = UDim2.new(0, 80, 0, 24)
         actionButton.Position = UDim2.new(1, -85, 0.5, -12)
         actionButton.BackgroundColor3 = DESIGN.ActiveToggleColor
-        actionButton.TextColor3 = Color3.new(1, 1, 1)
+        actionButton.TextColor3 = Color3.new(1,1,1)
         addRoundedCorners(actionButton, DESIGN.CornerRadius)
         actionButton.Parent = notifyFrame
         actionButton.AutoButtonColor = true
         actionButton.TextScaled = true
         actionButton.TextWrapped = true
+        paddingRight = paddingRight + 85 + 5
     end
 
-    -- Container de texto
+    -- Garante largura mínima para o texto
+    local minTextWidth = 100
+    local textContainerWidth = math.max(UDim2.new(1, -paddingRight, 1, 0).X.Offset, minTextWidth)
+
     local textContainer = Instance.new("Frame")
-    textContainer.Size = UDim2.new(1, -10, 1, 0)
+    textContainer.Size = UDim2.new(0, textContainerWidth, 1, 0)
     textContainer.Position = UDim2.new(0, 5, 0, 0)
     textContainer.BackgroundTransparency = 1
     textContainer.Parent = notifyFrame
 
-    if notifyImage then
-        textContainer.Size = UDim2.new(1, -(DESIGN.NotifyHeight + 10), 1, 0)
-    end
-    if actionButton then
-        textContainer.Size = UDim2.new(1, -(85 + 10), 1, 0)
-    end
-
-    -- Título
     if options.Title then
         local titleLabel = Instance.new("TextLabel")
         titleLabel.Text = options.Title
-        titleLabel.Size = UDim2.new(1, 0, 0.5, 0)
+        titleLabel.Size = UDim2.new(1,0,0.5,0)
         titleLabel.BackgroundTransparency = 1
-        titleLabel.TextColor3 = DESIGN.NotifyTextColor
-        titleLabel.Font = Enum.Font.SourceSansBold
+        titleLabel.TextColor3 = options.TitleColor or DESIGN.NotifyTextColor
+        titleLabel.Font = options.FontTitle or Enum.Font.SourceSansBold
         titleLabel.TextScaled = true
         titleLabel.TextXAlignment = Enum.TextXAlignment.Left
         titleLabel.TextYAlignment = Enum.TextYAlignment.Top
@@ -1378,15 +1377,14 @@ function UIManager:Notify(options: {
         titleLabel.Parent = textContainer
     end
 
-    -- Descrição
     if options.Desc then
         local descLabel = Instance.new("TextLabel")
         descLabel.Text = options.Desc
-        descLabel.Size = UDim2.new(1, 0, 0.5, 0)
-        descLabel.Position = UDim2.new(0, 0, 0.5, 0)
+        descLabel.Size = UDim2.new(1,0,0.5,0)
+        descLabel.Position = UDim2.new(0,0,0.5,0)
         descLabel.BackgroundTransparency = 1
-        descLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
-        descLabel.Font = Enum.Font.SourceSans
+        descLabel.TextColor3 = options.DescColor or Color3.new(0.8,0.8,0.8)
+        descLabel.Font = options.FontDesc or Enum.Font.SourceSans
         descLabel.TextScaled = true
         descLabel.TextXAlignment = Enum.TextXAlignment.Left
         descLabel.TextYAlignment = Enum.TextYAlignment.Top
@@ -1395,56 +1393,49 @@ function UIManager:Notify(options: {
         descLabel.Parent = textContainer
     end
 
-    -- Função para fechar suavemente
+    local function playTween(obj, props, duration)
+        local tween = TweenService:Create(obj, TweenInfo.new(duration or 0.4, Enum.EasingStyle.Quad), props)
+        tween:Play()
+        return tween
+    end
+
     local function closeNotification()
-        local tweens = {}
-        table.insert(tweens, TweenService:Create(notifyFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { BackgroundTransparency = 1 }))
+        local tweens = { playTween(notifyFrame, {BackgroundTransparency = 1}) }
         for _, child in pairs(textContainer:GetChildren()) do
             if child:IsA("TextLabel") then
-                table.insert(tweens, TweenService:Create(child, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { TextTransparency = 1 }))
+                table.insert(tweens, playTween(child, {TextTransparency = 1}))
             end
         end
-        if notifyImage then
-            table.insert(tweens, TweenService:Create(notifyImage, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { ImageTransparency = 1 }))
-        end
-        if actionButton then
-            table.insert(tweens, TweenService:Create(actionButton, TweenInfo.new(0.4, Enum.EasingStyle.Quad), { BackgroundTransparency = 1, TextTransparency = 1 }))
-        end
-        for _, t in pairs(tweens) do t:Play() end
+        if notifyImage then table.insert(tweens, playTween(notifyImage, {ImageTransparency = 1})) end
+        if actionButton then table.insert(tweens, playTween(actionButton, {BackgroundTransparency = 1, TextTransparency = 1})) end
         tweens[1].Completed:Wait()
         notifyFrame:Destroy()
     end
 
-    -- Evento do botão
+    local function triggerCallback()
+        if options.Callback then options.Callback() end
+        closeNotification()
+    end
+
     if actionButton then
-        actionButton.MouseButton1Click:Connect(function()
-            if options.Callback then options.Callback() end
-            closeNotification()
-        end)
-    elseif options.Callback then
+        actionButton.MouseButton1Click:Connect(triggerCallback)
+        actionButton.TouchTap:Connect(triggerCallback)
+    else
         notifyFrame.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                options.Callback()
-                closeNotification()
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                triggerCallback()
             end
         end)
     end
 
     -- Tween de entrada
-    TweenService:Create(notifyFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0 }):Play()
+    playTween(notifyFrame, {BackgroundTransparency = 0})
     for _, child in pairs(textContainer:GetChildren()) do
-        if child:IsA("TextLabel") then
-            TweenService:Create(child, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
-        end
+        if child:IsA("TextLabel") then playTween(child, {TextTransparency = 0}) end
     end
-    if notifyImage then
-        TweenService:Create(notifyImage, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { ImageTransparency = 0 }):Play()
-    end
-    if actionButton then
-        TweenService:Create(actionButton, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 0, TextTransparency = 0 }):Play()
-    end
+    if notifyImage then playTween(notifyImage, {ImageTransparency = 0}) end
+    if actionButton then playTween(actionButton, {BackgroundTransparency = 0, TextTransparency = 0}) end
 
-    -- Fecha automaticamente se não for persistente
     if not options.Persistent then
         spawn(function()
             task.wait(options.Duration or 5)
