@@ -1,4 +1,4 @@
-```
+
 # Documentação - UIManager
 
 Este documento descreve como utilizar a biblioteca UIManager para criar interfaces de usuário no Roblox. O foco é na importação e no uso prático dos componentes.
@@ -8,8 +8,8 @@ Este documento descreve como utilizar a biblioteca UIManager para criar interfac
 Primeiro, você precisa carregar o módulo da UIManager em seu script local.
 
 ```lua
--- Supondo que o módulo se chame "UIManager" e esteja em ReplicatedStorage
-local UIManager = require(game.ReplicatedStorage.UIManager)
+-- Carrega o módulo Labory do GitHub
+local UIManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/kauam73/tkrs/refs/heads/main/labory/data.lua"))()
 ```
 
 ## 2. Criando a Janela Principal
@@ -195,5 +195,4 @@ Remove completamente a interface da tela e desconecta todos os eventos.
 
 ```lua
 gui:Destroy()
-```
 ```
