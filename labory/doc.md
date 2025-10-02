@@ -275,6 +275,8 @@ gui:Destroy()
 ---  
   
 ## 📝 Exemplo Completo  
+
+![Foto Preview](./assets/example.png)
   
 ```lua  
 -- Carregar a biblioteca  
