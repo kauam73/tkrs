@@ -372,7 +372,7 @@ local speedSlider = Tekscripts:CreateSlider(tabSettings, {
 
 ## ⚠️ Considerações Finais
 
-⚠️ **Uso Responsável**: Esta ferramenta foi desenvolvida exclusivamente para fins educacionais e de desenvolvimento de scripts. Use com responsabilidade e respeite os termos de serviço das plataformas.
+⚠️ **Uso Responsável**: Esta ferramenta foi desenvolvida exclusivamente para fins educacionais e de desenvolvimento de scripts. Use com responsabilidade e respeite os termos de serviço das plataformas, NÃO ME RESPONSABILIZO PELOS SCRIPTS USADOS POR TRÁS DA FERRAMENTA.
 
 📝 **Documentação Atualizada**: Esta documentação será mantida atualizada com novas funcionalidades e melhorias.
 
@@ -383,4 +383,4 @@ local speedSlider = Tekscripts:CreateSlider(tabSettings, {
 Para dúvidas ou problemas técnicos, consulte o repositório oficial no GitHub ou entre em contato com a equipe de desenvolvimento.
 
 ---
-*Documentação atualizada em: [Data]*
+*Documentação atualizada em: [02/10/2025]*
