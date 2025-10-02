@@ -1679,8 +1679,8 @@ function Tekscripts:CreateFloatingButton(options: {
     Callback: ((boolean) -> ())?
 })
     options = options or {}
-    local radius = tonumber(options.Radius) or 20
-    local borderRadius = tonumber(options.BorderRadius) or 6 -- novo: borda arredondada leve
+    local radius = tonumber(options.Radius) or 40
+    local borderRadius = tonumber(options.BorderRadius) or 8
     local text = tostring(options.Text or "clique aqui")
     local title = tostring(options.Title or "Cabeçote")
     local value = options.Value == nil and false or options.Value
@@ -1695,83 +1695,106 @@ function Tekscripts:CreateFloatingButton(options: {
     screenGui.ResetOnSpawn = false
     screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
-    -- Container (para título + botão)
+    -- Container geral (box único)
     local container = Instance.new("Frame")
     container.Size = UDim2.new(0, radius * 2, 0, (radius * 2) + 25)
     container.Position = UDim2.new(0.5, -radius, 0.5, -radius)
-    container.BackgroundTransparency = 1
+    container.BackgroundColor3 = Color3.fromRGB(25, 25, 25) -- dark theme
     container.Visible = visible
     container.Parent = screenGui
+
+    local containerCorner = Instance.new("UICorner")
+    containerCorner.CornerRadius = UDim.new(0, borderRadius)
+    containerCorner.Parent = container
 
     -- Cabeçote
     local header = Instance.new("TextLabel")
     header.Size = UDim2.new(1, 0, 0, 25)
-    header.BackgroundColor3 = Color3.fromRGB(25, 25, 25) -- tema escuro
+    header.BackgroundTransparency = 1
     header.Text = title
-    header.TextColor3 = Color3.fromRGB(255, 255, 255) -- branco
+    header.TextColor3 = Color3.fromRGB(255, 255, 255)
     header.TextSize = 16
-    header.Font = Enum.Font.GothamBold -- fonte grossa
+    header.Font = Enum.Font.GothamBold
     header.Parent = container
 
-    local headerCorner = Instance.new("UICorner")
-    headerCorner.CornerRadius = UDim.new(0, borderRadius)
-    headerCorner.Parent = header
+    -- Linha divisória opcional
+    local divider = Instance.new("Frame")
+    divider.Size = UDim2.new(1, 0, 0, 1)
+    divider.Position = UDim2.new(0, 0, 0, 25)
+    divider.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    divider.BorderSizePixel = 0
+    divider.Parent = container
 
     -- Botão principal
     local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, radius * 2, 0, radius * 2)
+    button.Size = UDim2.new(1, 0, 1, -25)
     button.Position = UDim2.new(0, 0, 0, 25)
-    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40) -- dark
+    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     button.Text = text
-    button.TextColor3 = Color3.fromRGB(255, 255, 255) -- branco
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
     button.TextSize = 16
-    button.Font = Enum.Font.GothamBold -- fonte grossa
+    button.Font = Enum.Font.GothamBold
     button.AutoButtonColor = not block
     button.Parent = container
 
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, borderRadius) -- bordas ajustáveis
-    corner.Parent = button
+    local buttonCorner = Instance.new("UICorner")
+    buttonCorner.CornerRadius = UDim.new(0, borderRadius)
+    buttonCorner.Parent = button
 
-    -- Estado interno
+    -- Estado interno drag
     local dragging = false
+    local dragInput, dragStart, startPos
     local UIS = game:GetService("UserInputService")
 
-    -- Função para atualizar visual
+    -- Atualizar visuais
     local function updateVisuals()
         container.Size = UDim2.new(0, radius * 2, 0, (radius * 2) + 25)
         header.Text = title
-        button.Size = UDim2.new(0, radius * 2, 0, radius * 2)
         button.Text = text
         container.Visible = visible
         button.AutoButtonColor = not block
     end
 
-    -- Toggle quando clicar
+    -- Toggle no clique
     button.MouseButton1Click:Connect(function()
         if block then return end
         value = not value
-        if callback then pcall(callback, value) end
+        if callback then
+            task.spawn(callback, value)
+        end
     end)
 
-    -- Drag pelo cabeçote
+    -- Drag pelo cabeçote (com delta e lock no input inicial)
     if drag then
         header.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
+                dragStart = input.Position
+                startPos = container.Position
+                dragInput = input
+            end
+        end)
+
+        header.InputChanged:Connect(function(input)
+            if input == dragInput then
+                dragInput = input
             end
         end)
 
         UIS.InputChanged:Connect(function(input)
-            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                local pos = input.Position
-                container.Position = UDim2.new(0, pos.X - container.Size.X.Offset / 2, 0, pos.Y - header.Size.Y.Offset / 2)
+            if input == dragInput and dragging then
+                local delta = input.Position - dragStart
+                container.Position = UDim2.new(
+                    startPos.X.Scale, startPos.X.Offset + delta.X,
+                    startPos.Y.Scale, startPos.Y.Offset + delta.Y
+                )
             end
         end)
 
-        UIS.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        header.InputEnded:Connect(function(input)
+            if input == dragInput then
                 dragging = false
+                dragInput = nil
             end
         end)
     end
