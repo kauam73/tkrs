@@ -1668,7 +1668,6 @@ function Tekscripts:CreateSlider(tab: any, options: {
 end
 
 function Tekscripts:CreateFloatingButton(options: {
-    Radius: number?,
     BorderRadius: number?,
     Text: string?,
     Title: string?,
@@ -1679,9 +1678,10 @@ function Tekscripts:CreateFloatingButton(options: {
     Callback: ((boolean) -> ())?
 })
     options = options or {}
-    local radius = tonumber(options.Radius) or 40
+    local width = 100 -- Largura fixa
+    local height = 100 -- Altura fixa
     local borderRadius = tonumber(options.BorderRadius) or 8
-    local text = tostring(options.Text or "clique aqui")
+    local text = tostring(options.Text or "Clique Aqui")
     local title = tostring(options.Title or "Cabeçote")
     local value = options.Value == nil and false or options.Value
     local visible = options.Visible == nil and false or options.Visible
@@ -1697,9 +1697,9 @@ function Tekscripts:CreateFloatingButton(options: {
 
     -- Container geral (box único)
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(0, radius * 2, 0, (radius * 2) + 25)
-    container.Position = UDim2.new(0.5, -radius, 0.5, -radius)
-    container.BackgroundColor3 = Color3.fromRGB(25, 25, 25) -- dark theme
+    container.Size = UDim2.new(0, width, 0, height + 25)
+    container.Position = UDim2.new(0.5, -width/2, 0.5, -(height + 25)/2)
+    container.BackgroundColor3 = Color3.fromRGB(25, 25, 25) -- Dark theme
     container.Visible = visible
     container.Parent = screenGui
 
@@ -1732,9 +1732,10 @@ function Tekscripts:CreateFloatingButton(options: {
     button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     button.Text = text
     button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    button.TextSize = 16
     button.Font = Enum.Font.GothamBold
     button.AutoButtonColor = not block
+    button.TextScaled = true -- Adaptação de texto
+    button.TextWrapped = true -- Adaptação de texto
     button.Parent = container
 
     local buttonCorner = Instance.new("UICorner")
@@ -1748,11 +1749,13 @@ function Tekscripts:CreateFloatingButton(options: {
 
     -- Atualizar visuais
     local function updateVisuals()
-        container.Size = UDim2.new(0, radius * 2, 0, (radius * 2) + 25)
+        container.Size = UDim2.new(0, width, 0, height + 25)
         header.Text = title
         button.Text = text
         container.Visible = visible
         button.AutoButtonColor = not block
+        containerCorner.CornerRadius = UDim.new(0, borderRadius)
+        buttonCorner.CornerRadius = UDim.new(0, borderRadius)
     end
 
     -- Toggle no clique
@@ -1804,7 +1807,6 @@ function Tekscripts:CreateFloatingButton(options: {
         _instance = container,
         State = function()
             return {
-                Radius = radius,
                 BorderRadius = borderRadius,
                 Text = text,
                 Title = title,
@@ -1815,17 +1817,17 @@ function Tekscripts:CreateFloatingButton(options: {
             }
         end,
         Update = function(newOptions)
-            options = newOptions or options
-            radius = tonumber(options.Radius) or radius
-            borderRadius = tonumber(options.BorderRadius) or borderRadius
-            text = tostring(options.Text or text)
-            title = tostring(options.Title or title)
-            value = options.Value == nil and value or options.Value
-            visible = options.Visible == nil and visible or options.Visible
-            drag = options.Drag == nil and drag or options.Drag
-            block = options.Block == nil and block or options.Block
-            callback = options.Callback or callback
-            updateVisuals()
+            if newOptions then
+                borderRadius = tonumber(newOptions.BorderRadius) or borderRadius
+                text = tostring(newOptions.Text or text)
+                title = tostring(newOptions.Title or title)
+                value = newOptions.Value == nil and value or newOptions.Value
+                visible = newOptions.Visible == nil and visible or newOptions.Visible
+                drag = newOptions.Drag == nil and drag or newOptions.Drag
+                block = newOptions.Block == nil and block or newOptions.Block
+                callback = newOptions.Callback or callback
+                updateVisuals()
+            end
         end,
         Destroy = function()
             if screenGui then
