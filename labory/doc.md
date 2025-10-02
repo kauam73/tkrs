@@ -1,72 +1,99 @@
-
-
 # Documentação - UIManager
 
-Este documento descreve como utilizar a biblioteca UIManager para criar interfaces de usuário no Roblox. O foco é na importação e no uso prático dos componentes.
+**Painel de Interface Simples para Exploiters**
+
+Este documento descreve como utilizar a biblioteca UIManager para criar interfaces de usuário no Roblox. **Este painel foi desenvolvido especificamente para uso de exploiters**, oferecendo uma interface simples e prática para criar painéis de controle para seus scripts e ferramentas de exploit.
+
+---
+
+## 🎯 Sobre Este Painel
+
+O UIManager é uma biblioteca projetada **exclusivamente para exploiters**, permitindo criar interfaces gráficas de forma rápida e eficiente. Com ela, você pode:
+
+- Criar painéis personalizados para seus scripts de exploit
+- Adicionar botões, toggles, dropdowns e outros componentes
+- Organizar suas ferramentas em abas separadas
+- Ter uma interface profissional sem precisar programar do zero
+
+**Público-alvo:** Exploiters que desejam uma interface simples e funcional para seus scripts
+
+---
 
 ## 1. Carregando a Biblioteca
 
-Primeiro, você precisa carregar o módulo da UIManager em seu script local.
+Primeiro, você precisa carregar o módulo da UIManager em seu script de exploit local.
 
 ```lua
--- para carregar o script labory da interface no seu client
+-- Para carregar o script labory da interface no seu executor/exploit
 local UIManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/kauam73/tkrs/refs/heads/main/labory/data.lua"))()
 ```
 
-## 2. Criando a Janela Principal
+---
 
-Tudo começa com a criação da janela principal. Você pode definir um título e outras opções.
+## 2. Criando a Janela Principal do Seu Painel
+
+Tudo começa com a criação da janela principal do seu painel de exploit. Você pode definir um título e outras opções.
 
 ```lua
--- Cria uma nova janela com o título "Meu Painel"
+-- Cria uma nova janela com o título "Meu Painel de Exploit"
 local gui = UIManager.new({
-    Name = "Meu Painel",
+    Name = "Meu Painel de Exploit",
     FloatText = "Abrir Painel", -- Texto do botão quando a janela está minimizada
     startTab = "Principal" -- (Opcional) Nome da aba que deve abrir primeiro
 })
 ```
 
+---
+
 ## 3. Criando Abas (Tabs)
 
-Os componentes são organizados dentro de abas. Crie uma ou mais abas para agrupar suas funcionalidades.
+Os componentes do seu painel são organizados dentro de abas. Crie uma ou mais abas para agrupar suas funcionalidades de exploit.
 
 ```lua
--- Cria uma aba chamada "Principal"
+-- Cria uma aba chamada "Principal" para suas funções principais
 local tabPrincipal = gui:CreateTab({ Title = "Principal" })
 
 -- Cria outra aba chamada "Configurações"
 local tabConfig = gui:CreateTab({ Title = "Configurações" })
+
+-- Cria aba para funcionalidades específicas
+local tabPlayer = gui:CreateTab({ Title = "Player" })
 ```
 
-## 4. Adicionando Componentes
+---
 
-Todos os componentes são adicionados a uma aba específica.
+## 4. Adicionando Componentes ao Seu Painel
+
+Todos os componentes são adicionados a uma aba específica do seu painel.
 
 ### Botão (Button)
 
-Cria um botão clicável que executa uma função (callback).
+Cria um botão clicável que executa uma função (callback). Ideal para ativar funcionalidades do exploit.
 
 ```lua
 gui:CreateButton(tabPrincipal, {
-    Text = "Clique em Mim",
+    Text = "ESP Players",
     Callback = function()
-        print("Botão foi clicado!")
+        print("ESP ativado!")
+        -- Seu código de ESP aqui
     end
 })
 ```
 
 ### Toggle (Interruptor)
 
-Cria um interruptor (on/off) que retorna seu estado (true ou false) no callback.
+Cria um interruptor (on/off) que retorna seu estado (true ou false) no callback. Perfeito para funcionalidades que você quer ligar/desligar.
 
 ```lua
 gui:CreateToggle(tabPrincipal, {
-    Text = "Ativar Funcionalidade",
+    Text = "Fly",
     Callback = function(estado)
         if estado then
-            print("Toggle ativado!")
+            print("Fly ativado!")
+            -- Código para ativar fly
         else
-            print("Toggle desativado.")
+            print("Fly desativado.")
+            -- Código para desativar fly
         end
     end
 })
@@ -74,33 +101,34 @@ gui:CreateToggle(tabPrincipal, {
 
 ### Dropdown (Menu de Seleção)
 
-Cria um menu suspenso com uma lista de opções.
+Cria um menu suspenso com uma lista de opções. Útil para selecionar entre diferentes modos ou configurações.
 
 ```lua
 gui:CreateDropdown(tabPrincipal, {
-    Title = "Selecione uma Opção",
-    Values = { "Opção 1", "Opção 2", "Opção 3" },
-    SelectedValue = "Opção 1", -- (Opcional) Valor que já vem selecionado
+    Title = "Modo de Velocidade",
+    Values = { "Normal", "Rápido", "Super Rápido" },
+    SelectedValue = "Normal", -- (Opcional) Valor que já vem selecionado
     Callback = function(valorSelecionado)
-        print("Você selecionou: " .. valorSelecionado)
+        print("Velocidade: " .. valorSelecionado)
+        -- Seu código para aplicar velocidade
     end
 })
 ```
 
 ### Label (Rótulo)
 
-Exibe um texto informativo, com um título e uma descrição opcional.
+Exibe um texto informativo no seu painel, com um título e uma descrição opcional.
 
 ```lua
 gui:CreateLabel(tabConfig, {
     Title = "Informação Importante",
-    Desc = "Este é um texto descritivo sobre a configuração."
+    Desc = "Este painel foi desenvolvido para exploiters usarem de forma simples e prática."
 })
 ```
 
 ### Tag (Etiqueta)
 
-Cria uma pequena etiqueta colorida para exibir status ou categorias.
+Cria uma pequena etiqueta colorida para exibir status, versões ou categorias no seu painel.
 
 ```lua
 gui:CreateTag(tabConfig, {
@@ -111,16 +139,17 @@ gui:CreateTag(tabConfig, {
 
 ### Input (Campo de Texto)
 
-Cria um campo para o usuário inserir texto ou números.
+Cria um campo para o usuário inserir texto ou números no painel.
 
 #### Para texto:
 
 ```lua
-gui:CreateInput(tabConfig, {
+gui:CreateInput(tabPlayer, {
     Text = "Nome do Jogador",
-    Placeholder = "Digite seu nome aqui...",
+    Placeholder = "Digite o username...",
     Callback = function(texto)
-        print("O nome digitado foi: " .. texto)
+        print("Teleportar para: " .. texto)
+        -- Código para teleportar
     end
 })
 ```
@@ -128,13 +157,14 @@ gui:CreateInput(tabConfig, {
 #### Para números:
 
 ```lua
-gui:CreateInput(tabConfig, {
-    Text = "Idade",
-    Placeholder = "0",
+gui:CreateInput(tabPlayer, {
+    Text = "Walkspeed",
+    Placeholder = "16",
     Type = "number", -- Define o tipo como número
     Callback = function(numero)
         if type(numero) == "number" then
-            print("A idade digitada foi: " .. numero)
+            print("Velocidade: " .. numero)
+            -- game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = numero
         end
     end
 })
@@ -142,7 +172,7 @@ gui:CreateInput(tabConfig, {
 
 ### HR (Linha Horizontal)
 
-Cria uma linha divisória para separar visualmente os componentes. Pode conter um texto centralizado.
+Cria uma linha divisória para separar visualmente os componentes no seu painel. Pode conter um texto centralizado.
 
 #### Linha simples:
 
@@ -154,18 +184,20 @@ gui:CreateHR(tabPrincipal, {})
 
 ```lua
 gui:CreateHR(tabPrincipal, {
-    Text = "Outra Seção"
+    Text = "Funções de Combate"
 })
 ```
 
+---
+
 ## 5. Notificações
 
-Exibe uma notificação no canto da tela. Elas podem ser temporárias ou persistentes.
+Exibe uma notificação no canto da tela. Útil para informar o usuário do exploit sobre ações realizadas.
 
 ```lua
 gui:Notify({
     Title = "Sucesso!",
-    Desc = "A operação foi concluída.",
+    Desc = "ESP ativado com sucesso.",
     Duration = 5, -- (Opcional) Duração em segundos. Se omitido, a notificação é persistente.
     ButtonText = "OK", -- (Opcional) Adiciona um botão
     Callback = function()
@@ -174,135 +206,87 @@ gui:Notify({
 })
 ```
 
+---
+
 ## 6. Funções de Controle da Janela
 
-Você pode controlar a janela programaticamente.
+Você pode controlar a janela do painel programaticamente.
 
 ### Bloquear Interação (Block)
 
-Bloqueia a interface e aplica um efeito de desfoque na tela. Útil para pop-ups ou eventos importantes.
+Bloqueia a interface e aplica um efeito de desfoque na tela. Útil para pop-ups ou eventos importantes no seu exploit.
 
 ```lua
--- Bloqueia a UI
+-- Bloqueia a UI do painel
 gui:Block(true)
 
--- Desbloqueia a UI
+-- Desbloqueia a UI do painel
 gui:Block(false)
 ```
 
 ### Destruir a Janela (Destroy)
 
-Remove completamente a interface da tela e desconecta todos os eventos.
+Remove completamente a interface da tela e desconecta todos os eventos. Use quando quiser fechar o painel completamente.
 
 ```lua
 gui:Destroy()
 ```
 
-### para Ia
+---
 
-```-- BLACK BOX UIManager (v1.0) - Labory pronta para IAs
--- Descrição: Biblioteca de UI para Roblox com metadados para compreensão rápida por IAs
--- Autor: Kauam Henrique
--- GitHub: https://github.com/kauam73/tkrs
+## 📝 Exemplo Completo de Painel para Exploiter
 
-local UIManager = {}
--- para carregar o script labory da interface no seu client
+```lua
+-- Carregar a biblioteca
 local UIManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/kauam73/tkrs/refs/heads/main/labory/data.lua"))()
 
+-- Criar painel
+local gui = UIManager.new({
+    Name = "Meu Painel de Exploit",
+    FloatText = "Abrir",
+    startTab = "Principal"
+})
 
---[[
-METADATA (para IA):
-{
-    "name": "UIManager",
-    "version": "1.0",
-    "author": "Kauam Henrique",
-    "description": "Biblioteca para criar interfaces de usuário no Roblox",
-    "components": ["Button", "Toggle", "Dropdown", "Label", "Tag", "Input", "HR", "Notify"],
-    "usage_example": "local gui = UIManager.new({ Name='Meu Painel' })",
-    "functions": {
-        "new": "Cria janela principal",
-        "CreateTab": "Cria aba na janela",
-        "CreateButton": "Adiciona botão",
-        "CreateToggle": "Adiciona toggle",
-        "CreateDropdown": "Adiciona dropdown",
-        "CreateLabel": "Adiciona label",
-        "CreateTag": "Adiciona tag",
-        "CreateInput": "Adiciona campo de texto ou número",
-        "CreateHR": "Cria linha horizontal",
-        "Notify": "Exibe notificação",
-        "Block": "Bloqueia/desbloqueia UI",
-        "Destroy": "Remove interface e eventos"
-    }
-}
-]]
+-- Criar aba principal
+local tabMain = gui:CreateTab({ Title = "Principal" })
 
--- Função principal: cria janela
-function UIManager.new(opts)
-    local self = setmetatable({}, UIManager)
-    self.Name = opts.Name or "UI"
-    self.FloatText = opts.FloatText or "Abrir"
-    self.startTab = opts.startTab or nil
-    self.Tabs = {}
-    return self
-end
+-- Adicionar toggle de fly
+gui:CreateToggle(tabMain, {
+    Text = "Fly",
+    Callback = function(state)
+        if state then
+            print("Fly ON")
+        else
+            print("Fly OFF")
+        end
+    end
+})
 
--- Cria aba
-function UIManager:CreateTab(opts)
-    local tab = { Title = opts.Title or "Aba", Components = {} }
-    table.insert(self.Tabs, tab)
-    return tab
-end
+-- Adicionar botão de ESP
+gui:CreateButton(tabMain, {
+    Text = "Ativar ESP",
+    Callback = function()
+        gui:Notify({
+            Title = "ESP Ativado",
+            Desc = "Todos os players estão visíveis",
+            Duration = 3
+        })
+    end
+})
 
--- Adiciona botão
-function UIManager:CreateButton(tab, opts)
-    table.insert(tab.Components, { Type="Button", Text=opts.Text, Callback=opts.Callback })
-end
+-- Adicionar input de velocidade
+gui:CreateInput(tabMain, {
+    Text = "WalkSpeed",
+    Placeholder = "16",
+    Type = "number",
+    Callback = function(num)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = num
+    end
+})
+```
 
--- Adiciona toggle
-function UIManager:CreateToggle(tab, opts)
-    table.insert(tab.Components, { Type="Toggle", Text=opts.Text, Callback=opts.Callback })
-end
+---
 
--- Adiciona dropdown
-function UIManager:CreateDropdown(tab, opts)
-    table.insert(tab.Components, { Type="Dropdown", Title=opts.Title, Values=opts.Values, SelectedValue=opts.SelectedValue, Callback=opts.Callback })
-end
+## ⚠️ Nota Final
 
--- Adiciona label
-function UIManager:CreateLabel(tab, opts)
-    table.insert(tab.Components, { Type="Label", Title=opts.Title, Desc=opts.Desc })
-end
-
--- Adiciona tag
-function UIManager:CreateTag(tab, opts)
-    table.insert(tab.Components, { Type="Tag", Text=opts.Text, Color=opts.Color })
-end
-
--- Adiciona input
-function UIManager:CreateInput(tab, opts)
-    table.insert(tab.Components, { Type="Input", Text=opts.Text, Placeholder=opts.Placeholder, InputType=opts.Type, Callback=opts.Callback })
-end
-
--- Adiciona linha horizontal
-function UIManager:CreateHR(tab, opts)
-    table.insert(tab.Components, { Type="HR", Text=opts.Text })
-end
-
--- Notificação
-function UIManager:Notify(opts)
-    local notif = { Title=opts.Title, Desc=opts.Desc, Duration=opts.Duration, ButtonText=opts.ButtonText, Callback=opts.Callback }
-    print("Notificação disparada: ", notif.Title)
-end
-
--- Bloquear/Desbloquear UI
-function UIManager:Block(state)
-    print("UI bloqueada:", state)
-end
-
--- Destruir janela
-function UIManager:Destroy()
-    self.Tabs = {}
-    print("UI destruída")
-end
-
-return UIManager```
+**Este painel UIManager é uma ferramenta projetada para exploiters criarem interfaces simples e funcionais para seus scripts.** Use de forma responsável e esteja ciente das políticas e termos de serviço da plataforma onde você está utilizando.
