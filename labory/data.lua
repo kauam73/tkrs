@@ -1444,4 +1444,223 @@ function Tekscripts:Notify(options: {
     end
 end
 
+function Tekscripts:CreateSlider(tab: any, options: { Text: string?, Min: number?, Max: number?, Step: number?, Value: number?, Callback: function? })
+    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateSlider")
+
+    options = options or {}
+    local title = options.Text or "Slider"
+    local minv = tonumber(options.Min) or 0
+    local maxv = tonumber(options.Max) or 100
+    local step = tonumber(options.Step) or 1
+    local value = tonumber(options.Value) or minv
+    local callback = options.Callback
+
+    local function clamp(n) return math.max(minv, math.min(maxv, n)) end
+    local function roundToStep(n)
+        if step <= 0 then return n end
+        return math.floor(n / step + 0.5) * step
+    end
+
+    value = clamp(roundToStep(value))
+
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 28)
+    container.BackgroundTransparency = 1
+    container.Parent = tab.Container
+
+    -- Title label (à esquerda)
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Size = UDim2.new(0.5, -8, 1, 0)
+    titleLabel.Position = UDim2.new(0, 8, 0, 0)
+    titleLabel.Font = Enum.Font.Roboto
+    titleLabel.TextSize = 14
+    titleLabel.TextColor3 = DESIGN.ComponentTextColor
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Text = title
+    titleLabel.Parent = container
+
+    -- Value label (à direita)
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Size = UDim2.new(0.2, -8, 1, 0)
+    valueLabel.Position = UDim2.new(1, -container.Size.X.Offset * 0.2 - 8, 0, 0) -- will adjust below
+    valueLabel.AnchorPoint = Vector2.new(1, 0)
+    valueLabel.Font = Enum.Font.Roboto
+    valueLabel.TextSize = 14
+    valueLabel.TextColor3 = DESIGN.ComponentTextColor
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    valueLabel.Text = tostring(value)
+    valueLabel.Parent = container
+
+    -- Track frame (central)
+    local track = Instance.new("Frame")
+    track.AnchorPoint = Vector2.new(0, 0.5)
+    track.Size = UDim2.new(0.6, 0, 0, 6)
+    track.Position = UDim2.new(0.5, - (track.Size.X.Offset/2 or 0), 0.5, 0)
+    track.BackgroundColor3 = DESIGN.HRColor
+    track.BorderSizePixel = 0
+    track.Parent = container
+
+    -- Fill
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new((value - minv) / math.max(1, (maxv - minv)), 0, 1, 0)
+    fill.Position = UDim2.new(0, 0, 0, 0)
+    fill.BackgroundColor3 = DESIGN.PrimaryColor or Color3.fromRGB(120, 120, 255)
+    fill.BorderSizePixel = 0
+    fill.Parent = track
+
+    -- Thumb
+    local thumb = Instance.new("ImageLabel")
+    thumb.Size = UDim2.new(0, 14, 0, 14)
+    thumb.AnchorPoint = Vector2.new(0.5, 0.5)
+    thumb.BackgroundTransparency = 1
+    thumb.Image = "rbxassetid://0" -- transparente por padrão; substitua se quiser ícone
+    thumb.Parent = track
+    thumb.Position = UDim2.new(fill.Size.X.Scale, 0, 0.5, 0)
+
+    -- Minus button
+    local btnMinus = Instance.new("TextButton")
+    btnMinus.Size = UDim2.new(0, 26, 0, 22)
+    btnMinus.Position = UDim2.new(0, 8, 0.5, -11)
+    btnMinus.Text = "-"
+    btnMinus.Font = Enum.Font.Roboto
+    btnMinus.TextSize = 16
+    btnMinus.BackgroundTransparency = 0.6
+    btnMinus.Parent = container
+
+    -- Plus button
+    local btnPlus = Instance.new("TextButton")
+    btnPlus.Size = UDim2.new(0, 26, 0, 22)
+    btnPlus.AnchorPoint = Vector2.new(1, 0.5)
+    btnPlus.Position = UDim2.new(1, -8, 0.5, -11)
+    btnPlus.Text = "+"
+    btnPlus.Font = Enum.Font.Roboto
+    btnPlus.TextSize = 16
+    btnPlus.BackgroundTransparency = 0.6
+    btnPlus.Parent = container
+
+    -- Input (clicando no valueLabel abre prompt simples)
+    local function openPrompt()
+        -- usa gui:CreateInput se disponível no seu UIManager, caso contrário faz fallback simples:
+        if self and self.CreateInput then
+            self:CreateInput(tab, {
+                Text = title .. " (valor)",
+                Placeholder = tostring(value),
+                Type = "number",
+                Callback = function(num)
+                    local n = tonumber(num)
+                    if n then
+                        n = clamp(roundToStep(n))
+                        value = n
+                        valueLabel.Text = tostring(value)
+                        fill.Size = UDim2.new((value - minv) / math.max(1, (maxv - minv)), 0, 1, 0)
+                        thumb.Position = UDim2.new(fill.Size.X.Scale, 0, 0.5, 0)
+                        pcall(callback, value)
+                    end
+                end
+            })
+        else
+            -- fallback: simples InputDialog via Roblox (não implementado aqui)
+        end
+    end
+
+    valueLabel.MouseButton1Click = openPrompt
+    valueLabel.Active = true
+    valueLabel.Selectable = true
+
+    local connections = {}
+
+    local function updateVisuals()
+        local frac = (value - minv) / math.max(1, (maxv - minv))
+        fill.Size = UDim2.new(frac, 0, 1, 0)
+        thumb.Position = UDim2.new(frac, 0, 0.5, 0)
+        valueLabel.Text = tostring(value)
+    end
+
+    table.insert(connections, btnMinus.MouseButton1Click:Connect(function()
+        value = clamp(roundToStep(value - step))
+        updateVisuals()
+        pcall(callback, value)
+    end))
+
+    table.insert(connections, btnPlus.MouseButton1Click:Connect(function()
+        value = clamp(roundToStep(value + step))
+        updateVisuals()
+        pcall(callback, value)
+    end))
+
+    -- Drag to change value (mouse)
+    local dragging = false
+    table.insert(connections, thumb.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end))
+    table.insert(connections, track.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            if dragging then
+                local abs = track.AbsoluteSize.X
+                local x = math.clamp(input.Position.X - track.AbsolutePosition.X, 0, abs)
+                local frac = (abs > 0) and (x / abs) or 0
+                local newVal = clamp(roundToStep(minv + frac * (maxv - minv)))
+                if newVal ~= value then
+                    value = newVal
+                    updateVisuals()
+                    pcall(callback, value)
+                end
+            end
+        end
+    end))
+
+    -- expose API
+    local publicApi = {
+        _instance = container,
+        _connections = connections
+    }
+
+    function publicApi.Set(v)
+        v = tonumber(v)
+        if not v then return end
+        value = clamp(roundToStep(v))
+        updateVisuals()
+        pcall(callback, value)
+    end
+
+    function publicApi.Get()
+        return value
+    end
+
+    function publicApi.Update(newOptions)
+        options = newOptions or options
+        title = options.Text or title
+        minv = tonumber(options.Min) or minv
+        maxv = tonumber(options.Max) or maxv
+        step = tonumber(options.Step) or step
+        value = tonumber(options.Value) or value
+        callback = options.Callback or callback
+        value = clamp(roundToStep(value))
+        titleLabel.Text = title
+        updateVisuals()
+    end
+
+    function publicApi.Destroy()
+        for _, c in ipairs(connections) do
+            if c and c.Connected then pcall(function() c:Disconnect() end) end
+        end
+        if publicApi._instance then
+            publicApi._instance:Destroy()
+            publicApi._instance = nil
+        end
+    end
+
+    table.insert(tab.Components, publicApi)
+    return publicApi
+end
+
 return Tekscripts
