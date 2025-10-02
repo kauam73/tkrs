@@ -1,4 +1,5 @@
 
+
 # Documentação - UIManager
 
 Este documento descreve como utilizar a biblioteca UIManager para criar interfaces de usuário no Roblox. O foco é na importação e no uso prático dos componentes.
@@ -8,7 +9,7 @@ Este documento descreve como utilizar a biblioteca UIManager para criar interfac
 Primeiro, você precisa carregar o módulo da UIManager em seu script local.
 
 ```lua
--- Carrega o módulo Labory do GitHub
+-- para carregar o script labory da interface no seu client
 local UIManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/kauam73/tkrs/refs/heads/main/labory/data.lua"))()
 ```
 
@@ -196,3 +197,112 @@ Remove completamente a interface da tela e desconecta todos os eventos.
 ```lua
 gui:Destroy()
 ```
+
+### para Ia
+
+```-- BLACK BOX UIManager (v1.0) - Labory pronta para IAs
+-- Descrição: Biblioteca de UI para Roblox com metadados para compreensão rápida por IAs
+-- Autor: Kauam Henrique
+-- GitHub: https://github.com/kauam73/tkrs
+
+local UIManager = {}
+-- para carregar o script labory da interface no seu client
+local UIManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/kauam73/tkrs/refs/heads/main/labory/data.lua"))()
+
+
+--[[
+METADATA (para IA):
+{
+    "name": "UIManager",
+    "version": "1.0",
+    "author": "Kauam Henrique",
+    "description": "Biblioteca para criar interfaces de usuário no Roblox",
+    "components": ["Button", "Toggle", "Dropdown", "Label", "Tag", "Input", "HR", "Notify"],
+    "usage_example": "local gui = UIManager.new({ Name='Meu Painel' })",
+    "functions": {
+        "new": "Cria janela principal",
+        "CreateTab": "Cria aba na janela",
+        "CreateButton": "Adiciona botão",
+        "CreateToggle": "Adiciona toggle",
+        "CreateDropdown": "Adiciona dropdown",
+        "CreateLabel": "Adiciona label",
+        "CreateTag": "Adiciona tag",
+        "CreateInput": "Adiciona campo de texto ou número",
+        "CreateHR": "Cria linha horizontal",
+        "Notify": "Exibe notificação",
+        "Block": "Bloqueia/desbloqueia UI",
+        "Destroy": "Remove interface e eventos"
+    }
+}
+]]
+
+-- Função principal: cria janela
+function UIManager.new(opts)
+    local self = setmetatable({}, UIManager)
+    self.Name = opts.Name or "UI"
+    self.FloatText = opts.FloatText or "Abrir"
+    self.startTab = opts.startTab or nil
+    self.Tabs = {}
+    return self
+end
+
+-- Cria aba
+function UIManager:CreateTab(opts)
+    local tab = { Title = opts.Title or "Aba", Components = {} }
+    table.insert(self.Tabs, tab)
+    return tab
+end
+
+-- Adiciona botão
+function UIManager:CreateButton(tab, opts)
+    table.insert(tab.Components, { Type="Button", Text=opts.Text, Callback=opts.Callback })
+end
+
+-- Adiciona toggle
+function UIManager:CreateToggle(tab, opts)
+    table.insert(tab.Components, { Type="Toggle", Text=opts.Text, Callback=opts.Callback })
+end
+
+-- Adiciona dropdown
+function UIManager:CreateDropdown(tab, opts)
+    table.insert(tab.Components, { Type="Dropdown", Title=opts.Title, Values=opts.Values, SelectedValue=opts.SelectedValue, Callback=opts.Callback })
+end
+
+-- Adiciona label
+function UIManager:CreateLabel(tab, opts)
+    table.insert(tab.Components, { Type="Label", Title=opts.Title, Desc=opts.Desc })
+end
+
+-- Adiciona tag
+function UIManager:CreateTag(tab, opts)
+    table.insert(tab.Components, { Type="Tag", Text=opts.Text, Color=opts.Color })
+end
+
+-- Adiciona input
+function UIManager:CreateInput(tab, opts)
+    table.insert(tab.Components, { Type="Input", Text=opts.Text, Placeholder=opts.Placeholder, InputType=opts.Type, Callback=opts.Callback })
+end
+
+-- Adiciona linha horizontal
+function UIManager:CreateHR(tab, opts)
+    table.insert(tab.Components, { Type="HR", Text=opts.Text })
+end
+
+-- Notificação
+function UIManager:Notify(opts)
+    local notif = { Title=opts.Title, Desc=opts.Desc, Duration=opts.Duration, ButtonText=opts.ButtonText, Callback=opts.Callback }
+    print("Notificação disparada: ", notif.Title)
+end
+
+-- Bloquear/Desbloquear UI
+function UIManager:Block(state)
+    print("UI bloqueada:", state)
+end
+
+-- Destruir janela
+function UIManager:Destroy()
+    self.Tabs = {}
+    print("UI destruída")
+end
+
+return UIManager```
