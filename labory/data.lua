@@ -1444,7 +1444,14 @@ function Tekscripts:Notify(options: {
     end
 end
 
-function Tekscripts:CreateSlider(tab: any, options: { Text: string?, Min: number?, Max: number?, Step: number?, Value: number?, Callback: function? })
+function Tekscripts:CreateSlider(tab: any, options: { 
+    Text: string?, 
+    Min: number?, 
+    Max: number?, 
+    Step: number?, 
+    Value: number?, 
+    Callback: ((number) -> ())? 
+})
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateSlider")
 
     options = options or {}
@@ -1455,8 +1462,11 @@ function Tekscripts:CreateSlider(tab: any, options: { Text: string?, Min: number
     local value = tonumber(options.Value) or minv
     local callback = options.Callback
 
-    local function clamp(n) return math.max(minv, math.min(maxv, n)) end
-    local function roundToStep(n)
+    local function clamp(n: number): number
+        return math.max(minv, math.min(maxv, n))
+    end
+
+    local function roundToStep(n: number): number
         if step <= 0 then return n end
         return math.floor(n / step + 0.5) * step
     end
@@ -1468,7 +1478,7 @@ function Tekscripts:CreateSlider(tab: any, options: { Text: string?, Min: number
     container.BackgroundTransparency = 1
     container.Parent = tab.Container
 
-    -- Title label (à esquerda)
+    -- Title label
     local titleLabel = Instance.new("TextLabel")
     titleLabel.BackgroundTransparency = 1
     titleLabel.Size = UDim2.new(0.5, -8, 1, 0)
@@ -1480,11 +1490,11 @@ function Tekscripts:CreateSlider(tab: any, options: { Text: string?, Min: number
     titleLabel.Text = title
     titleLabel.Parent = container
 
-    -- Value label (à direita)
+    -- Value label
     local valueLabel = Instance.new("TextLabel")
     valueLabel.BackgroundTransparency = 1
     valueLabel.Size = UDim2.new(0.2, -8, 1, 0)
-    valueLabel.Position = UDim2.new(1, -container.Size.X.Offset * 0.2 - 8, 0, 0) -- will adjust below
+    valueLabel.Position = UDim2.new(1, -container.Size.X.Offset * 0.2 - 8, 0, 0)
     valueLabel.AnchorPoint = Vector2.new(1, 0)
     valueLabel.Font = Enum.Font.Roboto
     valueLabel.TextSize = 14
@@ -1493,7 +1503,7 @@ function Tekscripts:CreateSlider(tab: any, options: { Text: string?, Min: number
     valueLabel.Text = tostring(value)
     valueLabel.Parent = container
 
-    -- Track frame (central)
+    -- Track frame
     local track = Instance.new("Frame")
     track.AnchorPoint = Vector2.new(0, 0.5)
     track.Size = UDim2.new(0.6, 0, 0, 6)
@@ -1506,7 +1516,7 @@ function Tekscripts:CreateSlider(tab: any, options: { Text: string?, Min: number
     local fill = Instance.new("Frame")
     fill.Size = UDim2.new((value - minv) / math.max(1, (maxv - minv)), 0, 1, 0)
     fill.Position = UDim2.new(0, 0, 0, 0)
-    fill.BackgroundColor3 = DESIGN.PrimaryColor or Color3.fromRGB(120, 120, 255)
+    fill.BackgroundColor3 = DESIGN.PrimaryColor
     fill.BorderSizePixel = 0
     fill.Parent = track
 
@@ -1515,11 +1525,11 @@ function Tekscripts:CreateSlider(tab: any, options: { Text: string?, Min: number
     thumb.Size = UDim2.new(0, 14, 0, 14)
     thumb.AnchorPoint = Vector2.new(0.5, 0.5)
     thumb.BackgroundTransparency = 1
-    thumb.Image = "rbxassetid://0" -- transparente por padrão; substitua se quiser ícone
+    thumb.Image = "rbxassetid://0"
     thumb.Parent = track
     thumb.Position = UDim2.new(fill.Size.X.Scale, 0, 0.5, 0)
 
-    -- Minus button
+    -- Buttons
     local btnMinus = Instance.new("TextButton")
     btnMinus.Size = UDim2.new(0, 26, 0, 22)
     btnMinus.Position = UDim2.new(0, 8, 0.5, -11)
@@ -1529,7 +1539,6 @@ function Tekscripts:CreateSlider(tab: any, options: { Text: string?, Min: number
     btnMinus.BackgroundTransparency = 0.6
     btnMinus.Parent = container
 
-    -- Plus button
     local btnPlus = Instance.new("TextButton")
     btnPlus.Size = UDim2.new(0, 26, 0, 22)
     btnPlus.AnchorPoint = Vector2.new(1, 0.5)
@@ -1540,36 +1549,7 @@ function Tekscripts:CreateSlider(tab: any, options: { Text: string?, Min: number
     btnPlus.BackgroundTransparency = 0.6
     btnPlus.Parent = container
 
-    -- Input (clicando no valueLabel abre prompt simples)
-    local function openPrompt()
-        -- usa gui:CreateInput se disponível no seu UIManager, caso contrário faz fallback simples:
-        if self and self.CreateInput then
-            self:CreateInput(tab, {
-                Text = title .. " (valor)",
-                Placeholder = tostring(value),
-                Type = "number",
-                Callback = function(num)
-                    local n = tonumber(num)
-                    if n then
-                        n = clamp(roundToStep(n))
-                        value = n
-                        valueLabel.Text = tostring(value)
-                        fill.Size = UDim2.new((value - minv) / math.max(1, (maxv - minv)), 0, 1, 0)
-                        thumb.Position = UDim2.new(fill.Size.X.Scale, 0, 0.5, 0)
-                        pcall(callback, value)
-                    end
-                end
-            })
-        else
-            -- fallback: simples InputDialog via Roblox (não implementado aqui)
-        end
-    end
-
-    valueLabel.MouseButton1Click = openPrompt
-    valueLabel.Active = true
-    valueLabel.Selectable = true
-
-    local connections = {}
+    local connections: { RBXScriptConnection } = {}
 
     local function updateVisuals()
         local frac = (value - minv) / math.max(1, (maxv - minv))
@@ -1581,58 +1561,51 @@ function Tekscripts:CreateSlider(tab: any, options: { Text: string?, Min: number
     table.insert(connections, btnMinus.MouseButton1Click:Connect(function()
         value = clamp(roundToStep(value - step))
         updateVisuals()
-        pcall(callback, value)
+        if callback then pcall(callback, value) end
     end))
 
     table.insert(connections, btnPlus.MouseButton1Click:Connect(function()
         value = clamp(roundToStep(value + step))
         updateVisuals()
-        pcall(callback, value)
+        if callback then pcall(callback, value) end
     end))
 
-    -- Drag to change value (mouse)
+    -- Drag logic
     local dragging = false
     table.insert(connections, thumb.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
             end)
         end
     end))
+
     table.insert(connections, track.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            if dragging then
-                local abs = track.AbsoluteSize.X
-                local x = math.clamp(input.Position.X - track.AbsolutePosition.X, 0, abs)
-                local frac = (abs > 0) and (x / abs) or 0
-                local newVal = clamp(roundToStep(minv + frac * (maxv - minv)))
-                if newVal ~= value then
-                    value = newVal
-                    updateVisuals()
-                    pcall(callback, value)
-                end
+        if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+            local abs = track.AbsoluteSize.X
+            local x = math.clamp(input.Position.X - track.AbsolutePosition.X, 0, abs)
+            local newVal = clamp(roundToStep(minv + (x/abs)*(maxv-minv)))
+            if newVal ~= value then
+                value = newVal
+                updateVisuals()
+                if callback then pcall(callback, value) end
             end
         end
     end))
 
-    -- expose API
     local publicApi = {
         _instance = container,
         _connections = connections
     }
 
-    function publicApi.Set(v)
-        v = tonumber(v)
-        if not v then return end
+    function publicApi.Set(v: number)
         value = clamp(roundToStep(v))
         updateVisuals()
-        pcall(callback, value)
+        if callback then pcall(callback, value) end
     end
 
-    function publicApi.Get()
+    function publicApi.Get(): number
         return value
     end
 
