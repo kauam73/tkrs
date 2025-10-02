@@ -36,6 +36,10 @@ local DESIGN = {
     InputTextColor = Color3.fromRGB(240, 240, 240), -- texto claro mas não puro branco
     HRColor = Color3.fromRGB(80, 80, 80), -- divisória mais visível
     BlockScreenColor = Color3.fromRGB(0, 0, 0), -- overlay preto
+    DESIGN.SliderTrackColor = Color3.fromRGB(60, 60, 60)
+    DESIGN.SliderFillColor = Color3.fromRGB(90, 140, 200) -- Mesma cor do ativo para consistência
+    DESIGN.ThumbColor = Color3.fromRGB(240, 240, 240)
+    DESIGN.ThumbOutlineColor = Color3.fromRGB(50, 50, 50)
 
     -- Tamanhos e Dimensões
     WindowSize = UDim2.new(0, 500, 0, 400),
@@ -1452,7 +1456,7 @@ function Tekscripts:CreateSlider(tab: any, options: {
     Value: number?, 
     Callback: ((number) -> ())? 
 })
-    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateSlider")
+    assert(tab and tab.Container, "Invalid Tab object provided to CreateSlider")
 
     options = options or {}
     local title = options.Text or "Slider"
@@ -1474,125 +1478,139 @@ function Tekscripts:CreateSlider(tab: any, options: {
     value = clamp(roundToStep(value))
 
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, 28)
+    container.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight + 10)
     container.BackgroundTransparency = 1
     container.Parent = tab.Container
+
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, DESIGN.ComponentPadding/2)
+    padding.PaddingBottom = UDim.new(0, DESIGN.ComponentPadding/2)
+    padding.PaddingLeft = UDim.new(0, DESIGN.ComponentPadding)
+    padding.PaddingRight = UDim.new(0, DESIGN.ComponentPadding)
+    padding.Parent = container
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.FillDirection = Enum.FillDirection.Vertical
+    listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    listLayout.Parent = container
+    
+    -- Wrapper para o Título e o valor
+    local headerFrame = Instance.new("Frame")
+    headerFrame.Size = UDim2.new(1, 0, 0, 20)
+    headerFrame.BackgroundTransparency = 1
+    headerFrame.Parent = container
 
     -- Title label
     local titleLabel = Instance.new("TextLabel")
     titleLabel.BackgroundTransparency = 1
-    titleLabel.Size = UDim2.new(0.5, -8, 1, 0)
-    titleLabel.Position = UDim2.new(0, 8, 0, 0)
+    titleLabel.Size = UDim2.new(1, -70, 1, 0)
+    titleLabel.Position = UDim2.new(0, 0, 0, 0)
     titleLabel.Font = Enum.Font.Roboto
-    titleLabel.TextSize = 14
+    titleLabel.TextSize = 15
     titleLabel.TextColor3 = DESIGN.ComponentTextColor
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Text = title
-    titleLabel.Parent = container
+    titleLabel.Parent = headerFrame
 
     -- Value label
     local valueLabel = Instance.new("TextLabel")
     valueLabel.BackgroundTransparency = 1
-    valueLabel.Size = UDim2.new(0.2, -8, 1, 0)
-    valueLabel.Position = UDim2.new(1, -container.Size.X.Offset * 0.2 - 8, 0, 0)
+    valueLabel.Size = UDim2.new(0, 60, 1, 0)
+    valueLabel.Position = UDim2.new(1, 0, 0, 0)
     valueLabel.AnchorPoint = Vector2.new(1, 0)
     valueLabel.Font = Enum.Font.Roboto
-    valueLabel.TextSize = 14
+    valueLabel.TextSize = 15
     valueLabel.TextColor3 = DESIGN.ComponentTextColor
     valueLabel.TextXAlignment = Enum.TextXAlignment.Right
     valueLabel.Text = tostring(value)
-    valueLabel.Parent = container
-
+    valueLabel.Parent = headerFrame
+    
     -- Track frame
     local track = Instance.new("Frame")
-    track.AnchorPoint = Vector2.new(0, 0.5)
-    track.Size = UDim2.new(0.6, 0, 0, 6)
-    track.Position = UDim2.new(0.5, - (track.Size.X.Offset/2 or 0), 0.5, 0)
-    track.BackgroundColor3 = DESIGN.HRColor
+    track.Size = UDim2.new(1, 0, 0, 8)
+    track.BackgroundColor3 = DESIGN.SliderTrackColor
     track.BorderSizePixel = 0
     track.Parent = container
+
+    local trackCorner = Instance.new("UICorner")
+    trackCorner.CornerRadius = UDim.new(1, 0)
+    trackCorner.Parent = track
 
     -- Fill
     local fill = Instance.new("Frame")
     fill.Size = UDim2.new((value - minv) / math.max(1, (maxv - minv)), 0, 1, 0)
-    fill.Position = UDim2.new(0, 0, 0, 0)
-    fill.BackgroundColor3 = DESIGN.PrimaryColor
+    fill.BackgroundColor3 = DESIGN.SliderFillColor
     fill.BorderSizePixel = 0
     fill.Parent = track
 
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(1, 0)
+    fillCorner.Parent = fill
+
     -- Thumb
-    local thumb = Instance.new("ImageLabel")
-    thumb.Size = UDim2.new(0, 14, 0, 14)
+    local thumb = Instance.new("Frame")
+    thumb.Size = UDim2.new(0, 18, 0, 18)
     thumb.AnchorPoint = Vector2.new(0.5, 0.5)
-    thumb.BackgroundTransparency = 1
-    thumb.Image = "rbxassetid://0"
-    thumb.Parent = track
     thumb.Position = UDim2.new(fill.Size.X.Scale, 0, 0.5, 0)
+    thumb.BackgroundColor3 = DESIGN.ThumbColor
+    thumb.BorderSizePixel = 1
+    thumb.BorderColor3 = DESIGN.ThumbOutlineColor
+    thumb.Parent = track
+    
+    local thumbCorner = Instance.new("UICorner")
+    thumbCorner.CornerRadius = UDim.new(1, 0)
+    thumbCorner.Parent = thumb
 
-    -- Buttons
-    local btnMinus = Instance.new("TextButton")
-    btnMinus.Size = UDim2.new(0, 26, 0, 22)
-    btnMinus.Position = UDim2.new(0, 8, 0.5, -11)
-    btnMinus.Text = "-"
-    btnMinus.Font = Enum.Font.Roboto
-    btnMinus.TextSize = 16
-    btnMinus.BackgroundTransparency = 0.6
-    btnMinus.Parent = container
-
-    local btnPlus = Instance.new("TextButton")
-    btnPlus.Size = UDim2.new(0, 26, 0, 22)
-    btnPlus.AnchorPoint = Vector2.new(1, 0.5)
-    btnPlus.Position = UDim2.new(1, -8, 0.5, -11)
-    btnPlus.Text = "+"
-    btnPlus.Font = Enum.Font.Roboto
-    btnPlus.TextSize = 16
-    btnPlus.BackgroundTransparency = 0.6
-    btnPlus.Parent = container
-
+    -- Logica de interacao (PC e Mobile)
     local connections: { RBXScriptConnection } = {}
 
     local function updateVisuals()
         local frac = (value - minv) / math.max(1, (maxv - minv))
         fill.Size = UDim2.new(frac, 0, 1, 0)
         thumb.Position = UDim2.new(frac, 0, 0.5, 0)
-        valueLabel.Text = tostring(value)
+        valueLabel.Text = tostring(math.floor(value * 100) / 100) -- Arredonda para 2 casas decimais
+    end
+    
+    local dragging = false
+    local UIS = game:GetService("UserInputService")
+    
+    local function handleDrag(inputPos: Vector2)
+        local absPos = track.AbsolutePosition
+        local absSize = track.AbsoluteSize
+        local relativeX = math.clamp(inputPos.X - absPos.X, 0, absSize.X)
+        local newFrac = relativeX / absSize.X
+        local newVal = clamp(roundToStep(minv + newFrac * (maxv - minv)))
+        
+        if newVal ~= value then
+            value = newVal
+            updateVisuals()
+            if callback then pcall(callback, value) end
+        end
+    end
+    
+    local function handleInputBegan(input: InputObject)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            handleDrag(input.Position)
+        end
+    end
+    
+    local function handleInputChanged(input: InputObject)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            handleDrag(input.Position)
+        end
+    end
+    
+    local function handleInputEnded(input: InputObject)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
     end
 
-    table.insert(connections, btnMinus.MouseButton1Click:Connect(function()
-        value = clamp(roundToStep(value - step))
-        updateVisuals()
-        if callback then pcall(callback, value) end
-    end))
-
-    table.insert(connections, btnPlus.MouseButton1Click:Connect(function()
-        value = clamp(roundToStep(value + step))
-        updateVisuals()
-        if callback then pcall(callback, value) end
-    end))
-
-    -- Drag logic
-    local dragging = false
-    table.insert(connections, thumb.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
-        end
-    end))
-
-    table.insert(connections, track.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
-            local abs = track.AbsoluteSize.X
-            local x = math.clamp(input.Position.X - track.AbsolutePosition.X, 0, abs)
-            local newVal = clamp(roundToStep(minv + (x/abs)*(maxv-minv)))
-            if newVal ~= value then
-                value = newVal
-                updateVisuals()
-                if callback then pcall(callback, value) end
-            end
-        end
-    end))
+    table.insert(connections, track.InputBegan:Connect(handleInputBegan))
+    table.insert(connections, UIS.InputChanged:Connect(handleInputChanged))
+    table.insert(connections, UIS.InputEnded:Connect(handleInputEnded))
 
     local publicApi = {
         _instance = container,
@@ -1631,7 +1649,8 @@ function Tekscripts:CreateSlider(tab: any, options: {
             publicApi._instance = nil
         end
     end
-
+    
+    updateVisuals()
     table.insert(tab.Components, publicApi)
     return publicApi
 end
