@@ -1477,18 +1477,28 @@ function Tekscripts:CreateSlider(tab: any, options: {
 
     value = clamp(roundToStep(value))
 
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight + 10)
-    container.BackgroundTransparency = 1
-    container.Parent = tab.Container
+    -- Novo Box (Fundo do componente)
+    local box = Instance.new("Frame")
+    box.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
+    box.BackgroundColor3 = DESIGN.ComponentBackground
+    box.BorderSizePixel = 0
+    box.Parent = tab.Container
+
+    local boxCorner = Instance.new("UICorner")
+    boxCorner.CornerRadius = UDim.new(0, DESIGN.CornerRadius)
+    boxCorner.Parent = box
 
     local padding = Instance.new("UIPadding")
-    padding.PaddingTop = UDim.new(0, DESIGN.ComponentPadding/2)
-    padding.PaddingBottom = UDim.new(0, DESIGN.ComponentPadding/2)
     padding.PaddingLeft = UDim.new(0, DESIGN.ComponentPadding)
     padding.PaddingRight = UDim.new(0, DESIGN.ComponentPadding)
-    padding.Parent = container
+    padding.Parent = box
 
+    -- Container interno para o layout
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = box
+    
     local listLayout = Instance.new("UIListLayout")
     listLayout.FillDirection = Enum.FillDirection.Vertical
     listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
@@ -1613,7 +1623,7 @@ function Tekscripts:CreateSlider(tab: any, options: {
     table.insert(connections, UIS.InputEnded:Connect(handleInputEnded))
 
     local publicApi = {
-        _instance = container,
+        _instance = box, -- O PublicAPI agora aponta para o box, o container principal
         _connections = connections
     }
 
