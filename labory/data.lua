@@ -1,6 +1,6 @@
 --!strict
-local UIManager = {}
-UIManager.__index = UIManager
+local Tekscripts = {}
+Tekscripts.__index = Tekscripts
 
 -- Services
 local UserInputService = game:GetService("UserInputService")
@@ -171,7 +171,7 @@ end
 ---
 -- Construtor da GUI
 ---
-function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: string?, startTab: string? })
+function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: string?, startTab: string? })
     options = options or {}
     local self = setmetatable({} :: {
         ScreenGui: ScreenGui,
@@ -191,10 +191,10 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
         BlockScreen: Frame?,
         Blocked: boolean,
         startTab: string?
-    }, UIManager)
+    }, Tekscripts)
 
     self.ScreenGui = Instance.new("ScreenGui")
-    self.ScreenGui.Name = options.Name or "UIManager"
+    self.ScreenGui.Name = options.Name or "Tekscripts"
     self.ScreenGui.ResetOnSpawn = false
     self.ScreenGui.Parent = options.Parent or localPlayer:WaitForChild("PlayerGui")
 
@@ -234,7 +234,7 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
     self.TitleBar.Parent = self.Window
 
     local title = Instance.new("TextLabel")
-    title.Text = options.Name or "UIManager"
+    title.Text = options.Name or "Tekscripts"
     title.Size = UDim2.new(1, -(DESIGN.TitleHeight * 2), 1, 0)
     title.Position = UDim2.new(0, 10, 0, 0)
     title.BackgroundTransparency = 1
@@ -362,7 +362,7 @@ function UIManager.new(options: { Name: string?, Parent: Instance?, FloatText: s
     return self
 end
 
-function UIManager:Destroy()
+function Tekscripts:Destroy()
     if self.ScreenGui then
         self.ScreenGui:Destroy()
     end
@@ -378,7 +378,7 @@ end
 ---
 -- Sistema de Arrastar
 ---
-function UIManager:SetupDragSystem()
+function Tekscripts:SetupDragSystem()
     local dragStart = nil
     local startPos = nil
 
@@ -418,7 +418,7 @@ end
 ---
 -- Sistema de Redimensionamento
 ---
-function UIManager:SetupResizeSystem()
+function Tekscripts:SetupResizeSystem()
     self.ResizeHandle = Instance.new("Frame")
     self.ResizeHandle.Size = UDim2.new(0, DESIGN.ResizeHandleSize, 0, DESIGN.ResizeHandleSize)
     self.ResizeHandle.Position = UDim2.new(1, -DESIGN.ResizeHandleSize, 1, -DESIGN.ResizeHandleSize)
@@ -474,14 +474,14 @@ function UIManager:SetupResizeSystem()
     end)
 end
 
-function UIManager:UpdateContainersSize()
+function Tekscripts:UpdateContainersSize()
     self.TabContentContainer.Size = UDim2.new(1, -DESIGN.TabButtonWidth - DESIGN.ResizeHandleSize, 1, -DESIGN.TitleHeight)
 end
 
 ---
 -- Float Button Melhorado
 ---
-function UIManager:SetupFloatButton(text: string)
+function Tekscripts:SetupFloatButton(text: string)
     self.FloatButton = Instance.new("Frame")
     self.FloatButton.Size = DESIGN.FloatButtonSize
     self.FloatButton.Position = UDim2.new(1, -130, 1, -60)
@@ -554,7 +554,7 @@ end
 ---
 -- Lógica de Abas
 ---
-function UIManager:CreateTab(options: { Title: string })
+function Tekscripts:CreateTab(options: { Title: string })
     assert(type(options) == "table" and type(options.Title) == "string", "Invalid arguments for CreateTab")
     local tabTitle = options.Title
     local tab = Tab.new(tabTitle, self.TabContentContainer)
@@ -608,7 +608,7 @@ function UIManager:CreateTab(options: { Title: string })
     return tab
 end
 
-function UIManager:SetActiveTab(tab: any)
+function Tekscripts:SetActiveTab(tab: any)
     if self.CurrentTab then
         self.CurrentTab.Container.Visible = false
         -- Restaura a cor do botão da aba anterior
@@ -625,7 +625,7 @@ end
 ---
 -- Funções de Estado (Minimizar/Expandir)
 ---
-function UIManager:Minimize()
+function Tekscripts:Minimize()
     if self.IsMinimized or self.Blocked then return end
     self.IsMinimized = true
 
@@ -646,7 +646,7 @@ function UIManager:Minimize()
     end)
 end
 
-function UIManager:Expand()
+function Tekscripts:Expand()
     if not self.IsMinimized or self.Blocked then return end
     self.IsMinimized = false
 
@@ -667,7 +667,7 @@ function UIManager:Expand()
     end)
 end
 
-function UIManager:Block(state: boolean)
+function Tekscripts:Block(state: boolean)
     self.Blocked = state
     self.BlockScreen.Visible = state
     if state then
@@ -682,7 +682,7 @@ end
 ---
 -- Funções Públicas para criar componentes
 ---
-function UIManager:CreateButton(tab: any, options: { Text: string, Callback: () -> () })
+function Tekscripts:CreateButton(tab: any, options: { Text: string, Callback: () -> () })
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateButton")
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateButton")
     local btn = createButton(options.Text, nil, tab.Container)
@@ -733,7 +733,7 @@ function UIManager:CreateButton(tab: any, options: { Text: string, Callback: () 
     return publicApi
 end
 
-function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (state: boolean) -> () })
+function Tekscripts:CreateToggle(tab: any, options: { Text: string, Callback: (state: boolean) -> () })
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateToggle")
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateToggle")
 
@@ -831,7 +831,7 @@ function UIManager:CreateToggle(tab: any, options: { Text: string, Callback: (st
     return publicApi
 end
 
-function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { string }, Callback: (value: string) -> (), SelectedValue: string? })
+function Tekscripts:CreateDropdown(tab: any, options: { Title: string, Values: { string }, Callback: (value: string) -> (), SelectedValue: string? })
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateDropdown")
     assert(type(options) == "table" and type(options.Title) == "string" and type(options.Values) == "table", "Invalid arguments for CreateDropdown")
 
@@ -952,7 +952,7 @@ function UIManager:CreateDropdown(tab: any, options: { Title: string, Values: { 
 end
 
 
-function UIManager:CreateLabel(tab: any, options: { Title: string, Desc: string? })
+function Tekscripts:CreateLabel(tab: any, options: { Title: string, Desc: string? })
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateLabel")
     assert(type(options) == "table" and type(options.Title) == "string", "Invalid arguments for CreateLabel")
 
@@ -1058,7 +1058,7 @@ function UIManager:CreateLabel(tab: any, options: { Title: string, Desc: string?
     return publicApi
 end
 
-function UIManager:CreateTag(tab: any, options: { Text: string, Color: Color3? })
+function Tekscripts:CreateTag(tab: any, options: { Text: string, Color: Color3? })
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateTag")
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateTag")
 
@@ -1098,7 +1098,7 @@ function UIManager:CreateTag(tab: any, options: { Text: string, Color: Color3? }
     return publicApi
 end
 
-function UIManager:CreateInput(tab: any, options: { Text: string, Placeholder: string, Callback: (value: any) -> (), Type: string? })
+function Tekscripts:CreateInput(tab: any, options: { Text: string, Placeholder: string, Callback: (value: any) -> (), Type: string? })
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateInput")
     assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateInput")
 
@@ -1197,7 +1197,7 @@ function UIManager:CreateInput(tab: any, options: { Text: string, Placeholder: s
     return publicApi
 end
 
-function UIManager:CreateHR(tab: any, options: { Text: string? })
+function Tekscripts:CreateHR(tab: any, options: { Text: string? })
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateHR")
 
     local hrContainer = Instance.new("Frame")
@@ -1298,7 +1298,7 @@ function UIManager:CreateHR(tab: any, options: { Text: string? })
     return publicApi
 end
 
-function UIManager:Notify(options: { 
+function Tekscripts:Notify(options: { 
     Title: string?, 
     Desc: string?, 
     Duration: number?, 
@@ -1444,4 +1444,4 @@ function UIManager:Notify(options: {
     end
 end
 
-return UIManager
+return Tekscripts
