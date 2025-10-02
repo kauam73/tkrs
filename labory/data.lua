@@ -1669,7 +1669,9 @@ end
 
 function Tekscripts:CreateFloatingButton(options: {
     Radius: number?,
+    BorderRadius: number?,
     Text: string?,
+    Title: string?,
     Value: boolean?,
     Visible: boolean?,
     Drag: boolean?,
@@ -1678,7 +1680,9 @@ function Tekscripts:CreateFloatingButton(options: {
 })
     options = options or {}
     local radius = tonumber(options.Radius) or 20
+    local borderRadius = tonumber(options.BorderRadius) or 6 -- novo: borda arredondada leve
     local text = tostring(options.Text or "clique aqui")
+    local title = tostring(options.Title or "Cabeçote")
     local value = options.Value == nil and false or options.Value
     local visible = options.Visible == nil and false or options.Visible
     local drag = options.Drag == nil and true or options.Drag
@@ -1691,21 +1695,42 @@ function Tekscripts:CreateFloatingButton(options: {
     screenGui.ResetOnSpawn = false
     screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 
+    -- Container (para título + botão)
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(0, radius * 2, 0, (radius * 2) + 25)
+    container.Position = UDim2.new(0.5, -radius, 0.5, -radius)
+    container.BackgroundTransparency = 1
+    container.Visible = visible
+    container.Parent = screenGui
+
+    -- Cabeçote
+    local header = Instance.new("TextLabel")
+    header.Size = UDim2.new(1, 0, 0, 25)
+    header.BackgroundColor3 = Color3.fromRGB(25, 25, 25) -- tema escuro
+    header.Text = title
+    header.TextColor3 = Color3.fromRGB(255, 255, 255) -- branco
+    header.TextSize = 16
+    header.Font = Enum.Font.GothamBold -- fonte grossa
+    header.Parent = container
+
+    local headerCorner = Instance.new("UICorner")
+    headerCorner.CornerRadius = UDim.new(0, borderRadius)
+    headerCorner.Parent = header
+
     -- Botão principal
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0, radius * 2, 0, radius * 2)
-    button.Position = UDim2.new(0.5, -radius, 0.5, -radius) -- centro da tela
-    button.BackgroundColor3 = DESIGN.ButtonColor or Color3.fromRGB(50, 150, 250)
+    button.Position = UDim2.new(0, 0, 0, 25)
+    button.BackgroundColor3 = Color3.fromRGB(40, 40, 40) -- dark
     button.Text = text
-    button.TextColor3 = DESIGN.ComponentTextColor
-    button.TextSize = 14
-    button.Font = Enum.Font.Roboto
-    button.Visible = visible
+    button.TextColor3 = Color3.fromRGB(255, 255, 255) -- branco
+    button.TextSize = 16
+    button.Font = Enum.Font.GothamBold -- fonte grossa
     button.AutoButtonColor = not block
-    button.Parent = screenGui
+    button.Parent = container
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(1, 0)
+    corner.CornerRadius = UDim.new(0, borderRadius) -- bordas ajustáveis
     corner.Parent = button
 
     -- Estado interno
@@ -1714,9 +1739,11 @@ function Tekscripts:CreateFloatingButton(options: {
 
     -- Função para atualizar visual
     local function updateVisuals()
+        container.Size = UDim2.new(0, radius * 2, 0, (radius * 2) + 25)
+        header.Text = title
         button.Size = UDim2.new(0, radius * 2, 0, radius * 2)
         button.Text = text
-        button.Visible = visible
+        container.Visible = visible
         button.AutoButtonColor = not block
     end
 
@@ -1727,9 +1754,9 @@ function Tekscripts:CreateFloatingButton(options: {
         if callback then pcall(callback, value) end
     end)
 
-    -- Drag
+    -- Drag pelo cabeçote
     if drag then
-        button.InputBegan:Connect(function(input)
+        header.InputBegan:Connect(function(input)
             if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                 dragging = true
             end
@@ -1738,7 +1765,7 @@ function Tekscripts:CreateFloatingButton(options: {
         UIS.InputChanged:Connect(function(input)
             if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
                 local pos = input.Position
-                button.Position = UDim2.new(0, pos.X - button.Size.X.Offset / 2, 0, pos.Y - button.Size.Y.Offset / 2)
+                container.Position = UDim2.new(0, pos.X - container.Size.X.Offset / 2, 0, pos.Y - header.Size.Y.Offset / 2)
             end
         end)
 
@@ -1751,11 +1778,13 @@ function Tekscripts:CreateFloatingButton(options: {
 
     -- API pública
     local publicApi = {
-        _instance = button,
+        _instance = container,
         State = function()
             return {
                 Radius = radius,
+                BorderRadius = borderRadius,
                 Text = text,
+                Title = title,
                 Value = value,
                 Visible = visible,
                 Drag = drag,
@@ -1765,7 +1794,9 @@ function Tekscripts:CreateFloatingButton(options: {
         Update = function(newOptions)
             options = newOptions or options
             radius = tonumber(options.Radius) or radius
+            borderRadius = tonumber(options.BorderRadius) or borderRadius
             text = tostring(options.Text or text)
+            title = tostring(options.Title or title)
             value = options.Value == nil and value or options.Value
             visible = options.Visible == nil and visible or options.Visible
             drag = options.Drag == nil and drag or options.Drag
