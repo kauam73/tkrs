@@ -1667,4 +1667,118 @@ function Tekscripts:CreateSlider(tab: any, options: {
     return publicApi
 end
 
+function Tekscripts:CreateFloatingButton(tab: any, options: {
+    Radius: number?,
+    Text: string?,
+    Value: boolean?,
+    Visible: boolean?,
+    Drag: boolean?,
+    Block: boolean?,
+    Callback: ((boolean) -> ())?
+})
+    assert(tab and tab.Container, "Invalid Tab object provided to CreateFloatingButton")
+
+    options = options or {}
+    local radius = tonumber(options.Radius) or 20
+    local text = tostring(options.Text or "clique aqui")
+    local value = options.Value == nil and false or options.Value
+    local visible = options.Visible == nil and false or options.Visible
+    local drag = options.Drag == nil and true or options.Drag
+    local block = options.Block == nil and false or options.Block
+    local callback = options.Callback
+
+    -- Botão principal
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, radius * 2, 0, radius * 2)
+    button.BackgroundColor3 = DESIGN.ButtonColor or Color3.fromRGB(50, 150, 250)
+    button.Text = text
+    button.TextColor3 = DESIGN.ComponentTextColor
+    button.TextSize = 14
+    button.Font = Enum.Font.Roboto
+    button.Visible = visible
+    button.AutoButtonColor = not block
+    button.Parent = tab.Container
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0) -- sempre redondo
+    corner.Parent = button
+
+    -- Estado interno
+    local dragging = false
+    local UIS = game:GetService("UserInputService")
+
+    -- Função para atualizar visual
+    local function updateVisuals()
+        button.Size = UDim2.new(0, radius * 2, 0, radius * 2)
+        button.Text = text
+        button.Visible = visible
+        button.AutoButtonColor = not block
+    end
+
+    -- Toggle quando clicar
+    button.MouseButton1Click:Connect(function()
+        if block then return end
+        value = not value
+        if callback then pcall(callback, value) end
+    end)
+
+    -- Drag
+    if drag then
+        button.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+            end
+        end)
+
+        UIS.InputChanged:Connect(function(input)
+            if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                local pos = input.Position
+                button.Position = UDim2.new(0, pos.X - button.Size.X.Offset / 2, 0, pos.Y - button.Size.Y.Offset / 2)
+            end
+        end)
+
+        UIS.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+    end
+
+    -- API pública
+    local publicApi = {
+        _instance = button,
+        State = function()
+            return {
+                Radius = radius,
+                Text = text,
+                Value = value,
+                Visible = visible,
+                Drag = drag,
+                Block = block
+            }
+        end,
+        Update = function(newOptions)
+            options = newOptions or options
+            radius = tonumber(options.Radius) or radius
+            text = tostring(options.Text or text)
+            value = options.Value == nil and value or options.Value
+            visible = options.Visible == nil and visible or options.Visible
+            drag = options.Drag == nil and drag or options.Drag
+            block = options.Block == nil and block or options.Block
+            callback = options.Callback or callback
+            updateVisuals()
+        end,
+        Destroy = function()
+            if publicApi._instance then
+                publicApi._instance:Destroy()
+                publicApi._instance = nil
+            end
+        end
+    }
+
+    updateVisuals()
+    table.insert(tab.Components, publicApi)
+    return publicApi
+end
+
 return Tekscripts
