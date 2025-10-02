@@ -36,10 +36,10 @@ local DESIGN = {
     InputTextColor = Color3.fromRGB(240, 240, 240), -- texto claro mas não puro branco
     HRColor = Color3.fromRGB(80, 80, 80), -- divisória mais visível
     BlockScreenColor = Color3.fromRGB(0, 0, 0), -- overlay preto
-    SliderTrackColor = Color3.fromRGB(60, 60, 60)
-    SliderFillColor = Color3.fromRGB(90, 140, 200) -- Mesma cor do ativo para consistência
-    ThumbColor = Color3.fromRGB(240, 240, 240)
-    ThumbOutlineColor = Color3.fromRGB(50, 50, 50)
+    SliderTrackColor = Color3.fromRGB(60, 60, 60),
+    SliderFillColor = Color3.fromRGB(90, 140, 200), -- Mesma cor do ativo para consistência
+    ThumbColor = Color3.fromRGB(240, 240, 240),
+    ThumbOutlineColor = Color3.fromRGB(50, 50, 50),
 
     -- Tamanhos e Dimensões
     WindowSize = UDim2.new(0, 500, 0, 400),
