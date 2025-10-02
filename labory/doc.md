@@ -21,7 +21,7 @@ O UIManager é uma biblioteca projetada **exclusivamente para exploiters**, perm
 
 ## 1. Carregando a Biblioteca
 
-Primeiro, você precisa carregar o módulo da UIManager em seu script de exploit local.
+Primeiro, você precisa carregar o módulo da UIManager em seu script de exploit local, ISSO É OBRIGATÓRIO FAZER PARA FUNCIONAR!.
 
 ```lua
 -- Para carregar o script labory da interface no seu executor/exploit
