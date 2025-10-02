@@ -1667,7 +1667,7 @@ function Tekscripts:CreateSlider(tab: any, options: {
     return publicApi
 end
 
-function Tekscripts:CreateFloatingButton(tab: any, options: {
+function Tekscripts:CreateFloatingButton(options: {
     Radius: number?,
     Text: string?,
     Value: boolean?,
@@ -1676,8 +1676,6 @@ function Tekscripts:CreateFloatingButton(tab: any, options: {
     Block: boolean?,
     Callback: ((boolean) -> ())?
 })
-    assert(tab and tab.Container, "Invalid Tab object provided to CreateFloatingButton")
-
     options = options or {}
     local radius = tonumber(options.Radius) or 20
     local text = tostring(options.Text or "clique aqui")
@@ -1687,9 +1685,16 @@ function Tekscripts:CreateFloatingButton(tab: any, options: {
     local block = options.Block == nil and false or options.Block
     local callback = options.Callback
 
+    -- ScreenGui independente
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "FloatingButtonGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+
     -- Botão principal
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0, radius * 2, 0, radius * 2)
+    button.Position = UDim2.new(0.5, -radius, 0.5, -radius) -- centro da tela
     button.BackgroundColor3 = DESIGN.ButtonColor or Color3.fromRGB(50, 150, 250)
     button.Text = text
     button.TextColor3 = DESIGN.ComponentTextColor
@@ -1697,10 +1702,10 @@ function Tekscripts:CreateFloatingButton(tab: any, options: {
     button.Font = Enum.Font.Roboto
     button.Visible = visible
     button.AutoButtonColor = not block
-    button.Parent = tab.Container
+    button.Parent = screenGui
 
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(1, 0) -- sempre redondo
+    corner.CornerRadius = UDim.new(1, 0)
     corner.Parent = button
 
     -- Estado interno
@@ -1769,15 +1774,14 @@ function Tekscripts:CreateFloatingButton(tab: any, options: {
             updateVisuals()
         end,
         Destroy = function()
-            if publicApi._instance then
-                publicApi._instance:Destroy()
-                publicApi._instance = nil
+            if screenGui then
+                screenGui:Destroy()
+                screenGui = nil
             end
         end
     }
 
     updateVisuals()
-    table.insert(tab.Components, publicApi)
     return publicApi
 end
 
