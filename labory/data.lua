@@ -960,7 +960,7 @@ function Tekscripts:CreateLabel(tab: any, options: { Title: string, Desc: string
     assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateLabel")
     assert(type(options) == "table" and type(options.Title) == "string", "Invalid arguments for CreateLabel")
 
-    -- Box externo (vai englobar o título + descrição)
+    -- Box externo
     local outerBox = Instance.new("Frame")
     outerBox.Size = UDim2.new(1, 0, 0, 0)
     outerBox.BackgroundColor3 = DESIGN.ComponentBackground
@@ -968,50 +968,51 @@ function Tekscripts:CreateLabel(tab: any, options: { Title: string, Desc: string
     outerBox.Parent = tab.Container
     addRoundedCorners(outerBox, DESIGN.CornerRadius)
 
-    -- Container interno (vai organizar os labels dentro do box)
+    -- Container interno
     local container = Instance.new("Frame")
     container.Size = UDim2.new(1, -DESIGN.ComponentPadding * 2, 0, 0)
     container.Position = UDim2.new(0, DESIGN.ComponentPadding, 0, DESIGN.ComponentPadding)
     container.BackgroundTransparency = 1
+    container.AutomaticSize = Enum.AutomaticSize.Y
     container.Parent = outerBox
 
     local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, 4)
+    listLayout.Padding = UDim.new(0, 6)
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Parent = container
 
-    -- Título
+    -- Título (maior e mais forte)
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Text = options.Title
-    titleLabel.Size = UDim2.new(1, 0, 0, 20)
+    titleLabel.Size = UDim2.new(1, 0, 0, 24)
     titleLabel.BackgroundTransparency = 1
     titleLabel.TextColor3 = DESIGN.ComponentTextColor
-    titleLabel.Font = Enum.Font.Roboto
-    titleLabel.TextScaled = true
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 18
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.BorderSizePixel = 0
     titleLabel.Parent = container
 
-    -- Descrição opcional
+    -- Descrição (fonte maior e mais legível, ajusta altura automaticamente)
     local descLabel
     if options.Desc then
         descLabel = Instance.new("TextLabel")
         descLabel.Text = options.Desc
-        descLabel.Size = UDim2.new(1, 0, 0, 15)
+        descLabel.Size = UDim2.new(1, 0, 0, 0)
+        descLabel.AutomaticSize = Enum.AutomaticSize.Y
         descLabel.BackgroundTransparency = 1
-        descLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
-        descLabel.Font = Enum.Font.Roboto
-        descLabel.TextScaled = true
+        descLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        descLabel.Font = Enum.Font.GothamMedium
+        descLabel.TextSize = 16
         descLabel.TextXAlignment = Enum.TextXAlignment.Left
         descLabel.TextWrapped = true
         descLabel.BorderSizePixel = 0
         descLabel.Parent = container
     end
 
-    -- Ajusta o tamanho do container e do outerBox automaticamente
+    -- Ajusta o tamanho do outerBox conforme conteúdo
     local layoutConnection = listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        container.Size = UDim2.new(1, -DESIGN.ComponentPadding * 2, 0, listLayout.AbsoluteContentSize.Y)
-        outerBox.Size = UDim2.new(1, 0, 0, container.Size.Y.Offset + DESIGN.ComponentPadding * 2)
+        outerBox.Size = UDim2.new(1, 0, 0, listLayout.AbsoluteContentSize.Y + DESIGN.ComponentPadding * 2)
     end)
 
     -- API pública
@@ -1028,11 +1029,12 @@ function Tekscripts:CreateLabel(tab: any, options: { Title: string, Desc: string
             if newOptions.Desc and not descLabel then
                 descLabel = Instance.new("TextLabel")
                 descLabel.Text = newOptions.Desc
-                descLabel.Size = UDim2.new(1, 0, 0, 15)
+                descLabel.Size = UDim2.new(1, 0, 0, 0)
+                descLabel.AutomaticSize = Enum.AutomaticSize.Y
                 descLabel.BackgroundTransparency = 1
-                descLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
-                descLabel.Font = Enum.Font.Roboto
-                descLabel.TextScaled = true
+                descLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+                descLabel.Font = Enum.Font.GothamMedium
+                descLabel.TextSize = 16
                 descLabel.TextXAlignment = Enum.TextXAlignment.Left
                 descLabel.TextWrapped = true
                 descLabel.Parent = container
