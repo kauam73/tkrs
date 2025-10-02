@@ -24,7 +24,7 @@ O UIManager é uma biblioteca projetada **exclusivamente para exploiters**, perm
 Primeiro, você precisa carregar o módulo da UIManager em seu script de exploit local, ISSO É OBRIGATÓRIO FAZER PARA FUNCIONAR!.
 
 ```lua
--- Para carregar o script labory da interface no seu executor/exploit
+-- Para carregar o script labory da interface no seu executor/exploit, coloquei no início do seu código >
 local UIManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/kauam73/tkrs/refs/heads/main/labory/data.lua"))()
 ```
 
