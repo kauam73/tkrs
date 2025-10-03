@@ -1841,26 +1841,6 @@ function Tekscripts:CreateFloatingButton(options: {
     return publicApi
 end
 
--- Tekscripts:CreateColorPicker Component
---[[
-    options: {
-        Title: string?,
-        Color: Color3?,
-        Blocked: boolean?,
-        Callback: ((Color3) -> ())?
-    }
-]]
-
--- Tekscripts:CreateColorPicker Component
---[[
-    options: {
-        Title: string?,
-        Color: Color3?,
-        Blocked: boolean?,
-        Callback: ((Color3) -> ())?
-    }
-]]
-
 function Tekscripts:CreateColorPicker(tab: any, options: {
     Title: string?,
     Color: Color3?,
@@ -1871,7 +1851,13 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     
     options = options or {}
     local title = options.Title or "Color"
-    local color = options.Color or Color3.new(1, 1, 1)
+    
+    -- Verificação robusta do tipo Color3
+    local color = Color3.new(1, 1, 1)
+    if options.Color and typeof(options.Color) == "Color3" then
+        color = options.Color
+    end
+    
     local blocked = options.Blocked or false
     local callback = options.Callback
     
@@ -1989,7 +1975,7 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     svThumb.AnchorPoint = Vector2.new(0.5, 0.5)
     svThumb.Parent = svPalette
     
-    local svThumbRing = Instance.new("UICircle") -- Novo toque visual
+    local svThumbRing = Instance.new("UICircle")
     svThumbRing.FillColor = Color3.new(1, 1, 1)
     svThumbRing.FillTransparency = 1
     svThumbRing.Parent = svThumb
@@ -2023,8 +2009,7 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     hueThumb.BorderColor3 = Color3.new(0.1, 0.1, 0.1)
     hueThumb.Parent = hueTrack
 
-    -- ############ LÓGICA DE INTERAÇÃO DO COMPONENTE ############
-    
+    -- Lógica de Arrastar
     local draggingHue = false
     local draggingSV = false
     local h, s, v = color:ToHSV()
@@ -2072,7 +2057,7 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     local function expand()
         isExpanded = true
         pickerContainer.Visible = true
-        local finalSize = UDim2.new(1, 0, 0, DESIGN.ComponentHeight + pickerContainer.Size.Y.Offset)
+        local finalSize = UDim2.new(1, 0, 0, DESIGN.ComponentHeight + pickerContainer.Size.Y.Offset + listLayout.Padding.Offset)
         TweenService:Create(box, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = finalSize }):Play()
         
         local h, s, v = color:ToHSV()
