@@ -1841,15 +1841,6 @@ function Tekscripts:CreateFloatingButton(options: {
     return publicApi
 end
 
--- Tekscripts:CreateColorPicker Component
---[[
-    options: {
-        Title: string?,
-        Color: Color3?,
-        Blocked: boolean?,
-        Callback: ((Color3) -> ())?
-    }
-]]
 
 function Tekscripts:CreateColorPicker(tab: any, options: {
     Title: string?,
@@ -1857,250 +1848,228 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     Blocked: boolean?,
     Callback: ((Color3) -> ())?
 })
-    assert(tab and tab.Container, "Invalid Tab object provided to CreateColorPicker")
-    
+    -- Validação inicial
+    assert(tab and tab.Container, "CreateColorPicker: 'tab' e 'tab.Container' válidos são necessários.")
+
+    -- // DEPENDÊNCIAS E SERVIÇOS //
+    local UserInputService = game:GetService("UserInputService")
+    local TweenService = game:GetService("TweenService")
+
+    -- // CONFIGURAÇÃO INICIAL //
+    local defaultOptions = {
+        Title = "Color",
+        Color = Color3.new(1, 1, 1),
+        Blocked = false,
+        Callback = function() end
+    }
     options = options or {}
-    local title = options.Title or "Color"
-    
-    local color = Color3.new(1, 1, 1)
-    if options.Color and typeof(options.Color) == "Color3" then
-        color = options.Color
+    for key, value in pairs(defaultOptions) do
+        if options[key] == nil then
+            options[key] = value
+        end
     end
     
-    local blocked = options.Blocked or false
-    local callback = options.Callback
-    
-    local connections: { RBXScriptConnection } = {}
-    local UIS = game:GetService("UserInputService")
-    local TweenService = game:GetService("TweenService")
-    
-    local isExpanded = false
-    
-    -- Criação da UI principal
-    local box = Instance.new("Frame")
-    box.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
-    box.BackgroundColor3 = DESIGN.ComponentBackground
-    box.BorderSizePixel = 0
-    box.Parent = tab.Container
-    
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.FillDirection = Enum.FillDirection.Vertical
-    listLayout.Padding = UDim.new(0, 5)
-    listLayout.Parent = box
+    -- Validação robusta do tipo de cor inicial
+    if typeof(options.Color) ~= "Color3" then
+        warn("CreateColorPicker: 'options.Color' inválido. Esperado Color3, recebido " .. typeof(options.Color) .. ". Usando cor padrão.")
+        options.Color = defaultOptions.Color
+    end
 
-    local boxCorner = Instance.new("UICorner")
-    boxCorner.CornerRadius = UDim.new(0, DESIGN.CornerRadius)
-    boxCorner.Parent = box
-
-    local padding = Instance.new("UIPadding")
-    padding.PaddingLeft = UDim.new(0, DESIGN.ComponentPadding)
-    padding.PaddingRight = UDim.new(0, DESIGN.ComponentPadding)
-    padding.Parent = box
+    -- // ESTADO DO COMPONENTE (State) //
+    local state = {
+        isExpanded = false,
+        isBlocked = options.Blocked,
+        isDraggingHue = false,
+        isDraggingSV = false,
+        h, s, v = options.Color:ToHSV()
+    }
     
-    -- Container do título e da caixa de cor
-    local mainFrame = Instance.new("Frame")
-    mainFrame.Size = UDim2.new(1, 0, 0, 20)
-    mainFrame.BackgroundTransparency = 1
-    mainFrame.Parent = box
-    
-    -- Título
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Size = UDim2.new(1, -50, 1, 0)
-    titleLabel.Position = UDim2.new(0, 0, 0, 0)
-    titleLabel.Font = Enum.Font.Roboto
-    titleLabel.TextSize = 15
-    titleLabel.TextColor3 = DESIGN.ComponentTextColor
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Text = title
-    titleLabel.Parent = mainFrame
+    local connections = {}
 
-    -- Caixa de cor
-    local colorBox = Instance.new("Frame")
-    colorBox.Size = UDim2.new(0, 40, 0, 20)
-    colorBox.Position = UDim2.new(1, -40, 0, 0)
-    colorBox.AnchorPoint = Vector2.new(1, 0)
-    colorBox.BackgroundColor3 = color
-    colorBox.BorderSizePixel = 1
-    colorBox.BorderColor3 = Color3.new(0.2, 0.2, 0.2)
-    colorBox.Parent = mainFrame
+    -- // FUNÇÕES AUXILIARES DE CRIAÇÃO DE UI //
+    local function createInstance(className, properties)
+        local inst = Instance.new(className)
+        for prop, value in pairs(properties) do
+            inst[prop] = value
+        end
+        return inst
+    end
 
-    local colorBoxCorner = Instance.new("UICorner")
-    colorBoxCorner.CornerRadius = UDim.new(0, DESIGN.CornerRadius / 2)
-    colorBoxCorner.Parent = colorBox
-
-    -- Lógica do bloqueio
-    local blockedOverlay = Instance.new("Frame")
-    blockedOverlay.Size = UDim2.new(1, 0, 1, 0)
-    blockedOverlay.BackgroundTransparency = 0.5
-    blockedOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
-    blockedOverlay.Visible = blocked
-    blockedOverlay.Parent = box
-    
-    -- ############ UI DO COLOR PICKER INTEGRADA ############
-    
-    local pickerContainer = Instance.new("Frame")
-    pickerContainer.Size = UDim2.new(1, -2 * DESIGN.ComponentPadding, 0, 190)
-    pickerContainer.Position = UDim2.new(0, DESIGN.ComponentPadding, 0, 0)
-    pickerContainer.BackgroundTransparency = 1
-    pickerContainer.Visible = false
-    pickerContainer.Parent = box
-    
-    local pickerLayout = Instance.new("UIListLayout")
-    pickerLayout.FillDirection = Enum.FillDirection.Vertical
-    pickerLayout.Padding = UDim.new(0, 10)
-    pickerLayout.Parent = pickerContainer
-
-    -- Paleta de Saturação e Valor (Saturation & Value)
-    local svPalette = Instance.new("Frame")
-    svPalette.Size = UDim2.new(1, 0, 0, 150)
-    svPalette.BackgroundTransparency = 1
-    svPalette.Parent = pickerContainer
-
-    local svCorner = Instance.new("UICorner")
-    svCorner.CornerRadius = UDim.new(0, 5)
-    svCorner.Parent = svPalette
-
-    local svWhite = Instance.new("UIGradient")
-    svWhite.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
-        ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))
+    -- // CRIAÇÃO DA UI //
+    local box = createInstance("Frame", {
+        Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight),
+        BackgroundColor3 = DESIGN.ComponentBackground,
+        BorderSizePixel = 0,
+        Parent = tab.Container
     })
-    svWhite.Parent = svPalette
 
-    local svBlack = Instance.new("UIGradient")
-    svBlack.Rotation = 90
-    svBlack.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.new(0,0,0,0)),
-        ColorSequenceKeypoint.new(1, Color3.new(0,0,0,1))
+    createInstance("UIListLayout", { FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 5), Parent = box })
+    createInstance("UICorner", { CornerRadius = UDim.new(0, DESIGN.CornerRadius), Parent = box })
+    createInstance("UIPadding", { PaddingLeft = UDim.new(0, DESIGN.ComponentPadding), PaddingRight = UDim.new(0, DESIGN.ComponentPadding), Parent = box })
+
+    -- Container principal (título e amostra de cor)
+    local mainFrame = createInstance("Frame", {
+        Size = UDim2.new(1, 0, 0, 20),
+        BackgroundTransparency = 1,
+        Parent = box
     })
-    svBlack.Parent = svPalette
-    
-    local svThumb = Instance.new("Frame")
-    svThumb.Size = UDim2.new(0, 10, 0, 10)
-    svThumb.BackgroundTransparency = 1
-    svThumb.BorderSizePixel = 1
-    svThumb.BorderColor3 = Color3.new(0, 0, 0)
-    svThumb.AnchorPoint = Vector2.new(0.5, 0.5)
-    svThumb.Parent = svPalette
-    
-    local svThumbRing = Instance.new("Frame")
-    svThumbRing.Size = UDim2.new(1, 0, 1, 0)
-    svThumbRing.BackgroundColor3 = Color3.new(1, 1, 1)
-    svThumbRing.BackgroundTransparency = 1
-    svThumbRing.Parent = svThumb
 
-    local svThumbRingCorner = Instance.new("UICorner")
-    svThumbRingCorner.CornerRadius = UDim.new(0.5, 0)
-    svThumbRingCorner.Parent = svThumbRing
+    local titleLabel = createInstance("TextLabel", {
+        Size = UDim2.new(1, -50, 1, 0),
+        Font = Enum.Font.Roboto,
+        TextSize = 15,
+        TextColor3 = DESIGN.ComponentTextColor,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        BackgroundTransparency = 1,
+        Text = options.Title,
+        Parent = mainFrame
+    })
+
+    local colorBox = createInstance("Frame", {
+        Size = UDim2.new(0, 40, 0, 20),
+        Position = UDim2.new(1, -40, 0, 0),
+        AnchorPoint = Vector2.new(1, 0),
+        BackgroundColor3 = options.Color,
+        BorderSizePixel = 1,
+        BorderColor3 = Color3.new(0.2, 0.2, 0.2),
+        Parent = mainFrame
+    })
+    createInstance("UICorner", { CornerRadius = UDim.new(0, DESIGN.CornerRadius / 2), Parent = colorBox })
+
+    -- Container do seletor de cor (picker)
+    local pickerContainer = createInstance("Frame", {
+        Size = UDim2.new(1, -2 * DESIGN.ComponentPadding, 0, 190),
+        Position = UDim2.new(0, DESIGN.ComponentPadding, 0, 0),
+        BackgroundTransparency = 1,
+        Visible = false,
+        Parent = box
+    })
+    createInstance("UIListLayout", { FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 10), Parent = pickerContainer })
+
+    -- Paleta de Saturação/Valor (SV)
+    local svPalette = createInstance("Frame", { Size = UDim2.new(1, 0, 0, 150), BackgroundTransparency = 1, Parent = pickerContainer })
+    createInstance("UICorner", { CornerRadius = UDim.new(0, 5), Parent = svPalette })
+    local svWhiteGradient = createInstance("UIGradient", {
+        Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1,1,1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))}),
+        Parent = svPalette
+    })
+    local svBlackGradient = createInstance("UIGradient", {
+        Rotation = 90,
+        Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0,0,0,0)), ColorSequenceKeypoint.new(1, Color3.new(0,0,0,1))}),
+        Parent = svPalette
+    })
+    local svThumb = createInstance("Frame", {
+        Size = UDim2.new(0, 10, 0, 10),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 1,
+        BorderColor3 = Color3.new(0, 0, 0),
+        Parent = svPalette
+    })
+    local svThumbRing = createInstance("Frame", { Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 1, Parent = svThumb })
+    createInstance("UICorner", { CornerRadius = UDim.new(0.5, 0), Parent = svThumbRing })
 
     -- Seletor de Matiz (Hue)
-    local hueTrack = Instance.new("Frame")
-    hueTrack.Size = UDim2.new(1, 0, 0, 20)
-    hueTrack.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-    hueTrack.Parent = pickerContainer
-    
-    local hueCorner = Instance.new("UICorner")
-    hueCorner.CornerRadius = UDim.new(0, 5)
-    hueCorner.Parent = hueTrack
-
-    local hueGradient = Instance.new("UIGradient")
-    hueGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.new(1,0,0)),
-        ColorSequenceKeypoint.new(0.17, Color3.new(1,1,0)),
-        ColorSequenceKeypoint.new(0.33, Color3.new(0,1,0)),
-        ColorSequenceKeypoint.new(0.5, Color3.new(0,1,1)),
-        ColorSequenceKeypoint.new(0.67, Color3.new(0,0,1)),
-        ColorSequenceKeypoint.new(0.83, Color3.new(1,0,1)),
-        ColorSequenceKeypoint.new(1, Color3.new(1,0,0))
+    local hueTrack = createInstance("Frame", { Size = UDim2.new(1, 0, 0, 20), BackgroundColor3 = Color3.new(0.2, 0.2, 0.2), Parent = pickerContainer })
+    createInstance("UICorner", { CornerRadius = UDim.new(0, 5), Parent = hueTrack })
+    createInstance("UIGradient", {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.new(1,0,0)), ColorSequenceKeypoint.new(0.17, Color3.new(1,1,0)),
+            ColorSequenceKeypoint.new(0.33, Color3.new(0,1,0)), ColorSequenceKeypoint.new(0.5, Color3.new(0,1,1)),
+            ColorSequenceKeypoint.new(0.67, Color3.new(0,0,1)), ColorSequenceKeypoint.new(0.83, Color3.new(1,0,1)),
+            ColorSequenceKeypoint.new(1, Color3.new(1,0,0))
+        }),
+        Parent = hueTrack
     })
-    hueGradient.Parent = hueTrack
+    local hueThumb = createInstance("Frame", { Size = UDim2.new(0, 10, 1, 0), BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 1, BorderColor3 = Color3.new(0.1, 0.1, 0.1), Parent = hueTrack })
 
-    local hueThumb = Instance.new("Frame")
-    hueThumb.Size = UDim2.new(0, 10, 1, 0)
-    hueThumb.BackgroundColor3 = Color3.new(1, 1, 1)
-    hueThumb.BorderSizePixel = 1
-    hueThumb.BorderColor3 = Color3.new(0.1, 0.1, 0.1)
-    hueThumb.Parent = hueTrack
+    -- Overlay de bloqueio
+    local blockedOverlay = createInstance("Frame", {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 0.5,
+        BackgroundColor3 = Color3.new(0, 0, 0),
+        Visible = state.isBlocked,
+        Parent = box
+    })
 
-    -- Lógica de Arrastar
-    local draggingHue = false
-    local draggingSV = false
-    local h, s, v = color:ToHSV()
-    local selectedHue = h
-    local selectedSaturation = s
-    local selectedValue = v
-
-    local function updateColorVisuals(doTween)
-        local newColor = Color3.fromHSV(selectedHue, selectedSaturation, selectedValue)
+    -- // LÓGICA DO COMPONENTE //
+    local function updateColorVisuals(useTween: boolean)
+        local newColor = Color3.fromHSV(state.h, state.s, state.v)
         
-        if doTween then
+        if useTween then
             TweenService:Create(colorBox, TweenInfo.new(0.15), { BackgroundColor3 = newColor }):Play()
         else
             colorBox.BackgroundColor3 = newColor
         end
         
-        local hueColor = Color3.fromHSV(selectedHue, 1, 1)
-        svWhite.Color = ColorSequence.new({
+        local hueColor = Color3.fromHSV(state.h, 1, 1)
+        svWhiteGradient.Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
             ColorSequenceKeypoint.new(1, hueColor)
         })
 
-        if callback then pcall(callback, newColor) end
+        pcall(options.Callback, newColor)
     end
 
-    local function handleHueDrag(inputPos)
-        local x = math.clamp(inputPos.X - hueTrack.AbsolutePosition.X, 0, hueTrack.AbsoluteSize.X)
-        local frac = x / hueTrack.AbsoluteSize.X
-        selectedHue = frac
-        local hPosition = UDim2.new(frac, 0, 0.5, 0)
-        TweenService:Create(hueThumb, TweenInfo.new(0.05), { Position = hPosition }):Play()
-        updateColorVisuals(true)
-    end
-
-    local function handleSVDrag(inputPos)
-        local x = math.clamp(inputPos.X - svPalette.AbsolutePosition.X, 0, svPalette.AbsoluteSize.X)
-        local y = math.clamp(inputPos.Y - svPalette.AbsolutePosition.Y, 0, svPalette.AbsoluteSize.Y)
-        selectedSaturation = x / svPalette.AbsoluteSize.X
-        selectedValue = 1 - (y / svPalette.AbsoluteSize.Y)
-        local svPosition = UDim2.new(selectedSaturation, 0, 1 - selectedValue, 0)
-        TweenService:Create(svThumb, TweenInfo.new(0.05), { Position = svPosition }):Play()
-        updateColorVisuals(true)
-    end
-    
-    local function expand()
-        isExpanded = true
-        pickerContainer.Visible = true
-        local finalSize = UDim2.new(1, 0, 0, DESIGN.ComponentHeight + pickerContainer.Size.Y.Offset + listLayout.Padding.Offset)
-        TweenService:Create(box, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = finalSize }):Play()
-        
-        local h, s, v = color:ToHSV()
-        selectedHue, selectedSaturation, selectedValue = h, s, v
-        
-        hueThumb.Position = UDim2.new(selectedHue, 0, 0.5, 0)
-        svThumb.Position = UDim2.new(selectedSaturation, 0, 1 - selectedValue, 0)
+    local function updateThumbs()
+        hueThumb.Position = UDim2.fromScale(state.h, 0.5)
+        svThumb.Position = UDim2.fromScale(state.s, 1 - state.v)
         updateColorVisuals(false)
     end
 
+    local function handleHueDrag(inputPos: Vector2)
+        local relativeX = inputPos.X - hueTrack.AbsolutePosition.X
+        local frac = math.clamp(relativeX / hueTrack.AbsoluteSize.X, 0, 1)
+        state.h = frac
+        hueThumb.Position = UDim2.fromScale(frac, 0.5)
+        updateColorVisuals(true)
+    end
+
+    local function handleSVDrag(inputPos: Vector2)
+        local relativeX = inputPos.X - svPalette.AbsolutePosition.X
+        local relativeY = inputPos.Y - svPalette.AbsolutePosition.Y
+        state.s = math.clamp(relativeX / svPalette.AbsoluteSize.X, 0, 1)
+        state.v = 1 - math.clamp(relativeY / svPalette.AbsoluteSize.Y, 0, 1)
+        svThumb.Position = UDim2.fromScale(state.s, 1 - state.v)
+        updateColorVisuals(true)
+    end
+
+    local function expand()
+        if state.isExpanded then return end
+        state.isExpanded = true
+        
+        local h, s, v = colorBox.BackgroundColor3:ToHSV()
+        state.h, state.s, state.v = h, s, v
+        updateThumbs()
+        
+        pickerContainer.Visible = true
+        local finalSize = UDim2.new(1, 0, 0, DESIGN.ComponentHeight + pickerContainer.Size.Y.Offset + box.UIListLayout.Padding.Offset)
+        TweenService:Create(box, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = finalSize }):Play()
+    end
+
     local function collapse()
-        isExpanded = false
+        if not state.isExpanded then return end
+        state.isExpanded = false
+        
         local finalSize = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
         local closeTween = TweenService:Create(box, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = finalSize })
         closeTween:Play()
-        closeTween.Completed:Wait()
-        pickerContainer.Visible = false
+        closeTween.Completed:Once(function()
+            if not state.isExpanded then -- Garante que não foi reaberto durante a animação
+                pickerContainer.Visible = false
+            end
+        end)
     end
-    
-    local function handleInteraction(input)
-        if blocked then
+
+    local function onMainFrameClick(input)
+        if state.isBlocked then
             local originalPos = box.Position
-            local tween = TweenService:Create(box, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out, 1, true), { Position = originalPos + UDim2.new(0, 5, 0, 0) })
-            tween:Play()
+            TweenService:Create(box, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out, 1, true), { Position = originalPos + UDim2.new(0, 5, 0, 0) }):Play()
             return
         end
 
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            if isExpanded then
+            if state.isExpanded then
                 collapse()
             else
                 expand()
@@ -2108,61 +2077,60 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
         end
     end
 
-    -- Conexões de evento
-    table.insert(connections, mainFrame.InputBegan:Connect(handleInteraction))
+    -- // GERENCIAMENTO DE EVENTOS //
+    table.insert(connections, mainFrame.InputBegan:Connect(onMainFrameClick))
     
     table.insert(connections, hueTrack.InputBegan:Connect(function(input)
-        if isExpanded and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-            draggingHue = true
+        if state.isExpanded and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            state.isDraggingHue = true
             handleHueDrag(input.Position)
         end
     end))
 
     table.insert(connections, svPalette.InputBegan:Connect(function(input)
-        if isExpanded and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
-            draggingSV = true
+        if state.isExpanded and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            state.isDraggingSV = true
             handleSVDrag(input.Position)
         end
     end))
 
-    table.insert(connections, UIS.InputChanged:Connect(function(input)
-        if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+    table.insert(connections, UserInputService.InputChanged:Connect(function(input)
+        if not state.isExpanded then return end
+        if state.isDraggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             handleHueDrag(input.Position)
-        elseif draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        elseif state.isDraggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             handleSVDrag(input.Position)
         end
     end))
 
-    table.insert(connections, UIS.InputEnded:Connect(function(input)
+    table.insert(connections, UserInputService.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            draggingHue = false
-            draggingSV = false
+            state.isDraggingHue = false
+            state.isDraggingSV = false
         end
     end))
-    
-    -- API Pública
-    local publicApi = {
-        _instance = box,
-        _connections = connections
-    }
+
+    -- Inicializa a posição dos seletores
+    updateThumbs()
+
+    -- // API PÚBLICA DO COMPONENTE //
+    local publicApi = {}
 
     function publicApi.SetColor(newColor: Color3)
-        -- A cor inicial é definida aqui no início da função, mas o erro
-        -- na linha 302 do seu script de uso indica que a função SetColor
-        -- pode estar sendo chamada com um valor inesperado.
-        
-        -- Adicione uma verificação de tipo para evitar erros
-        if typeof(newColor) == "Color3" then
-            color = newColor
-            colorBox.BackgroundColor3 = newColor
-            if callback then pcall(callback, newColor) end
-            
-            local h, s, v = newColor:ToHSV()
-            selectedHue, selectedSaturation, selectedValue = h, s, v
-            updateColorVisuals(false)
-        else
-            warn("Attempted to set an invalid color for ColorPicker. Expected Color3, got "..typeof(newColor))
+        if typeof(newColor) ~= "Color3" then
+            warn("SetColor: Cor inválida. Esperado Color3, recebido " .. typeof(newColor))
+            return
         end
+        
+        colorBox.BackgroundColor3 = newColor
+        local h, s, v = newColor:ToHSV()
+        state.h, state.s, state.v = h, s, v
+        
+        if state.isExpanded then
+            updateThumbs()
+        end
+        
+        pcall(options.Callback, newColor)
     end
 
     function publicApi.GetColor(): Color3
@@ -2170,20 +2138,38 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     end
 
     function publicApi.SetBlocked(isBlocked: boolean)
-        blocked = isBlocked
+        state.isBlocked = isBlocked
         blockedOverlay.Visible = isBlocked
     end
 
     function publicApi.Destroy()
-        for _, c in ipairs(connections) do
-            if c and c.Connected then pcall(function() c:Disconnect() end) end
+        for _, connection in ipairs(connections) do
+            connection:Disconnect()
         end
-        if publicApi._instance then
-            publicApi._instance:Destroy()
-            publicApi._instance = nil
+        table.clear(connections)
+        
+        if box and box.Parent then
+            box:Destroy()
+        end
+        
+        -- Limpa a referência na API para evitar uso após destruição
+        for k in pairs(publicApi) do
+            publicApi[k] = nil
+        end
+        
+        -- Remove da lista de componentes da aba, se aplicável
+        for i, comp in ipairs(tab.Components) do
+            if comp == publicApi then
+                table.remove(tab.Components, i)
+                break
+            end
         end
     end
     
+    -- Adiciona a instância e as conexões à API para referência, se necessário
+    publicApi._instance = box
+    publicApi._connections = connections
+
     table.insert(tab.Components, publicApi)
     return publicApi
 end
