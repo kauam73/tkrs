@@ -1841,4 +1841,323 @@ function Tekscripts:CreateFloatingButton(options: {
     return publicApi
 end
 
+-- Tekscripts:CreateColorPicker Component
+--[[
+    options: {
+        Title: string?,
+        Color: Color3?,
+        Blocked: boolean?,
+        Callback: ((Color3) -> ())?
+    }
+]]
+
+function Tekscripts:CreateColorPicker(tab: any, options: {
+    Title: string?,
+    Color: Color3?,
+    Blocked: boolean?,
+    Callback: ((Color3) -> ())?
+})
+    assert(tab and tab.Container, "Invalid Tab object provided to CreateColorPicker")
+    
+    options = options or {}
+    local title = options.Title or "Color"
+    local color = options.Color or Color3.new(1, 1, 1)
+    local blocked = options.Blocked or false
+    local callback = options.Callback
+    
+    local connections: { RBXScriptConnection } = {}
+
+    local function updateColorBox()
+        -- Implementação da atualização visual aqui...
+    end
+
+    -- Criação da UI principal
+    local box = Instance.new("Frame")
+    box.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
+    box.BackgroundColor3 = DESIGN.ComponentBackground
+    box.BorderSizePixel = 0
+    box.Parent = tab.Container
+
+    local boxCorner = Instance.new("UICorner")
+    boxCorner.CornerRadius = UDim.new(0, DESIGN.CornerRadius)
+    boxCorner.Parent = box
+
+    local padding = Instance.new("UIPadding")
+    padding.PaddingLeft = UDim.new(0, DESIGN.ComponentPadding)
+    padding.PaddingRight = UDim.new(0, DESIGN.ComponentPadding)
+    padding.Parent = box
+
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = box
+
+    -- Container do título e da caixa de cor
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Size = UDim2.new(1, 0, 1, 0)
+    mainFrame.BackgroundTransparency = 1
+    mainFrame.Parent = container
+
+    -- Título
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Size = UDim2.new(1, -50, 1, 0)
+    titleLabel.Position = UDim2.new(0, 0, 0, 0)
+    titleLabel.Font = Enum.Font.Roboto
+    titleLabel.TextSize = 15
+    titleLabel.TextColor3 = DESIGN.ComponentTextColor
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Text = title
+    titleLabel.Parent = mainFrame
+
+    -- Caixa de cor
+    local colorBox = Instance.new("Frame")
+    colorBox.Size = UDim2.new(0, 40, 0, 20)
+    colorBox.Position = UDim2.new(1, -40, 0, 0)
+    colorBox.AnchorPoint = Vector2.new(1, 0)
+    colorBox.BackgroundColor3 = color
+    colorBox.BorderSizePixel = 1
+    colorBox.BorderColor3 = Color3.new(0.2, 0.2, 0.2)
+    colorBox.Parent = mainFrame
+
+    local colorBoxCorner = Instance.new("UICorner")
+    colorBoxCorner.CornerRadius = UDim.new(0, DESIGN.CornerRadius / 2)
+    colorBoxCorner.Parent = colorBox
+
+    -- Logica do bloqueio
+    local blockedOverlay = Instance.new("Frame")
+    blockedOverlay.Size = UDim2.new(1, 0, 1, 0)
+    blockedOverlay.BackgroundTransparency = 0.5
+    blockedOverlay.BackgroundColor3 = Color3.new(0, 0, 0)
+    blockedOverlay.Visible = blocked
+    blockedOverlay.Parent = box
+
+    -- Lógica de seleção de cor flutuante
+    local function createColorPickerUI()
+        local h, s, v = color:ToHSV()
+        local selectedHue = h
+        local selectedSaturation = s
+        local selectedValue = v
+
+        local picker = Instance.new("Frame")
+        picker.Size = UDim2.new(0, 250, 0, 250)
+        picker.Position = UDim2.new(0.5, 0, 0.5, 0)
+        picker.AnchorPoint = Vector2.new(0.5, 0.5)
+        picker.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+        picker.BorderSizePixel = 1
+        picker.BorderColor3 = Color3.new(0, 0, 0)
+        picker.ZIndex = 100 -- Certifica-se de que fica acima de tudo
+        picker.Name = "ColorPickerUI"
+        picker.Parent = game.Players.LocalPlayer.PlayerGui
+
+        local pickerCorner = Instance.new("UICorner")
+        pickerCorner.CornerRadius = UDim.new(0, 10)
+        pickerCorner.Parent = picker
+
+        local closeButton = Instance.new("TextButton")
+        closeButton.Size = UDim2.new(0, 20, 0, 20)
+        closeButton.Position = UDim2.new(1, -25, 0, 5)
+        closeButton.AnchorPoint = Vector2.new(1, 0)
+        closeButton.BackgroundColor3 = Color3.new(0.8, 0.1, 0.1)
+        closeButton.Text = "X"
+        closeButton.Font = Enum.Font.Roboto
+        closeButton.TextSize = 15
+        closeButton.TextColor3 = Color3.new(1, 1, 1)
+        closeButton.Parent = picker
+
+        table.insert(connections, closeButton.MouseButton1Click:Connect(function()
+            picker:Destroy()
+        end))
+
+        -- Seletor de Matiz (Hue)
+        local hueTrack = Instance.new("Frame")
+        hueTrack.Size = UDim2.new(1, -20, 0, 20)
+        hueTrack.Position = UDim2.new(0.5, 0, 1, -25)
+        hueTrack.AnchorPoint = Vector2.new(0.5, 1)
+        hueTrack.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+        hueTrack.Parent = picker
+
+        local hueGradient = Instance.new("UIGradient")
+        hueGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.new(1,0,0)),
+            ColorSequenceKeypoint.new(0.17, Color3.new(1,1,0)),
+            ColorSequenceKeypoint.new(0.33, Color3.new(0,1,0)),
+            ColorSequenceKeypoint.new(0.5, Color3.new(0,1,1)),
+            ColorSequenceKeypoint.new(0.67, Color3.new(0,0,1)),
+            ColorSequenceKeypoint.new(0.83, Color3.new(1,0,1)),
+            ColorSequenceKeypoint.new(1, Color3.new(1,0,0))
+        })
+        hueGradient.Parent = hueTrack
+
+        local hueThumb = Instance.new("Frame")
+        hueThumb.Size = UDim2.new(0, 10, 1, 0)
+        hueThumb.BackgroundColor3 = Color3.new(1, 1, 1)
+        hueThumb.BorderSizePixel = 1
+        hueThumb.BorderColor3 = Color3.new(0.1, 0.1, 0.1)
+        hueThumb.Parent = hueTrack
+
+        -- Paleta de Saturação e Valor (Saturation & Value)
+        local svPalette = Instance.new("Frame")
+        svPalette.Size = UDim2.new(1, -20, 0, 150)
+        svPalette.Position = UDim2.new(0.5, 0, 0, 20)
+        svPalette.AnchorPoint = Vector2.new(0.5, 0)
+        svPalette.BackgroundTransparency = 1
+        svPalette.Parent = picker
+
+        local svCorner = Instance.new("UICorner")
+        svCorner.CornerRadius = UDim.new(0, 5)
+        svCorner.Parent = svPalette
+
+        local svWhite = Instance.new("UIGradient")
+        svWhite.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromHSV(0,0,1)),
+            ColorSequenceKeypoint.new(1, Color3.fromHSV(0,1,1))
+        })
+        svWhite.Parent = svPalette
+
+        local svBlack = Instance.new("UIGradient")
+        svBlack.Rotation = 90
+        svBlack.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.new(0,0,0,0)),
+            ColorSequenceKeypoint.new(1, Color3.new(0,0,0,1))
+        })
+        svBlack.Parent = svPalette
+
+        local svThumb = Instance.new("Frame")
+        svThumb.Size = UDim2.new(0, 10, 0, 10)
+        svThumb.BackgroundColor3 = Color3.new(1, 1, 1)
+        svThumb.BackgroundTransparency = 1
+        svThumb.BorderSizePixel = 1
+        svThumb.BorderColor3 = Color3.new(0, 0, 0)
+        svThumb.Position = UDim2.new(selectedSaturation, 0, 1 - selectedValue, 0)
+        svThumb.AnchorPoint = Vector2.new(0.5, 0.5)
+        svThumb.Parent = svPalette
+
+        -- Lógica de Arrastar
+        local draggingHue = false
+        local draggingSV = false
+        local UIS = game:GetService("UserInputService")
+        local newConnections = {}
+
+        local function updateHSV()
+            color = Color3.fromHSV(selectedHue, selectedSaturation, selectedValue)
+            colorBox.BackgroundColor3 = color
+            svPalette.BackgroundColor3 = Color3.fromHSV(selectedHue, 1, 1) -- Fundo da paleta HSV
+            if callback then pcall(callback, color) end
+        end
+
+        local function handleHueDrag(inputPos)
+            local x = math.clamp(inputPos.X - hueTrack.AbsolutePosition.X, 0, hueTrack.AbsoluteSize.X)
+            local frac = x / hueTrack.AbsoluteSize.X
+            selectedHue = frac
+            hueThumb.Position = UDim2.new(frac, 0, 0.5, 0)
+            updateHSV()
+        end
+
+        local function handleSVDrag(inputPos)
+            local x = math.clamp(inputPos.X - svPalette.AbsolutePosition.X, 0, svPalette.AbsoluteSize.X)
+            local y = math.clamp(inputPos.Y - svPalette.AbsolutePosition.Y, 0, svPalette.AbsoluteSize.Y)
+            selectedSaturation = x / svPalette.AbsoluteSize.X
+            selectedValue = 1 - (y / svPalette.AbsoluteSize.Y)
+            svThumb.Position = UDim2.new(selectedSaturation, 0, 1 - selectedValue, 0)
+            updateHSV()
+        end
+
+        table.insert(newConnections, hueTrack.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                draggingHue = true
+                handleHueDrag(input.Position)
+            end
+        end))
+
+        table.insert(newConnections, svPalette.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                draggingSV = true
+                handleSVDrag(input.Position)
+            end
+        end))
+
+        table.insert(newConnections, UIS.InputChanged:Connect(function(input)
+            if draggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                handleHueDrag(input.Position)
+            elseif draggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+                handleSVDrag(input.Position)
+            end
+        end))
+
+        table.insert(newConnections, UIS.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                draggingHue = false
+                draggingSV = false
+            end
+        end))
+
+        -- Adiciona as novas conexões à lista principal para que sejam destruídas com o componente
+        for _, c in ipairs(newConnections) do
+            table.insert(connections, c)
+        end
+        
+        -- Configuração inicial
+        updateHSV()
+    end
+    
+    local function handleInteraction(input)
+        if blocked then
+            -- Animação de bloqueio
+            local originalPos = box.Position
+            local tween = game:GetService("TweenService"):Create(box, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out, 1, true), { Position = originalPos + UDim2.new(0, 5, 0, 0) })
+            tween:Play()
+            return
+        end
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            local existingPicker = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ColorPickerUI")
+            if existingPicker then
+                existingPicker:Destroy()
+            end
+            createColorPickerUI()
+        end
+    end
+
+    table.insert(connections, box.InputBegan:Connect(handleInteraction))
+
+    -- API Pública
+    local publicApi = {
+        _instance = box,
+        _connections = connections
+    }
+
+    function publicApi.SetColor(newColor: Color3)
+        color = newColor
+        colorBox.BackgroundColor3 = newColor
+        if callback then pcall(callback, newColor) end
+    end
+
+    function publicApi.GetColor(): Color3
+        return color
+    end
+
+    function publicApi.SetBlocked(isBlocked: boolean)
+        blocked = isBlocked
+        blockedOverlay.Visible = isBlocked
+    end
+
+    function publicApi.Destroy()
+        for _, c in ipairs(connections) do
+            if c and c.Connected then pcall(function() c:Disconnect() end) end
+        end
+        if publicApi._instance then
+            publicApi._instance:Destroy()
+            publicApi._instance = nil
+        end
+        local existingPicker = game.Players.LocalPlayer.PlayerGui:FindFirstChild("ColorPickerUI")
+        if existingPicker then
+            existingPicker:Destroy()
+        end
+    end
+    
+    table.insert(tab.Components, publicApi)
+    return publicApi
+end
+
 return Tekscripts
