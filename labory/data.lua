@@ -1841,16 +1841,6 @@ function Tekscripts:CreateFloatingButton(options: {
     return publicApi
 end
 
--- Tekscripts:CreateColorPicker Component
---[[
-    options: {
-        Title: string?,
-        Color: Color3?,
-        Blocked: boolean?,
-        Callback: ((Color3) -> ())?
-    }
-]]
-
 function Tekscripts:CreateColorPicker(tab: any, options: {
     Title: string?,
     Color: Color3?,
@@ -1866,10 +1856,8 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     local callback = options.Callback
     
     local connections: { RBXScriptConnection } = {}
-
-    local function updateColorBox()
-        -- Implementação da atualização visual aqui...
-    end
+    local UIS = game:GetService("UserInputService")
+    local TweenService = game:GetService("TweenService")
 
     -- Criação da UI principal
     local box = Instance.new("Frame")
@@ -1934,7 +1922,7 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
 
     -- Lógica de seleção de cor flutuante
     local function createColorPickerUI()
-        local h, s, v = color:ToHSV()
+        local h, s, v = colorBox.BackgroundColor3:ToHSV()
         local selectedHue = h
         local selectedSaturation = s
         local selectedValue = v
@@ -1995,6 +1983,8 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
         hueThumb.BorderSizePixel = 1
         hueThumb.BorderColor3 = Color3.new(0.1, 0.1, 0.1)
         hueThumb.Parent = hueTrack
+        local hPosition = UDim2.new(selectedHue, 0, 0.5, 0)
+        TweenService:Create(hueThumb, TweenInfo.new(0.1), { Position = hPosition }):Play()
 
         -- Paleta de Saturação e Valor (Saturation & Value)
         local svPalette = Instance.new("Frame")
@@ -2010,8 +2000,8 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
 
         local svWhite = Instance.new("UIGradient")
         svWhite.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromHSV(0,0,1)),
-            ColorSequenceKeypoint.new(1, Color3.fromHSV(0,1,1))
+            ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
+            ColorSequenceKeypoint.new(1, Color3.fromHSV(selectedHue, 1, 1))
         })
         svWhite.Parent = svPalette
 
@@ -2029,29 +2019,33 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
         svThumb.BackgroundTransparency = 1
         svThumb.BorderSizePixel = 1
         svThumb.BorderColor3 = Color3.new(0, 0, 0)
-        svThumb.Position = UDim2.new(selectedSaturation, 0, 1 - selectedValue, 0)
         svThumb.AnchorPoint = Vector2.new(0.5, 0.5)
         svThumb.Parent = svPalette
+        local svPosition = UDim2.new(selectedSaturation, 0, 1 - selectedValue, 0)
+        TweenService:Create(svThumb, TweenInfo.new(0.1), { Position = svPosition }):Play()
 
         -- Lógica de Arrastar
         local draggingHue = false
         local draggingSV = false
-        local UIS = game:GetService("UserInputService")
         local newConnections = {}
 
-        local function updateHSV()
-            color = Color3.fromHSV(selectedHue, selectedSaturation, selectedValue)
-            colorBox.BackgroundColor3 = color
-            svPalette.BackgroundColor3 = Color3.fromHSV(selectedHue, 1, 1) -- Fundo da paleta HSV
-            if callback then pcall(callback, color) end
+        local function updateColorVisuals()
+            local newColor = Color3.fromHSV(selectedHue, selectedSaturation, selectedValue)
+            colorBox.BackgroundColor3 = newColor
+            svWhite.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
+                ColorSequenceKeypoint.new(1, Color3.fromHSV(selectedHue, 1, 1))
+            })
+            if callback then pcall(callback, newColor) end
         end
 
         local function handleHueDrag(inputPos)
             local x = math.clamp(inputPos.X - hueTrack.AbsolutePosition.X, 0, hueTrack.AbsoluteSize.X)
             local frac = x / hueTrack.AbsoluteSize.X
             selectedHue = frac
-            hueThumb.Position = UDim2.new(frac, 0, 0.5, 0)
-            updateHSV()
+            local hPosition = UDim2.new(frac, 0, 0.5, 0)
+            hueThumb.Position = hPosition
+            updateColorVisuals()
         end
 
         local function handleSVDrag(inputPos)
@@ -2059,8 +2053,9 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
             local y = math.clamp(inputPos.Y - svPalette.AbsolutePosition.Y, 0, svPalette.AbsoluteSize.Y)
             selectedSaturation = x / svPalette.AbsoluteSize.X
             selectedValue = 1 - (y / svPalette.AbsoluteSize.Y)
-            svThumb.Position = UDim2.new(selectedSaturation, 0, 1 - selectedValue, 0)
-            updateHSV()
+            local svPosition = UDim2.new(selectedSaturation, 0, 1 - selectedValue, 0)
+            svThumb.Position = svPosition
+            updateColorVisuals()
         end
 
         table.insert(newConnections, hueTrack.InputBegan:Connect(function(input)
@@ -2092,20 +2087,15 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
             end
         end))
 
-        -- Adiciona as novas conexões à lista principal para que sejam destruídas com o componente
         for _, c in ipairs(newConnections) do
             table.insert(connections, c)
         end
-        
-        -- Configuração inicial
-        updateHSV()
     end
     
     local function handleInteraction(input)
         if blocked then
-            -- Animação de bloqueio
             local originalPos = box.Position
-            local tween = game:GetService("TweenService"):Create(box, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out, 1, true), { Position = originalPos + UDim2.new(0, 5, 0, 0) })
+            local tween = TweenService:Create(box, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out, 1, true), { Position = originalPos + UDim2.new(0, 5, 0, 0) })
             tween:Play()
             return
         end
@@ -2134,7 +2124,7 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     end
 
     function publicApi.GetColor(): Color3
-        return color
+        return colorBox.BackgroundColor3
     end
 
     function publicApi.SetBlocked(isBlocked: boolean)
@@ -2159,5 +2149,6 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     table.insert(tab.Components, publicApi)
     return publicApi
 end
+
 
 return Tekscripts
