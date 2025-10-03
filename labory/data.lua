@@ -1851,6 +1851,16 @@ end
     }
 ]]
 
+-- Tekscripts:CreateColorPicker Component
+--[[
+    options: {
+        Title: string?,
+        Color: Color3?,
+        Blocked: boolean?,
+        Callback: ((Color3) -> ())?
+    }
+]]
+
 function Tekscripts:CreateColorPicker(tab: any, options: {
     Title: string?,
     Color: Color3?,
@@ -1891,8 +1901,8 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     padding.PaddingLeft = UDim.new(0, DESIGN.ComponentPadding)
     padding.PaddingRight = UDim.new(0, DESIGN.ComponentPadding)
     padding.Parent = box
-
-    -- Container do título e da caixa de cor (semelhante ao layout anterior)
+    
+    -- Container do título e da caixa de cor
     local mainFrame = Instance.new("Frame")
     mainFrame.Size = UDim2.new(1, 0, 0, 20)
     mainFrame.BackgroundTransparency = 1
@@ -1934,18 +1944,65 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     
     -- ############ UI DO COLOR PICKER INTEGRADA ############
     
-    local colorPickerFrame = Instance.new("Frame")
-    colorPickerFrame.Size = UDim2.new(1, 0, 0, 200) -- Altura dinâmica
-    colorPickerFrame.BackgroundTransparency = 1
-    colorPickerFrame.Visible = false
-    colorPickerFrame.Parent = box
+    local pickerContainer = Instance.new("Frame")
+    pickerContainer.Size = UDim2.new(1, -2 * DESIGN.ComponentPadding, 0, 190)
+    pickerContainer.Position = UDim2.new(0, DESIGN.ComponentPadding, 0, 0)
+    pickerContainer.BackgroundTransparency = 1
+    pickerContainer.Visible = false
+    pickerContainer.Parent = box
+    
+    local pickerLayout = Instance.new("UIListLayout")
+    pickerLayout.FillDirection = Enum.FillDirection.Vertical
+    pickerLayout.Padding = UDim.new(0, 10)
+    pickerLayout.Parent = pickerContainer
+
+    -- Paleta de Saturação e Valor (Saturation & Value)
+    local svPalette = Instance.new("Frame")
+    svPalette.Size = UDim2.new(1, 0, 0, 150)
+    svPalette.BackgroundTransparency = 1
+    svPalette.Parent = pickerContainer
+
+    local svCorner = Instance.new("UICorner")
+    svCorner.CornerRadius = UDim.new(0, 5)
+    svCorner.Parent = svPalette
+
+    local svWhite = Instance.new("UIGradient")
+    svWhite.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
+        ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))
+    })
+    svWhite.Parent = svPalette
+
+    local svBlack = Instance.new("UIGradient")
+    svBlack.Rotation = 90
+    svBlack.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.new(0,0,0,0)),
+        ColorSequenceKeypoint.new(1, Color3.new(0,0,0,1))
+    })
+    svBlack.Parent = svPalette
+    
+    local svThumb = Instance.new("Frame")
+    svThumb.Size = UDim2.new(0, 10, 0, 10)
+    svThumb.BackgroundTransparency = 1
+    svThumb.BorderSizePixel = 1
+    svThumb.BorderColor3 = Color3.new(0, 0, 0)
+    svThumb.AnchorPoint = Vector2.new(0.5, 0.5)
+    svThumb.Parent = svPalette
+    
+    local svThumbRing = Instance.new("UICircle") -- Novo toque visual
+    svThumbRing.FillColor = Color3.new(1, 1, 1)
+    svThumbRing.FillTransparency = 1
+    svThumbRing.Parent = svThumb
 
     -- Seletor de Matiz (Hue)
     local hueTrack = Instance.new("Frame")
     hueTrack.Size = UDim2.new(1, 0, 0, 20)
-    hueTrack.Position = UDim2.new(0, 0, 0, 170)
     hueTrack.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-    hueTrack.Parent = colorPickerFrame
+    hueTrack.Parent = pickerContainer
+    
+    local hueCorner = Instance.new("UICorner")
+    hueCorner.CornerRadius = UDim.new(0, 5)
+    hueCorner.Parent = hueTrack
 
     local hueGradient = Instance.new("UIGradient")
     hueGradient.Color = ColorSequence.new({
@@ -1966,38 +2023,8 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     hueThumb.BorderColor3 = Color3.new(0.1, 0.1, 0.1)
     hueThumb.Parent = hueTrack
 
-    -- Paleta de Saturação e Valor (Saturation & Value)
-    local svPalette = Instance.new("Frame")
-    svPalette.Size = UDim2.new(1, 0, 0, 150)
-    svPalette.Position = UDim2.new(0, 0, 0, 0)
-    svPalette.BackgroundTransparency = 1
-    svPalette.Parent = colorPickerFrame
-
-    local svWhite = Instance.new("UIGradient")
-    svWhite.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
-        ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))
-    })
-    svWhite.Parent = svPalette
-
-    local svBlack = Instance.new("UIGradient")
-    svBlack.Rotation = 90
-    svBlack.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.new(0,0,0,0)),
-        ColorSequenceKeypoint.new(1, Color3.new(0,0,0,1))
-    })
-    svBlack.Parent = svPalette
-
-    local svThumb = Instance.new("Frame")
-    svThumb.Size = UDim2.new(0, 10, 0, 10)
-    svThumb.BackgroundColor3 = Color3.new(1, 1, 1)
-    svThumb.BackgroundTransparency = 1
-    svThumb.BorderSizePixel = 1
-    svThumb.BorderColor3 = Color3.new(0, 0, 0)
-    svThumb.AnchorPoint = Vector2.new(0.5, 0.5)
-    svThumb.Parent = svPalette
-
-    -- Lógica de Arrastar
+    -- ############ LÓGICA DE INTERAÇÃO DO COMPONENTE ############
+    
     local draggingHue = false
     local draggingSV = false
     local h, s, v = color:ToHSV()
@@ -2005,15 +2032,22 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     local selectedSaturation = s
     local selectedValue = v
 
-    local function updateColorVisuals()
-        color = Color3.fromHSV(selectedHue, selectedSaturation, selectedValue)
-        colorBox.BackgroundColor3 = color
+    local function updateColorVisuals(doTween)
+        local newColor = Color3.fromHSV(selectedHue, selectedSaturation, selectedValue)
+        
+        if doTween then
+            TweenService:Create(colorBox, TweenInfo.new(0.15), { BackgroundColor3 = newColor }):Play()
+        else
+            colorBox.BackgroundColor3 = newColor
+        end
+        
         local hueColor = Color3.fromHSV(selectedHue, 1, 1)
         svWhite.Color = ColorSequence.new({
             ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
             ColorSequenceKeypoint.new(1, hueColor)
         })
-        if callback then pcall(callback, color) end
+
+        if callback then pcall(callback, newColor) end
     end
 
     local function handleHueDrag(inputPos)
@@ -2021,8 +2055,8 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
         local frac = x / hueTrack.AbsoluteSize.X
         selectedHue = frac
         local hPosition = UDim2.new(frac, 0, 0.5, 0)
-        hueThumb.Position = hPosition
-        updateColorVisuals()
+        TweenService:Create(hueThumb, TweenInfo.new(0.05), { Position = hPosition }):Play()
+        updateColorVisuals(true)
     end
 
     local function handleSVDrag(inputPos)
@@ -2031,32 +2065,31 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
         selectedSaturation = x / svPalette.AbsoluteSize.X
         selectedValue = 1 - (y / svPalette.AbsoluteSize.Y)
         local svPosition = UDim2.new(selectedSaturation, 0, 1 - selectedValue, 0)
-        svThumb.Position = svPosition
-        updateColorVisuals()
+        TweenService:Create(svThumb, TweenInfo.new(0.05), { Position = svPosition }):Play()
+        updateColorVisuals(true)
     end
-    
-    -- ############ LÓGICA DE INTERAÇÃO DO COMPONENTE ############
     
     local function expand()
         isExpanded = true
-        colorPickerFrame.Visible = true
-        local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        TweenService:Create(box, tweenInfo, { Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight + colorPickerFrame.Size.Y.Offset) }):Play()
+        pickerContainer.Visible = true
+        local finalSize = UDim2.new(1, 0, 0, DESIGN.ComponentHeight + pickerContainer.Size.Y.Offset)
+        TweenService:Create(box, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = finalSize }):Play()
         
         local h, s, v = color:ToHSV()
         selectedHue, selectedSaturation, selectedValue = h, s, v
         
         hueThumb.Position = UDim2.new(selectedHue, 0, 0.5, 0)
         svThumb.Position = UDim2.new(selectedSaturation, 0, 1 - selectedValue, 0)
-        updateColorVisuals()
+        updateColorVisuals(false)
     end
 
     local function collapse()
         isExpanded = false
-        local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-        local closeTween = TweenService:Create(box, tweenInfo, { Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight) })
+        local finalSize = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
+        local closeTween = TweenService:Create(box, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = finalSize })
+        closeTween:Play()
         closeTween.Completed:Wait()
-        colorPickerFrame.Visible = false
+        pickerContainer.Visible = false
     end
     
     local function handleInteraction(input)
@@ -2077,7 +2110,8 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     end
 
     -- Conexões de evento
-    table.insert(connections, box.InputBegan:Connect(handleInteraction))
+    table.insert(connections, mainFrame.InputBegan:Connect(handleInteraction))
+    
     table.insert(connections, hueTrack.InputBegan:Connect(function(input)
         if isExpanded and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
             draggingHue = true
@@ -2118,10 +2152,9 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
         colorBox.BackgroundColor3 = newColor
         if callback then pcall(callback, newColor) end
         
-        -- Atualiza os seletores internos quando a cor é definida externamente
         local h, s, v = newColor:ToHSV()
         selectedHue, selectedSaturation, selectedValue = h, s, v
-        updateColorVisuals()
+        updateColorVisuals(false)
     end
 
     function publicApi.GetColor(): Color3
@@ -2146,5 +2179,6 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     table.insert(tab.Components, publicApi)
     return publicApi
 end
+
 
 return Tekscripts
