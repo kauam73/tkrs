@@ -1841,6 +1841,16 @@ function Tekscripts:CreateFloatingButton(options: {
     return publicApi
 end
 
+-- Tekscripts:CreateColorPicker Component
+--[[
+    options: {
+        Title: string?,
+        Color: Color3?,
+        Blocked: boolean?,
+        Callback: ((Color3) -> ())?
+    }
+]]
+
 function Tekscripts:CreateColorPicker(tab: any, options: {
     Title: string?,
     Color: Color3?,
@@ -1852,7 +1862,6 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     options = options or {}
     local title = options.Title or "Color"
     
-    -- Verificação robusta do tipo Color3
     local color = Color3.new(1, 1, 1)
     if options.Color and typeof(options.Color) == "Color3" then
         color = options.Color
@@ -1975,10 +1984,16 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     svThumb.AnchorPoint = Vector2.new(0.5, 0.5)
     svThumb.Parent = svPalette
     
-    local svThumbRing = Instance.new("UICircle")
-    svThumbRing.FillColor = Color3.new(1, 1, 1)
-    svThumbRing.FillTransparency = 1
+    -- Substituição do UICircle por um Frame com UICorner para criar um círculo
+    local svThumbRing = Instance.new("Frame")
+    svThumbRing.Size = UDim2.new(1, 0, 1, 0)
+    svThumbRing.BackgroundColor3 = Color3.new(1, 1, 1)
+    svThumbRing.BackgroundTransparency = 1
     svThumbRing.Parent = svThumb
+
+    local svThumbRingCorner = Instance.new("UICorner")
+    svThumbRingCorner.CornerRadius = UDim.new(0.5, 0) -- raio de 50% para formar um círculo
+    svThumbRingCorner.Parent = svThumbRing
 
     -- Seletor de Matiz (Hue)
     local hueTrack = Instance.new("Frame")
