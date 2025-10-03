@@ -1984,7 +1984,6 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     svThumb.AnchorPoint = Vector2.new(0.5, 0.5)
     svThumb.Parent = svPalette
     
-    -- Substituição do UICircle por um Frame com UICorner para criar um círculo
     local svThumbRing = Instance.new("Frame")
     svThumbRing.Size = UDim2.new(1, 0, 1, 0)
     svThumbRing.BackgroundColor3 = Color3.new(1, 1, 1)
@@ -1992,7 +1991,7 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     svThumbRing.Parent = svThumb
 
     local svThumbRingCorner = Instance.new("UICorner")
-    svThumbRingCorner.CornerRadius = UDim.new(0.5, 0) -- raio de 50% para formar um círculo
+    svThumbRingCorner.CornerRadius = UDim.new(0.5, 0)
     svThumbRingCorner.Parent = svThumbRing
 
     -- Seletor de Matiz (Hue)
@@ -2148,13 +2147,22 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     }
 
     function publicApi.SetColor(newColor: Color3)
-        color = newColor
-        colorBox.BackgroundColor3 = newColor
-        if callback then pcall(callback, newColor) end
+        -- A cor inicial é definida aqui no início da função, mas o erro
+        -- na linha 302 do seu script de uso indica que a função SetColor
+        -- pode estar sendo chamada com um valor inesperado.
         
-        local h, s, v = newColor:ToHSV()
-        selectedHue, selectedSaturation, selectedValue = h, s, v
-        updateColorVisuals(false)
+        -- Adicione uma verificação de tipo para evitar erros
+        if typeof(newColor) == "Color3" then
+            color = newColor
+            colorBox.BackgroundColor3 = newColor
+            if callback then pcall(callback, newColor) end
+            
+            local h, s, v = newColor:ToHSV()
+            selectedHue, selectedSaturation, selectedValue = h, s, v
+            updateColorVisuals(false)
+        else
+            warn("Attempted to set an invalid color for ColorPicker. Expected Color3, got "..typeof(newColor))
+        end
     end
 
     function publicApi.GetColor(): Color3
