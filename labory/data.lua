@@ -10,64 +10,104 @@ local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
 
 ---
--- Tabela de Constantes de Design (Tema Dark Clean)
+-- Tabela de Constantes de Design (Tema Dark Clean com mais contraste)
 ---
 local DESIGN = {
-    -- Cores
-    WindowColor1 = Color3.fromRGB(32, 32, 32), -- fundo principal mais neutro
-    WindowColor2 = Color3.fromRGB(24, 24, 24), -- fundo secundário
-    TitleColor = Color3.fromRGB(230, 230, 230), -- branco suave
-    ComponentBackground = Color3.fromRGB(45, 45, 45), -- caixas discretas
-    ComponentTextColor = Color3.fromRGB(230, 230, 230), -- texto levemente cinza
-    ComponentHoverColor = Color3.fromRGB(65, 65, 65), -- hover sutil
-    ActiveToggleColor = Color3.fromRGB(90, 140, 200), -- azul acinzentado elegante
-    InactiveToggleColor = Color3.fromRGB(55, 55, 55), -- cinza apagado
-    DropdownHoverColor = Color3.fromRGB(70, 70, 70), -- hover de opções
-    MinimizeButtonColor = Color3.fromRGB(200, 60, 60), -- vermelho menos saturado
-    CloseButtonColor = Color3.fromRGB(220, 70, 70), -- vermelho suave
-    FloatButtonColor = Color3.fromRGB(50, 50, 50), -- botão flutuante discreto
-    TabActiveColor = Color3.fromRGB(90, 140, 200), -- mesma cor do toggle ativo
-    TabInactiveColor = Color3.fromRGB(35, 35, 35), -- abas inativas bem neutras
-    ResizeHandleColor = Color3.fromRGB(60, 60, 60), -- quase invisível
-    NotifyBackground = Color3.fromRGB(40, 40, 40), -- notificações clean
-    NotifyTextColor = Color3.fromRGB(235, 235, 235), -- texto claro mas suave
-    TagBackground = Color3.fromRGB(90, 140, 200), -- mesma cor do ativo (consistência)
-    InputBackgroundColor = Color3.fromRGB(38, 38, 38), -- inputs discretos
-    InputTextColor = Color3.fromRGB(240, 240, 240), -- texto claro mas não puro branco
-    HRColor = Color3.fromRGB(80, 80, 80), -- divisória mais visível
-    BlockScreenColor = Color3.fromRGB(0, 0, 0), -- overlay preto
-    SliderTrackColor = Color3.fromRGB(60, 60, 60),
-    SliderFillColor = Color3.fromRGB(90, 140, 200), -- Mesma cor do ativo para consistência
-    ThumbColor = Color3.fromRGB(240, 240, 240),
-    ThumbOutlineColor = Color3.fromRGB(50, 50, 50),
+    -- =================================================================
+    -- CORES (Ajustadas para maior contraste e estética)
+    -- =================================================================
+    
+    -- Cores da Janela e Fundo
+    WindowColor1 = Color3.fromRGB(20, 20, 22),        -- Fundo principal mais escuro
+    WindowColor2 = Color3.fromRGB(15, 15, 17),        -- Fundo secundário para gradiente
+    BlockScreenColor = Color3.fromRGB(0, 0, 0),       -- Overlay preto para modais
 
-    -- Tamanhos e Dimensões
-    WindowSize = UDim2.new(0, 500, 0, 400),
-    MinWindowSize = Vector2.new(320, 250), -- ligeiramente maior pro clean
-    MaxWindowSize = Vector2.new(900, 650), -- um pouco mais espaçoso
-    TitleHeight = 38, -- barra de título um pouco mais alta
-    ComponentHeight = 42, -- componentes mais confortáveis
-    ComponentPadding = 12, -- mais respiro
+    -- Cores de Texto
+    TitleColor = Color3.fromRGB(255, 255, 255),       -- Títulos branco puro para contraste
+    ComponentTextColor = Color3.fromRGB(245, 245, 245), -- Texto dos componentes claro
+    InputTextColor = Color3.fromRGB(255, 255, 255),   -- Texto para inputs mais nítido
+    NotifyTextColor = Color3.fromRGB(245, 245, 245),  -- Texto para notificações
+
+    -- Cores de Componentes
+    ComponentBackground = Color3.fromRGB(30, 30, 35), -- Fundo de componentes mais escuro
+    InputBackgroundColor = Color3.fromRGB(38, 38, 45),-- Fundo inputs com contraste
+    AccentColor = Color3.fromRGB(0, 170, 255),        -- Azul mais vibrante
+    ItemHoverColor = Color3.fromRGB(60, 60, 70),      -- Hover itens com contraste
+    ComponentHoverColor = Color3.fromRGB(80, 80, 90), -- Hover geral mais visível
+    
+    -- Cores de Botões e Controles
+    ActiveToggleColor = Color3.fromRGB(0, 170, 255),  -- Azul vibrante para toggles
+    InactiveToggleColor = Color3.fromRGB(50, 50, 55), -- Cinza mais escuro
+    MinimizeButtonColor = Color3.fromRGB(230, 80, 80),-- Vermelho vibrante para minimizar
+    CloseButtonColor = Color3.fromRGB(255, 100, 100), -- Vermelho para fechar
+    FloatButtonColor = Color3.fromRGB(40, 40, 45),    -- Botão flutuante discreto
+    
+    -- Cores de menu dropdown
+    DropdownBackground = Color3.fromRGB(25, 25, 30),
+    DropdownItemHover = Color3.fromRGB(60, 60, 70),
+
+    -- Cores de Abas (Tabs)
+    TabActiveColor = Color3.fromRGB(0, 170, 255),     -- Aba ativa vibrante
+    TabInactiveColor = Color3.fromRGB(30, 30, 35),    -- Aba inativa mais escura
+
+    -- Cores de Sliders
+    SliderTrackColor = Color3.fromRGB(55, 55, 60),    -- Trilha slider mais escura
+    SliderFillColor = Color3.fromRGB(0, 170, 255),    -- Preenchimento ativo
+    ThumbColor = Color3.fromRGB(255, 255, 255),       -- Bolinha branca
+    ThumbOutlineColor = Color3.fromRGB(30, 30, 35),   -- Contorno da bolinha
+
+    -- Cores de Elementos de UI Diversos
+    HRColor = Color3.fromRGB(80, 80, 85),             -- Divisórias mais claras
+    ResizeHandleColor = Color3.fromRGB(60, 60, 65),   -- Alça resize
+    NotifyBackground = Color3.fromRGB(35, 35, 40),    -- Fundo notificações
+    TagBackground = Color3.fromRGB(0, 170, 255),      -- Tags vibrantes
+
+    -- Cores para mensagens de estado vazio
+    EmptyStateTextColor = Color3.fromRGB(180, 180, 180), -- Texto para mensagens de vazio
+
+    -- =================================================================
+    -- TAMANHOS E DIMENSÕES
+    -- =================================================================
+
+    WindowSize = UDim2.new(0, 620, 0, 470),
+    MinWindowSize = Vector2.new(500, 370),
+    MaxWindowSize = Vector2.new(620, 470),
+    TitleHeight = 48,
+
+    -- Componentes
+    ComponentHeight = 44,
+    ComponentPadding = 14,
     ContainerPadding = 12,
-    FloatButtonSize = UDim2.new(0, 130, 0, 42),
-    TabButtonWidth = 130,
-    TabButtonHeight = 36,
-    ResizeHandleSize = 15,
-    NotifyWidth = 220,
-    NotifyHeight = 45,
-    TagHeight = 28,
-    TagWidth = 110,
+    CornerRadius = 8,                                 -- Cantos mais suaves
+    ButtonIconSize = 24,
+
+    -- Abas (Tabs)
+    TabButtonWidth = 140,
+    TabButtonHeight = 40,
+
+    -- Elementos Diversos
+    FloatButtonSize = UDim2.new(0, 140, 0, 46),
+    ResizeHandleSize = 16,
+    NotifyWidth = 270,
+    NotifyHeight = 70,
+    TagHeight = 30,
+    TagWidth = 115,
+    
+    -- Linha Divisória (HR)
     HRHeight = 2,
-    HRTextPadding = 12,
-    HRMinTextSize = 20, -- Tamanho minimo para o texto de HR
-    HRMaxTextSize = 30, -- Tamanho máximo para o texto de HR
+    HRTextPadding = 14,
+    HRMinTextSize = 20,
+    HRMaxTextSize = 30,
 
-    -- Outros
-    CornerRadius = 8, -- cantos discretamente arredondados
-    ButtonIconSize = 22, -- ícones um pouco menores e elegantes
+    -- Menu Dropdown
+    DropdownWidth = 150,
+    DropdownItemHeight = 35,
 
-    -- Blur
-    BlurEffectSize = 8, -- desfoque mais suave
+    -- =================================================================
+    -- EFEITOS
+    -- =================================================================
+    BlurEffectSize = 12,                              -- Blur mais intenso
+    AnimationSpeed = 0.15,                            -- Animações mais rápidas
 }
 
 ---
@@ -80,21 +120,21 @@ local function addRoundedCorners(instance: Instance, radius: number?)
     corner.Parent = instance
 end
 
-local function addHoverEffect(button: GuiObject, originalColor: Color3, hoverColor: Color3)
+local function addHoverEffect(button: GuiObject, originalColor: Color3, hoverColor: Color3, condition: (() -> boolean)?)
     local isHovering = false
     local isDown = false
 
     button.MouseEnter:Connect(function()
         isHovering = true
-        if not isDown then
-            local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = hoverColor })
+        if not isDown and (not condition or condition()) then
+            local tween = TweenService:Create(button, TweenInfo.new(DESIGN.AnimationSpeed, Enum.EasingStyle.Quad), { BackgroundColor3 = hoverColor })
             tween:Play()
         end
     end)
     button.MouseLeave:Connect(function()
         isHovering = false
-        if not isDown then
-            local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = originalColor })
+        if not isDown and (not condition or condition()) then
+            local tween = TweenService:Create(button, TweenInfo.new(DESIGN.AnimationSpeed, Enum.EasingStyle.Quad), { BackgroundColor3 = originalColor })
             tween:Play()
         end
     end)
@@ -103,8 +143,8 @@ local function addHoverEffect(button: GuiObject, originalColor: Color3, hoverCol
     end)
     button.MouseButton1Up:Connect(function()
         isDown = false
-        if not isHovering then
-            local tween = TweenService:Create(button, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { BackgroundColor3 = originalColor })
+        if not isHovering and (not condition or condition()) then
+            local tween = TweenService:Create(button, TweenInfo.new(DESIGN.AnimationSpeed, Enum.EasingStyle.Quad), { BackgroundColor3 = originalColor })
             tween:Play()
         end
     end)
@@ -138,7 +178,8 @@ function Tab.new(name: string, parent: Instance)
         Name: string,
         Container: ScrollingFrame,
         Components: {any},
-        Button: TextButton?
+        Button: TextButton?,
+        EmptyLabel: TextLabel?
     }, Tab)
 
     self.Name = name
@@ -163,9 +204,24 @@ function Tab.new(name: string, parent: Instance)
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Parent = self.Container
 
+    -- Mensagem de aba sem componentes
+    self.EmptyLabel = Instance.new("TextLabel")
+    self.EmptyLabel.Size = UDim2.new(1, 0, 1, 0)
+    self.EmptyLabel.BackgroundTransparency = 1
+    self.EmptyLabel.Text = "Desculpe não tem nada aqui :("
+    self.EmptyLabel.TextColor3 = DESIGN.EmptyStateTextColor
+    self.EmptyLabel.Font = Enum.Font.Roboto
+    self.EmptyLabel.TextScaled = true
+    self.EmptyLabel.TextXAlignment = Enum.TextXAlignment.Center
+    self.EmptyLabel.TextYAlignment = Enum.TextYAlignment.Center
+    self.EmptyLabel.Parent = self.Container
+    self.EmptyLabel.Visible = true
+
     -- Auto-resize do ScrollingFrame
     listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         self.Container.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + DESIGN.ContainerPadding * 2)
+        -- Atualiza visibilidade da mensagem de vazio
+        self.EmptyLabel.Visible = #self.Components == 0
     end)
 
     self.Components = {}
@@ -194,7 +250,9 @@ function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: 
         Connections: { any },
         BlockScreen: Frame?,
         Blocked: boolean,
-        startTab: string?
+        startTab: string?,
+        DropdownMenu: Frame?,
+        NoTabsLabel: TextLabel?
     }, Tekscripts)
 
     self.ScreenGui = Instance.new("ScreenGui")
@@ -243,45 +301,109 @@ function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: 
     title.Position = UDim2.new(0, 10, 0, 0)
     title.BackgroundTransparency = 1
     title.TextColor3 = DESIGN.TitleColor
-    title.TextScaled = true
     title.Font = Enum.Font.RobotoMono
+    title.TextScaled = true
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.Parent = self.TitleBar
 
+    -- Botão de três pontos para o menu de controle
+    local controlBtn = Instance.new("TextButton")
+    controlBtn.Text = "•••"
+    controlBtn.Size = UDim2.new(0, DESIGN.TitleHeight, 0, DESIGN.TitleHeight)
+    controlBtn.Position = UDim2.new(1, -DESIGN.TitleHeight, 0, 0)
+    controlBtn.BackgroundColor3 = DESIGN.ComponentBackground
+    controlBtn.TextColor3 = DESIGN.ComponentTextColor
+    controlBtn.Font = Enum.Font.Roboto
+    controlBtn.TextScaled = true
+    controlBtn.BorderSizePixel = 0
+    controlBtn.Parent = self.TitleBar
+
+    addRoundedCorners(controlBtn, DESIGN.CornerRadius)
+    addHoverEffect(controlBtn, DESIGN.ComponentBackground, DESIGN.ComponentHoverColor)
+
+    -- Botão de minimizar ao lado do botão de controle
     local minimizeBtn = Instance.new("TextButton")
-    minimizeBtn.Text = "–"
+    minimizeBtn.Text = "−"
     minimizeBtn.Size = UDim2.new(0, DESIGN.TitleHeight, 0, DESIGN.TitleHeight)
-    minimizeBtn.Position = UDim2.new(1, -DESIGN.TitleHeight, 0, 0)
+    minimizeBtn.Position = UDim2.new(1, -(DESIGN.TitleHeight * 2), 0, 0)
     minimizeBtn.BackgroundColor3 = DESIGN.MinimizeButtonColor
-    minimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    minimizeBtn.TextColor3 = DESIGN.ComponentTextColor
     minimizeBtn.Font = Enum.Font.Roboto
     minimizeBtn.TextScaled = true
     minimizeBtn.BorderSizePixel = 0
     minimizeBtn.Parent = self.TitleBar
 
     addRoundedCorners(minimizeBtn, DESIGN.CornerRadius)
-    addHoverEffect(minimizeBtn, DESIGN.MinimizeButtonColor, Color3.fromRGB(255, 80, 80))
+    addHoverEffect(minimizeBtn, DESIGN.MinimizeButtonColor, DESIGN.ComponentHoverColor)
 
-    self.Connections.MinimizeBtn = minimizeBtn.MouseButton1Click:Connect(function()
+    minimizeBtn.MouseButton1Click:Connect(function()
         self:Minimize()
     end)
 
-    local closeBtn = Instance.new("TextButton")
-    closeBtn.Text = "X"
-    closeBtn.Size = UDim2.new(0, DESIGN.TitleHeight, 0, DESIGN.TitleHeight)
-    closeBtn.Position = UDim2.new(1, -(DESIGN.TitleHeight * 2), 0, 0)
-    closeBtn.BackgroundColor3 = DESIGN.CloseButtonColor
-    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeBtn.Font = Enum.Font.Roboto
-    closeBtn.TextScaled = true
-    closeBtn.BorderSizePixel = 0
-    closeBtn.Parent = self.TitleBar
+    -- Menu dropdown (apenas com "Fechar")
+    self.DropdownMenu = Instance.new("Frame")
+    self.DropdownMenu.Size = UDim2.new(0, DESIGN.DropdownWidth, 0, 0)
+    self.DropdownMenu.Position = UDim2.new(1, -DESIGN.DropdownWidth - 5, 0, DESIGN.TitleHeight + 5)
+    self.DropdownMenu.BackgroundColor3 = DESIGN.DropdownBackground
+    self.DropdownMenu.BorderSizePixel = 0
+    self.DropdownMenu.Visible = false
+    self.DropdownMenu.Parent = self.ScreenGui
 
-    addRoundedCorners(closeBtn, DESIGN.CornerRadius)
-    addHoverEffect(closeBtn, DESIGN.CloseButtonColor, Color3.fromRGB(255, 80, 80))
+    addRoundedCorners(self.DropdownMenu)
 
-    self.Connections.CloseBtn = closeBtn.MouseButton1Click:Connect(function()
+    local dropdownLayout = Instance.new("UIListLayout")
+    dropdownLayout.Padding = UDim.new(0, 5)
+    dropdownLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    dropdownLayout.Parent = self.DropdownMenu
+
+    local dropdownPadding = Instance.new("UIPadding")
+    dropdownPadding.PaddingTop = UDim.new(0, 5)
+    dropdownPadding.PaddingBottom = UDim.new(0, 5)
+    dropdownPadding.Parent = self.DropdownMenu
+    
+    -- Botão "Fechar" no dropdown
+    local closeOption = Instance.new("TextButton")
+    closeOption.Text = "Fechar"
+    closeOption.Size = UDim2.new(1, -10, 0, DESIGN.DropdownItemHeight)
+    closeOption.BackgroundColor3 = DESIGN.DropdownBackground
+    closeOption.TextColor3 = DESIGN.CloseButtonColor
+    closeOption.Font = Enum.Font.Roboto
+    closeOption.TextScaled = true
+    closeOption.BorderSizePixel = 0
+    closeOption.Parent = self.DropdownMenu
+
+    addRoundedCorners(closeOption, 5)
+    addHoverEffect(closeOption, DESIGN.DropdownBackground, DESIGN.DropdownItemHover)
+
+    closeOption.MouseButton1Click:Connect(function()
         self:Destroy()
+        self.DropdownMenu.Visible = false
+    end)
+
+    -- Atualiza o tamanho do dropdown
+    self.DropdownMenu.Size = UDim2.new(0, DESIGN.DropdownWidth, 0, dropdownLayout.AbsoluteContentSize.Y + 10)
+
+    self.Connections.ControlBtn = controlBtn.MouseButton1Click:Connect(function()
+        self.DropdownMenu.Visible = not self.DropdownMenu.Visible
+    end)
+
+    -- Fecha o dropdown se o usuário clicar em qualquer outro lugar
+    self.Connections.InputBegan = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if self.DropdownMenu.Visible and input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local mousePos = UserInputService:GetMouseLocation()
+            local dropdownPos = self.DropdownMenu.AbsolutePosition
+            local dropdownSize = self.DropdownMenu.AbsoluteSize
+            local controlBtnPos = controlBtn.AbsolutePosition
+            local controlBtnSize = controlBtn.AbsoluteSize
+
+            local isOutsideDropdown = mousePos.X < dropdownPos.X or mousePos.X > dropdownPos.X + dropdownSize.X or mousePos.Y < dropdownPos.Y or mousePos.Y > dropdownPos.Y + dropdownSize.Y
+            local isOutsideControlBtn = mousePos.X < controlBtnPos.X or mousePos.X > controlBtnPos.X + controlBtnSize.X or mousePos.Y < controlBtnPos.Y or mousePos.Y > controlBtnPos.Y + controlBtnSize.Y
+
+            if isOutsideDropdown and isOutsideControlBtn then
+                self.DropdownMenu.Visible = false
+            end
+        end
     end)
 
     -- Sistema de arrastar pela barra de título
@@ -307,6 +429,19 @@ function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: 
     tabPadding.PaddingRight = UDim.new(0, 5)
     tabPadding.Parent = self.TabContainer
 
+    -- Mensagem de "sem abas"
+    self.NoTabsLabel = Instance.new("TextLabel")
+    self.NoTabsLabel.Size = UDim2.new(1, 0, 1, 0)
+    self.NoTabsLabel.BackgroundTransparency = 1
+    self.NoTabsLabel.Text = "não tem tabs :("
+    self.NoTabsLabel.TextColor3 = DESIGN.EmptyStateTextColor
+    self.NoTabsLabel.Font = Enum.Font.Roboto
+    self.NoTabsLabel.TextScaled = true
+    self.NoTabsLabel.TextXAlignment = Enum.TextXAlignment.Center
+    self.NoTabsLabel.TextYAlignment = Enum.TextYAlignment.Center
+    self.NoTabsLabel.Parent = self.TabContainer
+    self.NoTabsLabel.Visible = true
+
     -- Container do conteúdo das abas
     self.TabContentContainer = Instance.new("Frame")
     self.TabContentContainer.Size = UDim2.new(1, -DESIGN.TabButtonWidth, 1, -DESIGN.TitleHeight)
@@ -317,10 +452,10 @@ function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: 
     -- Sistema de redimensionamento
     self:SetupResizeSystem()
 
-    -- Float Button melhorado
+    -- Float Button
     self:SetupFloatButton(options.FloatText or "📋 Expandir")
 
-    -- Container de Notificações (visível mesmo quando minimizado)
+    -- Container de Notificações
     self.NotifyContainer = Instance.new("Frame")
     self.NotifyContainer.Name = "NotifyContainer"
     self.NotifyContainer.Size = UDim2.new(0, DESIGN.NotifyWidth, 1, 0)
@@ -350,13 +485,11 @@ function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: 
     self.BlockScreen.Visible = false
     self.BlockScreen.Parent = self.ScreenGui
 
-    -- Adicionar o efeito de borrão
     local blur = Instance.new("BlurEffect")
     blur.Size = 0
     blur.Parent = self.BlockScreen
     self.BlurEffect = blur
 
-    -- Conexão para garantir que o painel persista
     self.Connections.PlayerRemoving = Players.PlayerRemoving:Connect(function(player)
         if player == localPlayer then
             self:Destroy()
@@ -370,7 +503,6 @@ function Tekscripts:Destroy()
     if self.ScreenGui then
         self.ScreenGui:Destroy()
     end
-    -- Limpa referências para garbage collection
     for _, connection in pairs(self.Connections) do
         if connection and connection.Connected then
             connection:Disconnect()
@@ -406,7 +538,7 @@ function Tekscripts:SetupDragSystem()
                 startPos.Y.Offset + delta.Y
             )
 
-            local tween = TweenService:Create(self.Window, TweenInfo.new(0.1, Enum.EasingStyle.Quad), { Position = newPos })
+            local tween = TweenService:Create(self.Window, TweenInfo.new(DESIGN.AnimationSpeed, Enum.EasingStyle.Quad), { Position = newPos })
             tween:Play()
         end
     end)
@@ -429,7 +561,6 @@ function Tekscripts:SetupResizeSystem()
     self.ResizeHandle.BackgroundColor3 = DESIGN.ResizeHandleColor
     self.ResizeHandle.BorderSizePixel = 0
     self.ResizeHandle.Parent = self.Window
-
     addRoundedCorners(self.ResizeHandle, 4)
 
     local resizeIcon = Instance.new("TextLabel")
@@ -440,8 +571,6 @@ function Tekscripts:SetupResizeSystem()
     resizeIcon.TextScaled = true
     resizeIcon.Font = Enum.Font.Roboto
     resizeIcon.Parent = self.ResizeHandle
-
-    -- Não é necessário addHoverEffect aqui, pois a funcionalidade de redimensionamento já controla o mouse.
 
     local resizeStart = nil
     local startSize = nil
@@ -463,7 +592,7 @@ function Tekscripts:SetupResizeSystem()
             local newHeight = math.clamp(startSize.Y.Offset + delta.Y, DESIGN.MinWindowSize.Y, DESIGN.MaxWindowSize.Y)
 
             local newSize = UDim2.new(0, newWidth, 0, newHeight)
-            local tween = TweenService:Create(self.Window, TweenInfo.new(0.1, Enum.EasingStyle.Quad), { Size = newSize })
+            local tween = TweenService:Create(self.Window, TweenInfo.new(DESIGN.AnimationSpeed, Enum.EasingStyle.Quad), { Size = newSize })
             tween:Play()
 
             self:UpdateContainersSize()
@@ -483,7 +612,7 @@ function Tekscripts:UpdateContainersSize()
 end
 
 ---
--- Float Button Melhorado
+-- Float Button
 ---
 function Tekscripts:SetupFloatButton(text: string)
     self.FloatButton = Instance.new("Frame")
@@ -576,7 +705,10 @@ function Tekscripts:CreateTab(options: { Title: string })
     tab.Button = tabButton
 
     addRoundedCorners(tabButton, DESIGN.CornerRadius)
-    addHoverEffect(tabButton, DESIGN.TabInactiveColor, DESIGN.ComponentHoverColor)
+
+    addHoverEffect(tabButton, DESIGN.TabInactiveColor, DESIGN.ComponentHoverColor, function()
+        return self.CurrentTab ~= tab
+    end)
 
     tabButton.MouseButton1Click:Connect(function()
         if self.Blocked then return end
@@ -590,6 +722,9 @@ function Tekscripts:CreateTab(options: { Title: string })
     elseif not self.CurrentTab then
         self:SetActiveTab(tab)
     end
+
+    -- Atualiza visibilidade da mensagem de "sem abas"
+    self.NoTabsLabel.Visible = next(self.Tabs) == nil
     
     function tab.Destroy()
         for _, componentApi in pairs(tab.Components) do
@@ -605,6 +740,8 @@ function Tekscripts:CreateTab(options: { Title: string })
             local firstTab = next(self.Tabs)
             if firstTab then
                 self:SetActiveTab(self.Tabs[firstTab])
+            else
+                self.NoTabsLabel.Visible = true
             end
         end
     end
@@ -615,14 +752,11 @@ end
 function Tekscripts:SetActiveTab(tab: any)
     if self.CurrentTab then
         self.CurrentTab.Container.Visible = false
-        -- Restaura a cor do botão da aba anterior
         self.CurrentTab.Button.BackgroundColor3 = DESIGN.TabInactiveColor
     end
 
     self.CurrentTab = tab
     self.CurrentTab.Container.Visible = true
-
-    -- Define a cor do botão da nova aba ativa
     self.CurrentTab.Button.BackgroundColor3 = DESIGN.TabActiveColor
 end
 
@@ -633,7 +767,7 @@ function Tekscripts:Minimize()
     if self.IsMinimized or self.Blocked then return end
     self.IsMinimized = true
 
-    local minimizeTween = TweenService:Create(self.Window, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
+    local minimizeTween = TweenService:Create(self.Window, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
         Size = UDim2.new(0, 0, 0, 0),
         Position = UDim2.new(0.5, 0, 0.5, 0)
     })
@@ -643,7 +777,7 @@ function Tekscripts:Minimize()
         self.Window.Visible = false
         self.FloatButton.Visible = true
 
-        local floatTween = TweenService:Create(self.FloatButton, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+        local floatTween = TweenService:Create(self.FloatButton, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
             Size = DESIGN.FloatButtonSize
         })
         floatTween:Play()
@@ -654,7 +788,7 @@ function Tekscripts:Expand()
     if not self.IsMinimized or self.Blocked then return end
     self.IsMinimized = false
 
-    local floatTween = TweenService:Create(self.FloatButton, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+    local floatTween = TweenService:Create(self.FloatButton, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {
         Size = UDim2.new(0, 0, 0, 0)
     })
     floatTween:Play()
@@ -663,7 +797,7 @@ function Tekscripts:Expand()
         self.FloatButton.Visible = false
         self.Window.Visible = true
 
-        local expandTween = TweenService:Create(self.Window, TweenInfo.new(0.4, Enum.EasingStyle.Back), {
+        local expandTween = TweenService:Create(self.Window, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
             Size = DESIGN.WindowSize,
             Position = UDim2.new(0.5, -DESIGN.WindowSize.X.Offset / 2, 0.5, -DESIGN.WindowSize.Y.Offset / 2)
         })
@@ -675,11 +809,9 @@ function Tekscripts:Block(state: boolean)
     self.Blocked = state
     self.BlockScreen.Visible = state
     if state then
-        -- Suaviza a entrada do borrão
-        TweenService:Create(self.BlurEffect, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Size = DESIGN.BlurEffectSize}):Play()
+        TweenService:Create(self.BlurEffect, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {Size = DESIGN.BlurEffectSize}):Play()
     else
-        -- Suaviza a saída do borrão
-        TweenService:Create(self.BlurEffect, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Size = 0}):Play()
+        TweenService:Create(self.BlurEffect, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {Size = 0}):Play()
     end
 end
 
@@ -815,235 +947,6 @@ function Tekscripts:CreateToggle(tab: any, options: { Text: string, Callback: (s
         end
         if newOptions.State ~= nil and newOptions.State ~= state then
             toggle(newOptions.State)
-        end
-    end
-
-    function publicApi.Destroy()
-        if publicApi._instance then
-            for _, conn in pairs(publicApi._connections) do
-                if conn and conn.Connected then
-                    conn:Disconnect()
-                end
-            end
-            publicApi._instance:Destroy()
-            publicApi._instance = nil
-            publicApi._connections = nil
-        end
-    end
-
-    table.insert(tab.Components, publicApi)
-    return publicApi
-end
-
-function Tekscripts:CreateDropdown(tab: any, options: { Title: string, Values: { string }, Callback: (value: string) -> (), SelectedValue: string? })
-    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateDropdown")
-    assert(type(options) == "table" and type(options.Title) == "string" and type(options.Values) == "table", "Invalid arguments for CreateDropdown")
-
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
-    frame.BackgroundTransparency = 1
-    frame.Parent = tab.Container
-
-    local label = Instance.new("TextLabel")
-    label.Text = options.Title
-    label.Size = UDim2.new(1, 0, 0.4, 0)
-    label.BackgroundTransparency = 1
-    label.TextColor3 = DESIGN.ComponentTextColor
-    label.Font = Enum.Font.Roboto
-    label.TextScaled = true
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = frame
-
-    local btn = createButton("Selecionar ▼", UDim2.new(1, 0, 0.6, 0), frame)
-    btn.Position = UDim2.new(0, 0, 0.4, 0)
-
-    local dropdownOpen = false
-    local listFrame: Frame?
-    local connections = {}
-    local currentValues = options.Values
-    local currentValue = options.SelectedValue or (currentValues[1] and currentValues[1] or "")
-    btn.Text = currentValue .. " ▼"
-
-    local publicApi = {
-        _instance = frame,
-        _connections = connections
-    }
-
-    local function closeDropdown()
-        if listFrame then
-            listFrame:Destroy()
-            listFrame = nil
-        end
-        dropdownOpen = false
-        btn.Text = currentValue .. " ▼"
-    end
-
-    connections.Click = btn.MouseButton1Click:Connect(function()
-        if self.Blocked then return end
-        if dropdownOpen then
-            closeDropdown()
-        else
-            btn.Text = currentValue .. " ▲"
-
-            listFrame = Instance.new("Frame")
-            listFrame.Size = UDim2.new(1, 0, 0, 0)
-            listFrame.Position = UDim2.new(0, 0, 1, 0) -- abre logo abaixo do botão
-            listFrame.BackgroundColor3 = DESIGN.ComponentBackground
-            listFrame.BorderSizePixel = 0
-            listFrame.ClipsDescendants = true
-            listFrame.Parent = frame
-
-            -- garante que fique na frente
-            listFrame.ZIndex = 50
-
-            local dropdownLayout = Instance.new("UIListLayout")
-            dropdownLayout.Padding = UDim.new(0, 2)
-            dropdownLayout.Parent = listFrame
-
-            for _, v in ipairs(currentValues) do
-                local option = createButton(v, UDim2.new(1, 0, 0, DESIGN.ComponentHeight - 2), listFrame)
-                option.ZIndex = 51 -- cada opção acima do container
-                option.MouseButton1Click:Connect(function()
-                    currentValue = v
-                    if options.Callback then options.Callback(v) end
-                    closeDropdown()
-                end)
-            end
-
-            local totalHeight = #currentValues * (DESIGN.ComponentHeight - 2) + dropdownLayout.Padding.Offset * (#currentValues - 1)
-            TweenService:Create(listFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
-                Size = UDim2.new(1, 0, 0, totalHeight)
-            }):Play()
-
-            dropdownOpen = true
-        end
-    end)
-
-    function publicApi.Update(newOptions: { Title: string?, Values: { string }?, SelectedValue: string? })
-        if newOptions.Title then
-            label.Text = newOptions.Title
-        end
-        if newOptions.Values then
-            currentValues = newOptions.Values
-        end
-        if newOptions.SelectedValue then
-            for _, v in ipairs(currentValues) do
-                if v == newOptions.SelectedValue then
-                    currentValue = newOptions.SelectedValue
-                    btn.Text = currentValue .. " ▼"
-                    break
-                end
-            end
-        end
-    end
-
-    function publicApi.Destroy()
-        if publicApi._instance then
-            for _, conn in pairs(publicApi._connections) do
-                if conn and conn.Connected then
-                    conn:Disconnect()
-                end
-            end
-            closeDropdown()
-            publicApi._instance:Destroy()
-            publicApi._instance = nil
-            publicApi._connections = nil
-        end
-    end
-
-    table.insert(tab.Components, publicApi)
-    return publicApi
-end
-
-
-function Tekscripts:CreateLabel(tab: any, options: { Title: string, Desc: string? })
-    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateLabel")
-    assert(type(options) == "table" and type(options.Title) == "string", "Invalid arguments for CreateLabel")
-
-    -- Box externo
-    local outerBox = Instance.new("Frame")
-    outerBox.Size = UDim2.new(1, 0, 0, 0)
-    outerBox.BackgroundColor3 = DESIGN.ComponentBackground
-    outerBox.BorderSizePixel = 0
-    outerBox.Parent = tab.Container
-    addRoundedCorners(outerBox, DESIGN.CornerRadius)
-
-    -- Container interno
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, -DESIGN.ComponentPadding * 2, 0, 0)
-    container.Position = UDim2.new(0, DESIGN.ComponentPadding, 0, DESIGN.ComponentPadding)
-    container.BackgroundTransparency = 1
-    container.AutomaticSize = Enum.AutomaticSize.Y
-    container.Parent = outerBox
-
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, 6)
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Parent = container
-
-    -- Título (maior e mais forte)
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Text = options.Title
-    titleLabel.Size = UDim2.new(1, 0, 0, 24)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.TextColor3 = DESIGN.ComponentTextColor
-    titleLabel.Font = Enum.Font.GothamBold
-    titleLabel.TextSize = 18
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.BorderSizePixel = 0
-    titleLabel.Parent = container
-
-    -- Descrição (fonte maior e mais legível, ajusta altura automaticamente)
-    local descLabel
-    if options.Desc then
-        descLabel = Instance.new("TextLabel")
-        descLabel.Text = options.Desc
-        descLabel.Size = UDim2.new(1, 0, 0, 0)
-        descLabel.AutomaticSize = Enum.AutomaticSize.Y
-        descLabel.BackgroundTransparency = 1
-        descLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-        descLabel.Font = Enum.Font.GothamMedium
-        descLabel.TextSize = 16
-        descLabel.TextXAlignment = Enum.TextXAlignment.Left
-        descLabel.TextWrapped = true
-        descLabel.BorderSizePixel = 0
-        descLabel.Parent = container
-    end
-
-    -- Ajusta o tamanho do outerBox conforme conteúdo
-    local layoutConnection = listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        outerBox.Size = UDim2.new(1, 0, 0, listLayout.AbsoluteContentSize.Y + DESIGN.ComponentPadding * 2)
-    end)
-
-    -- API pública
-    local publicApi = {
-        _instance = outerBox,
-        _connections = { layoutConnection }
-    }
-
-    function publicApi.Update(newOptions: { Title: string?, Desc: string? })
-        if newOptions.Title then
-            titleLabel.Text = newOptions.Title
-        end
-        if newOptions.Desc ~= nil then
-            if newOptions.Desc and not descLabel then
-                descLabel = Instance.new("TextLabel")
-                descLabel.Text = newOptions.Desc
-                descLabel.Size = UDim2.new(1, 0, 0, 0)
-                descLabel.AutomaticSize = Enum.AutomaticSize.Y
-                descLabel.BackgroundTransparency = 1
-                descLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-                descLabel.Font = Enum.Font.GothamMedium
-                descLabel.TextSize = 16
-                descLabel.TextXAlignment = Enum.TextXAlignment.Left
-                descLabel.TextWrapped = true
-                descLabel.Parent = container
-            elseif newOptions.Desc and descLabel then
-                descLabel.Text = newOptions.Desc
-            elseif not newOptions.Desc and descLabel then
-                descLabel:Destroy()
-                descLabel = nil
-            end
         end
     end
 
@@ -1841,17 +1744,7 @@ function Tekscripts:CreateFloatingButton(options: {
     return publicApi
 end
 
---[[
-    Componente de UI para seleção de cores (Color Picker).
 
-    Opções (options):
-    {
-        Title: string? - Título exibido no componente. Padrão: "Color".
-        Color: Color3? - Cor inicial do seletor. Padrão: Color3.new(1, 1, 1) (Branco).
-        Blocked: boolean? - Se o componente deve iniciar bloqueado. Padrão: false.
-        Callback: ((Color3) -> ())? - Função chamada sempre que a cor é alterada.
-    }
-]]
 function Tekscripts:CreateColorPicker(tab: any, options: {
     Title: string?,
     Color: Color3?,
@@ -1879,6 +1772,7 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
         end
     end
     
+    -- Validação robusta do tipo de cor inicial
     if typeof(options.Color) ~= "Color3" then
         warn("CreateColorPicker: 'options.Color' inválido. Esperado Color3, recebido " .. typeof(options.Color) .. ". Usando cor padrão.")
         options.Color = defaultOptions.Color
@@ -1904,45 +1798,220 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
         return inst
     end
 
-    -- // CRIAÇÃO DA UI (O código aqui é idêntico ao anterior, pois já estava correto) //
-    local box = createInstance("Frame", { Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight), BackgroundColor3 = DESIGN.ComponentBackground, BorderSizePixel = 0, Parent = tab.Container })
+    -- // CRIAÇÃO DA UI //
+    local box = createInstance("Frame", {
+        Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight),
+        BackgroundColor3 = DESIGN.ComponentBackground,
+        BorderSizePixel = 0,
+        Parent = tab.Container
+    })
+
     createInstance("UIListLayout", { FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 5), Parent = box })
     createInstance("UICorner", { CornerRadius = UDim.new(0, DESIGN.CornerRadius), Parent = box })
     createInstance("UIPadding", { PaddingLeft = UDim.new(0, DESIGN.ComponentPadding), PaddingRight = UDim.new(0, DESIGN.ComponentPadding), Parent = box })
-    local mainFrame = createInstance("Frame", { Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1, Parent = box })
-    local titleLabel = createInstance("TextLabel", { Size = UDim2.new(1, -50, 1, 0), Font = Enum.Font.Roboto, TextSize = 15, TextColor3 = DESIGN.ComponentTextColor, TextXAlignment = Enum.TextXAlignment.Left, BackgroundTransparency = 1, Text = options.Title, Parent = mainFrame })
-    local colorBox = createInstance("Frame", { Size = UDim2.new(0, 40, 0, 20), Position = UDim2.new(1, -40, 0, 0), AnchorPoint = Vector2.new(1, 0), BackgroundColor3 = options.Color, BorderSizePixel = 1, BorderColor3 = Color3.new(0.2, 0.2, 0.2), Parent = mainFrame })
+
+    -- Container principal (título e amostra de cor)
+    local mainFrame = createInstance("Frame", {
+        Size = UDim2.new(1, 0, 0, 20),
+        BackgroundTransparency = 1,
+        Parent = box
+    })
+
+    local titleLabel = createInstance("TextLabel", {
+        Size = UDim2.new(1, -50, 1, 0),
+        Font = Enum.Font.Roboto,
+        TextSize = 15,
+        TextColor3 = DESIGN.ComponentTextColor,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        BackgroundTransparency = 1,
+        Text = options.Title,
+        Parent = mainFrame
+    })
+
+    local colorBox = createInstance("Frame", {
+        Size = UDim2.new(0, 40, 0, 20),
+        Position = UDim2.new(1, -40, 0, 0),
+        AnchorPoint = Vector2.new(1, 0),
+        BackgroundColor3 = options.Color,
+        BorderSizePixel = 1,
+        BorderColor3 = Color3.new(0.2, 0.2, 0.2),
+        Parent = mainFrame
+    })
     createInstance("UICorner", { CornerRadius = UDim.new(0, DESIGN.CornerRadius / 2), Parent = colorBox })
-    local pickerContainer = createInstance("Frame", { Size = UDim2.new(1, -2 * DESIGN.ComponentPadding, 0, 190), Position = UDim2.new(0, DESIGN.ComponentPadding, 0, 0), BackgroundTransparency = 1, Visible = false, Parent = box })
+
+    -- Container do seletor de cor (picker)
+    local pickerContainer = createInstance("Frame", {
+        Size = UDim2.new(1, -2 * DESIGN.ComponentPadding, 0, 190),
+        Position = UDim2.new(0, DESIGN.ComponentPadding, 0, 0),
+        BackgroundTransparency = 1,
+        Visible = false,
+        Parent = box
+    })
     createInstance("UIListLayout", { FillDirection = Enum.FillDirection.Vertical, Padding = UDim.new(0, 10), Parent = pickerContainer })
+
+    -- Paleta de Saturação/Valor (SV)
     local svPalette = createInstance("Frame", { Size = UDim2.new(1, 0, 0, 150), BackgroundTransparency = 1, Parent = pickerContainer })
     createInstance("UICorner", { CornerRadius = UDim.new(0, 5), Parent = svPalette })
-    local svWhiteGradient = createInstance("UIGradient", { Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1,1,1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))}), Parent = svPalette })
-    local svBlackGradient = createInstance("UIGradient", { Rotation = 90, Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0,0,0,0)), ColorSequenceKeypoint.new(1, Color3.new(0,0,0,1))}), Parent = svPalette })
-    local svThumb = createInstance("Frame", { Size = UDim2.new(0, 10, 0, 10), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, BorderSizePixel = 1, BorderColor3 = Color3.new(0, 0, 0), Parent = svPalette })
+    local svWhiteGradient = createInstance("UIGradient", {
+        Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(1,1,1)), ColorSequenceKeypoint.new(1, Color3.fromHSV(1, 1, 1))}),
+        Parent = svPalette
+    })
+    local svBlackGradient = createInstance("UIGradient", {
+        Rotation = 90,
+        Color = ColorSequence.new({ColorSequenceKeypoint.new(0, Color3.new(0,0,0,0)), ColorSequenceKeypoint.new(1, Color3.new(0,0,0,1))}),
+        Parent = svPalette
+    })
+    local svThumb = createInstance("Frame", {
+        Size = UDim2.new(0, 10, 0, 10),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 1,
+        BorderColor3 = Color3.new(0, 0, 0),
+        Parent = svPalette
+    })
     local svThumbRing = createInstance("Frame", { Size = UDim2.new(1, 0, 1, 0), BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 1, Parent = svThumb })
     createInstance("UICorner", { CornerRadius = UDim.new(0.5, 0), Parent = svThumbRing })
+
+    -- Seletor de Matiz (Hue)
     local hueTrack = createInstance("Frame", { Size = UDim2.new(1, 0, 0, 20), BackgroundColor3 = Color3.new(0.2, 0.2, 0.2), Parent = pickerContainer })
     createInstance("UICorner", { CornerRadius = UDim.new(0, 5), Parent = hueTrack })
-    createInstance("UIGradient", { Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.new(1,0,0)), ColorSequenceKeypoint.new(0.17, Color3.new(1,1,0)), ColorSequenceKeypoint.new(0.33, Color3.new(0,1,0)), ColorSequenceKeypoint.new(0.5, Color3.new(0,1,1)), ColorSequenceKeypoint.new(0.67, Color3.new(0,0,1)), ColorSequenceKeypoint.new(0.83, Color3.new(1,0,1)), ColorSequenceKeypoint.new(1, Color3.new(1,0,0)) }), Parent = hueTrack })
+    createInstance("UIGradient", {
+        Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.new(1,0,0)), ColorSequenceKeypoint.new(0.17, Color3.new(1,1,0)),
+            ColorSequenceKeypoint.new(0.33, Color3.new(0,1,0)), ColorSequenceKeypoint.new(0.5, Color3.new(0,1,1)),
+            ColorSequenceKeypoint.new(0.67, Color3.new(0,0,1)), ColorSequenceKeypoint.new(0.83, Color3.new(1,0,1)),
+            ColorSequenceKeypoint.new(1, Color3.new(1,0,0))
+        }),
+        Parent = hueTrack
+    })
     local hueThumb = createInstance("Frame", { Size = UDim2.new(0, 10, 1, 0), BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 1, BorderColor3 = Color3.new(0.1, 0.1, 0.1), Parent = hueTrack })
-    local blockedOverlay = createInstance("Frame", { Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 0.5, BackgroundColor3 = Color3.new(0, 0, 0), Visible = state.isBlocked, Parent = box })
 
-    -- // LÓGICA DO COMPONENTE (O código aqui é idêntico ao anterior) //
-    local function updateColorVisuals(useTween: boolean) local newColor = Color3.fromHSV(state.h, state.s, state.v) if useTween then TweenService:Create(colorBox, TweenInfo.new(0.15), { BackgroundColor3 = newColor }):Play() else colorBox.BackgroundColor3 = newColor end local hueColor = Color3.fromHSV(state.h, 1, 1) svWhiteGradient.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.new(1,1,1)), ColorSequenceKeypoint.new(1, hueColor) }) pcall(options.Callback, newColor) end
-    local function updateThumbs() hueThumb.Position = UDim2.fromScale(state.h, 0.5) svThumb.Position = UDim2.fromScale(state.s, 1 - state.v) updateColorVisuals(false) end
-    local function handleHueDrag(inputPos: Vector2) local relativeX = inputPos.X - hueTrack.AbsolutePosition.X local frac = math.clamp(relativeX / hueTrack.AbsoluteSize.X, 0, 1) state.h = frac hueThumb.Position = UDim2.fromScale(frac, 0.5) updateColorVisuals(true) end
-    local function handleSVDrag(inputPos: Vector2) local relativeX = inputPos.X - svPalette.AbsolutePosition.X local relativeY = inputPos.Y - svPalette.AbsolutePosition.Y state.s = math.clamp(relativeX / svPalette.AbsoluteSize.X, 0, 1) state.v = 1 - math.clamp(relativeY / svPalette.AbsoluteSize.Y, 0, 1) svThumb.Position = UDim2.fromScale(state.s, 1 - state.v) updateColorVisuals(true) end
-    local function expand() if state.isExpanded then return end state.isExpanded = true local h, s, v = colorBox.BackgroundColor3:ToHSV() state.h, state.s, state.v = h, s, v updateThumbs() pickerContainer.Visible = true local finalSize = UDim2.new(1, 0, 0, DESIGN.ComponentHeight + pickerContainer.Size.Y.Offset + box.UIListLayout.Padding.Offset) TweenService:Create(box, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = finalSize }):Play() end
-    local function collapse() if not state.isExpanded then return end state.isExpanded = false local finalSize = UDim2.new(1, 0, 0, DESIGN.ComponentHeight) local closeTween = TweenService:Create(box, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = finalSize }) closeTween:Play() closeTween.Completed:Once(function() if not state.isExpanded then pickerContainer.Visible = false end end) end
-    local function onMainFrameClick(input) if state.isBlocked then local originalPos = box.Position TweenService:Create(box, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out, 1, true), { Position = originalPos + UDim2.new(0, 5, 0, 0) }):Play() return end if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then if state.isExpanded then collapse() else expand() end end end
-    
-    -- // GERENCIAMENTO DE EVENTOS (O código aqui é idêntico ao anterior) //
+    -- Overlay de bloqueio
+    local blockedOverlay = createInstance("Frame", {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 0.5,
+        BackgroundColor3 = Color3.new(0, 0, 0),
+        Visible = state.isBlocked,
+        Parent = box
+    })
+
+    -- // LÓGICA DO COMPONENTE //
+    local function updateColorVisuals(useTween: boolean)
+        local newColor = Color3.fromHSV(state.h, state.s, state.v)
+        
+        if useTween then
+            TweenService:Create(colorBox, TweenInfo.new(0.15), { BackgroundColor3 = newColor }):Play()
+        else
+            colorBox.BackgroundColor3 = newColor
+        end
+        
+        local hueColor = Color3.fromHSV(state.h, 1, 1)
+        svWhiteGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.new(1,1,1)),
+            ColorSequenceKeypoint.new(1, hueColor)
+        })
+
+        pcall(options.Callback, newColor)
+    end
+
+    local function updateThumbs()
+        hueThumb.Position = UDim2.fromScale(state.h, 0.5)
+        svThumb.Position = UDim2.fromScale(state.s, 1 - state.v)
+        updateColorVisuals(false)
+    end
+
+    local function handleHueDrag(inputPos: Vector2)
+        local relativeX = inputPos.X - hueTrack.AbsolutePosition.X
+        local frac = math.clamp(relativeX / hueTrack.AbsoluteSize.X, 0, 1)
+        state.h = frac
+        hueThumb.Position = UDim2.fromScale(frac, 0.5)
+        updateColorVisuals(true)
+    end
+
+    local function handleSVDrag(inputPos: Vector2)
+        local relativeX = inputPos.X - svPalette.AbsolutePosition.X
+        local relativeY = inputPos.Y - svPalette.AbsolutePosition.Y
+        state.s = math.clamp(relativeX / svPalette.AbsoluteSize.X, 0, 1)
+        state.v = 1 - math.clamp(relativeY / svPalette.AbsoluteSize.Y, 0, 1)
+        svThumb.Position = UDim2.fromScale(state.s, 1 - state.v)
+        updateColorVisuals(true)
+    end
+
+    local function expand()
+        if state.isExpanded then return end
+        state.isExpanded = true
+        
+        local h, s, v = colorBox.BackgroundColor3:ToHSV()
+        state.h, state.s, state.v = h, s, v
+        updateThumbs()
+        
+        pickerContainer.Visible = true
+        local finalSize = UDim2.new(1, 0, 0, DESIGN.ComponentHeight + pickerContainer.Size.Y.Offset + box.UIListLayout.Padding.Offset)
+        TweenService:Create(box, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = finalSize }):Play()
+    end
+
+    local function collapse()
+        if not state.isExpanded then return end
+        state.isExpanded = false
+        
+        local finalSize = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
+        local closeTween = TweenService:Create(box, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = finalSize })
+        closeTween:Play()
+        closeTween.Completed:Once(function()
+            if not state.isExpanded then -- Garante que não foi reaberto durante a animação
+                pickerContainer.Visible = false
+            end
+        end)
+    end
+
+    local function onMainFrameClick(input)
+        if state.isBlocked then
+            local originalPos = box.Position
+            TweenService:Create(box, TweenInfo.new(0.2, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out, 1, true), { Position = originalPos + UDim2.new(0, 5, 0, 0) }):Play()
+            return
+        end
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            if state.isExpanded then
+                collapse()
+            else
+                expand()
+            end
+        end
+    end
+
+    -- // GERENCIAMENTO DE EVENTOS //
     table.insert(connections, mainFrame.InputBegan:Connect(onMainFrameClick))
-    table.insert(connections, hueTrack.InputBegan:Connect(function(input) if state.isExpanded and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then state.isDraggingHue = true handleHueDrag(input.Position) end end))
-    table.insert(connections, svPalette.InputBegan:Connect(function(input) if state.isExpanded and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then state.isDraggingSV = true handleSVDrag(input.Position) end end))
-    table.insert(connections, UserInputService.InputChanged:Connect(function(input) if not state.isExpanded then return end if state.isDraggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then handleHueDrag(input.Position) elseif state.isDraggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then handleSVDrag(input.Position) end end))
-    table.insert(connections, UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then state.isDraggingHue = false state.isDraggingSV = false end end))
+    
+    table.insert(connections, hueTrack.InputBegan:Connect(function(input)
+        if state.isExpanded and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            state.isDraggingHue = true
+            handleHueDrag(input.Position)
+        end
+    end))
+
+    table.insert(connections, svPalette.InputBegan:Connect(function(input)
+        if state.isExpanded and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            state.isDraggingSV = true
+            handleSVDrag(input.Position)
+        end
+    end))
+
+    table.insert(connections, UserInputService.InputChanged:Connect(function(input)
+        if not state.isExpanded then return end
+        if state.isDraggingHue and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            handleHueDrag(input.Position)
+        elseif state.isDraggingSV and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            handleSVDrag(input.Position)
+        end
+    end))
+
+    table.insert(connections, UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            state.isDraggingHue = false
+            state.isDraggingSV = false
+        end
+    end))
 
     -- Inicializa a posição dos seletores
     updateThumbs()
@@ -1950,40 +2019,21 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     -- // API PÚBLICA DO COMPONENTE //
     local publicApi = {}
 
-    --- [NOVA VERSÃO APRIMORADA] ---
-    function publicApi.SetColor(newColor: any)
-        local colorToSet = newColor
-        
-        -- Tenta corrigir a entrada se for uma tabela
-        if typeof(colorToSet) == "table" then
-            -- Tenta encontrar um Color3 dentro da tabela
-            -- Ex: { Color = Color3.new(...) } ou { true, Color3.new(...) }
-            for _, value in pairs(colorToSet) do
-                if typeof(value) == "Color3" then
-                    colorToSet = value -- Encontrou! Usa este valor.
-                    break
-                end
-            end
-        end
-
-        -- Validação final. Se ainda não for um Color3, emite um aviso detalhado e para.
-        if typeof(colorToSet) ~= "Color3" then
-            local trace = debug.traceback()
-            warn("SetColor: Cor inválida. Esperado Color3, recebido " .. typeof(newColor) .. ".\n" ..
-                 "Origem da chamada:\n" .. trace)
+    function publicApi.SetColor(newColor: Color3)
+        if typeof(newColor) ~= "Color3" then
+            warn("SetColor: Cor inválida. Esperado Color3, recebido " .. typeof(newColor))
             return
         end
         
-        -- Se chegou aqui, colorToSet é um Color3 válido.
-        colorBox.BackgroundColor3 = colorToSet
-        local h, s, v = colorToSet:ToHSV()
+        colorBox.BackgroundColor3 = newColor
+        local h, s, v = newColor:ToHSV()
         state.h, state.s, state.v = h, s, v
         
         if state.isExpanded then
             updateThumbs()
         end
         
-        pcall(options.Callback, colorToSet)
+        pcall(options.Callback, newColor)
     end
 
     function publicApi.GetColor(): Color3
@@ -2000,8 +2050,17 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
             connection:Disconnect()
         end
         table.clear(connections)
-        if box and box.Parent then box:Destroy() end
-        for k in pairs(publicApi) do publicApi[k] = nil end
+        
+        if box and box.Parent then
+            box:Destroy()
+        end
+        
+        -- Limpa a referência na API para evitar uso após destruição
+        for k in pairs(publicApi) do
+            publicApi[k] = nil
+        end
+        
+        -- Remove da lista de componentes da aba, se aplicável
         for i, comp in ipairs(tab.Components) do
             if comp == publicApi then
                 table.remove(tab.Components, i)
@@ -2010,6 +2069,7 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
         end
     end
     
+    -- Adiciona a instância e as conexões à API para referência, se necessário
     publicApi._instance = box
     publicApi._connections = connections
 
@@ -2017,5 +2077,439 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     return publicApi
 end
 
+-- Dropdown Component Refatorado
+-- Suporta single/multi-select, imagens opcionais, scroll otimizado e interação mobile/desktop
+
+function Tekscripts:CreateDropdown(tab: any, options: {
+    Title: string,
+    Values: { { Name: string, Image: string? } },
+    Callback: (selected: {string} | string) -> (),
+    MultiSelect: boolean?,
+    MaxVisibleItems: number?,
+    InitialValues: {string}?
+})
+    -- Validações
+    assert(type(tab) == "table" and tab.Container, "Objeto 'tab' inválido fornecido para CreateDropdown")
+    assert(type(options) == "table" and type(options.Title) == "string" and type(options.Values) == "table", "Argumentos inválidos para CreateDropdown")
+
+    -- Configurações
+    local multiSelect = options.MultiSelect or false
+    local maxVisibleItems = math.min(options.MaxVisibleItems or 5, 8) -- Máximo de 8 itens visíveis para performance
+    local itemHeight = 44 -- Altura aumentada para melhor touch
+    local imagePadding = 8
+    local imageSize = itemHeight - (imagePadding * 2)
+    
+    -- =================================================================
+    -- BOX PRINCIPAL (Container)
+    -- =================================================================
+    local box = Instance.new("Frame")
+    box.AutomaticSize = Enum.AutomaticSize.Y
+    box.Size = UDim2.new(1, 0, 0, 0)
+    box.BackgroundColor3 = DESIGN.ComponentBackground
+    box.BorderSizePixel = 0
+    box.Parent = tab.Container
+    addRoundedCorners(box, DESIGN.CornerRadius)
+
+    local boxLayout = Instance.new("UIListLayout")
+    boxLayout.Padding = UDim.new(0, 0)
+    boxLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    boxLayout.Parent = box
+    
+    -- =================================================================
+    -- MAIN (Header com título e botão)
+    -- =================================================================
+    local main = Instance.new("Frame")
+    main.Size = UDim2.new(1, 0, 0, 50)
+    main.BackgroundTransparency = 1
+    main.LayoutOrder = 1
+    main.Parent = box
+
+    local mainPadding = Instance.new("UIPadding")
+    mainPadding.PaddingLeft = UDim.new(0, 12)
+    mainPadding.PaddingRight = UDim.new(0, 12)
+    mainPadding.PaddingTop = UDim.new(0, 12)
+    mainPadding.PaddingBottom = UDim.new(0, 12)
+    mainPadding.Parent = main
+
+    -- Title
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Text = options.Title
+    title.Size = UDim2.new(1, -110, 1, 0)
+    title.Position = UDim2.new(0, 0, 0, 0)
+    title.BackgroundTransparency = 1
+    title.TextColor3 = DESIGN.ComponentTextColor
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 15
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextYAlignment = Enum.TextYAlignment.Center
+    title.TextTruncate = Enum.TextTruncate.AtEnd
+    title.Parent = main
+
+    -- Botão de ação
+    local botaoText = createButton("Selecionar ▼", UDim2.new(0, 100, 1, 0), main)
+    botaoText.Name = "BotaoText"
+    botaoText.Position = UDim2.new(1, -100, 0, 0)
+    botaoText.TextSize = 13
+    botaoText.Parent = main
+
+    -- =================================================================
+    -- LISTER (ScrollingFrame para os itens)
+    -- =================================================================
+    local lister = Instance.new("ScrollingFrame")
+    lister.Name = "Lister"
+    lister.Size = UDim2.new(1, 0, 0, 0) -- Começa fechado
+    lister.BackgroundTransparency = 1
+    lister.BorderSizePixel = 0
+    lister.ClipsDescendants = true
+    lister.ScrollBarImageColor3 = DESIGN.AccentColor
+    lister.ScrollBarThickness = 5
+    lister.ScrollingDirection = Enum.ScrollingDirection.Y
+    lister.CanvasSize = UDim2.new(0, 0, 0, 0)
+    lister.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    lister.LayoutOrder = 2
+    lister.Parent = box
+
+    local listerLayout = Instance.new("UIListLayout")
+    listerLayout.Padding = UDim.new(0, 4)
+    listerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listerLayout.Parent = lister
+
+    local listerPadding = Instance.new("UIPadding")
+    listerPadding.PaddingLeft = UDim.new(0, 12)
+    listerPadding.PaddingRight = UDim.new(0, 12)
+    listerPadding.PaddingTop = UDim.new(0, 8)
+    listerPadding.PaddingBottom = UDim.new(0, 12)
+    listerPadding.Parent = lister
+
+    -- =================================================================
+    -- ESTADO E LÓGICA
+    -- =================================================================
+    local isOpen = false
+    local selectedValues = {}
+    local connections = {}
+    local itemElements = {}
+
+    -- Atualiza o texto do botão
+    local function updateButtonText()
+        local arrow = isOpen and "▲" or "▼"
+        if #selectedValues == 0 then
+            botaoText.Text = "Selecionar " .. arrow
+        elseif #selectedValues == 1 then
+            local displayText = selectedValues[1]
+            if #displayText > 10 then
+                displayText = string.sub(displayText, 1, 10) .. "..."
+            end
+            botaoText.Text = displayText .. " " .. arrow
+        else
+            botaoText.Text = string.format("%d itens %s", #selectedValues, arrow)
+        end
+    end
+
+    -- Toggle do dropdown
+    local function toggleDropdown()
+        isOpen = not isOpen
+        
+        -- Calcula altura necessária
+        local numItems = #options.Values
+        local totalItemHeight = (numItems * itemHeight) + ((numItems - 1) * listerLayout.Padding.Offset)
+        local maxHeight = (maxVisibleItems * itemHeight) + ((maxVisibleItems - 1) * listerLayout.Padding.Offset)
+        local targetHeight = isOpen and math.min(totalItemHeight + listerPadding.PaddingTop.Offset + listerPadding.PaddingBottom.Offset, maxHeight + listerPadding.PaddingTop.Offset + listerPadding.PaddingBottom.Offset) or 0
+        
+        -- Animação suave
+        local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        TweenService:Create(lister, tweenInfo, { 
+            Size = UDim2.new(1, 0, 0, targetHeight) 
+        }):Play()
+        
+        updateButtonText()
+    end
+
+    -- Marca/desmarca item visualmente
+    local function setItemSelected(valueName, isSelected)
+        local elements = itemElements[valueName]
+        if not elements then return end
+        
+        local targetColor = isSelected and DESIGN.AccentColor or DESIGN.ComponentBackground
+        local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Quad)
+        
+        TweenService:Create(elements.container, tweenInfo, {
+            BackgroundColor3 = targetColor
+        }):Play()
+        
+        if elements.indicator then
+            elements.indicator.Visible = isSelected
+        end
+    end
+
+    -- Toggle de seleção de item
+    local function toggleItemSelection(valueName)
+        local isCurrentlySelected = table.find(selectedValues, valueName)
+        
+        if multiSelect then
+            -- Multi-select: adiciona/remove da lista
+            if isCurrentlySelected then
+                table.remove(selectedValues, isCurrentlySelected)
+                setItemSelected(valueName, false)
+            else
+                table.insert(selectedValues, valueName)
+                setItemSelected(valueName, true)
+            end
+        else
+            -- Single-select: limpa tudo e seleciona apenas um
+            for name, _ in pairs(itemElements) do 
+                setItemSelected(name, false) 
+            end
+            
+            if isCurrentlySelected then
+                selectedValues = {}
+            else
+                selectedValues = { valueName }
+                setItemSelected(valueName, true)
+            end
+            
+            -- Fecha automaticamente no single-select
+            if isOpen and not isCurrentlySelected then 
+                task.delay(0.15, toggleDropdown)
+            end
+        end
+        
+        updateButtonText()
+        
+        -- Callback
+        if options.Callback then 
+            options.Callback(multiSelect and selectedValues or (selectedValues[1] or nil)) 
+        end
+    end
+
+    -- =================================================================
+    -- CRIAÇÃO DOS ITENS
+    -- =================================================================
+    for index, valueInfo in ipairs(options.Values) do
+        local hasImage = valueInfo.Image and valueInfo.Image ~= ""
+        
+        -- Container do item
+        local itemContainer = Instance.new("TextButton")
+        itemContainer.Name = "Item_" .. index
+        itemContainer.Size = UDim2.new(1, 0, 0, itemHeight)
+        itemContainer.BackgroundColor3 = DESIGN.ComponentBackground
+        itemContainer.BorderSizePixel = 0
+        itemContainer.Text = ""
+        itemContainer.AutoButtonColor = false
+        itemContainer.LayoutOrder = index
+        itemContainer.Parent = lister
+        addRoundedCorners(itemContainer, DESIGN.CornerRadius - 2)
+
+        -- Padding interno
+        local itemPadding = Instance.new("UIPadding")
+        itemPadding.PaddingLeft = UDim.new(0, 10)
+        itemPadding.PaddingRight = UDim.new(0, 10)
+        itemPadding.Parent = itemContainer
+
+        -- Frame para organizar conteúdo
+        local contentFrame = Instance.new("Frame")
+        contentFrame.Size = UDim2.new(1, 0, 1, 0)
+        contentFrame.BackgroundTransparency = 1
+        contentFrame.Parent = itemContainer
+
+        -- Indicador de seleção (círculo/checkbox)
+        local indicator
+        if multiSelect then
+            -- Checkbox para multi-select
+            indicator = Instance.new("Frame")
+            indicator.Size = UDim2.new(0, 18, 0, 18)
+            indicator.Position = UDim2.new(1, -18, 0.5, -9)
+            indicator.BackgroundColor3 = DESIGN.AccentColor
+            indicator.BorderSizePixel = 0
+            indicator.Visible = false
+            indicator.Parent = contentFrame
+            addRoundedCorners(indicator, UDim.new(0, 3))
+            
+            local checkIcon = Instance.new("TextLabel")
+            checkIcon.Size = UDim2.new(1, 0, 1, 0)
+            checkIcon.BackgroundTransparency = 1
+            checkIcon.Text = "✓"
+            checkIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+            checkIcon.Font = Enum.Font.GothamBold
+            checkIcon.TextSize = 14
+            checkIcon.Parent = indicator
+        else
+            -- Indicador circular para single-select
+            indicator = Instance.new("Frame")
+            indicator.Size = UDim2.new(0, 8, 0, 8)
+            indicator.Position = UDim2.new(1, -8, 0.5, -4)
+            indicator.BackgroundColor3 = DESIGN.AccentColor
+            indicator.BorderSizePixel = 0
+            indicator.Visible = false
+            indicator.Parent = contentFrame
+            addRoundedCorners(indicator, UDim.new(1, 0))
+        end
+
+        -- Foto (se existir)
+        local foto
+        if hasImage then
+            foto = Instance.new("ImageLabel")
+            foto.Name = "Foto"
+            foto.Size = UDim2.new(0, imageSize, 0, imageSize)
+            foto.Position = UDim2.new(0, 0, 0.5, -imageSize/2)
+            foto.BackgroundTransparency = 1
+            foto.Image = valueInfo.Image
+            foto.ScaleType = Enum.ScaleType.Fit
+            foto.Parent = contentFrame
+            addRoundedCorners(foto, UDim.new(0, 4))
+        end
+
+        -- Texto do item
+        local textXOffset = hasImage and (imageSize + 8) or 0
+        local textWidth = multiSelect and -30 or -12
+        
+        local itemText = Instance.new("TextLabel")
+        itemText.Name = "ConteudoText"
+        itemText.Size = UDim2.new(1, textWidth, 1, 0)
+        itemText.Position = UDim2.new(0, textXOffset, 0, 0)
+        itemText.BackgroundTransparency = 1
+        itemText.Text = valueInfo.Name
+        itemText.TextColor3 = DESIGN.ComponentTextColor
+        itemText.Font = Enum.Font.Gotham
+        itemText.TextSize = 14
+        itemText.TextXAlignment = Enum.TextXAlignment.Left
+        itemText.TextYAlignment = Enum.TextYAlignment.Center
+        itemText.TextTruncate = Enum.TextTruncate.AtEnd
+        itemText.Parent = contentFrame
+
+        -- Armazena referências
+        itemElements[valueInfo.Name] = {
+            container = itemContainer,
+            indicator = indicator,
+            text = itemText,
+            foto = foto
+        }
+
+        -- =================================================================
+        -- EVENTOS DO ITEM
+        -- =================================================================
+        
+        -- Click/Touch
+        itemContainer.MouseButton1Click:Connect(function()
+            toggleItemSelection(valueInfo.Name)
+        end)
+
+        -- Hover (apenas desktop)
+        itemContainer.MouseEnter:Connect(function()
+            if not table.find(selectedValues, valueInfo.Name) then
+                TweenService:Create(itemContainer, TweenInfo.new(0.15), { 
+                    BackgroundColor3 = DESIGN.ItemHoverColor or Color3.fromRGB(45, 45, 50)
+                }):Play()
+            end
+        end)
+
+        itemContainer.MouseLeave:Connect(function()
+            if not table.find(selectedValues, valueInfo.Name) then
+                TweenService:Create(itemContainer, TweenInfo.new(0.15), { 
+                    BackgroundColor3 = DESIGN.ComponentBackground 
+                }):Play()
+            end
+        end)
+    end
+
+    -- =================================================================
+    -- INICIALIZAÇÃO COM VALORES
+    -- =================================================================
+    if options.InitialValues then
+        for _, valueToSelect in ipairs(options.InitialValues) do
+            if itemElements[valueToSelect] then
+                table.insert(selectedValues, valueToSelect)
+                setItemSelected(valueToSelect, true)
+            end
+        end
+        updateButtonText()
+    end
+
+    -- =================================================================
+    -- EVENTOS GLOBAIS
+    -- =================================================================
+    
+    -- Click no botão principal
+    connections.ButtonClick = botaoText.MouseButton1Click:Connect(toggleDropdown)
+
+    -- Click fora para fechar (desktop e mobile)
+    connections.InputBegan = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not isOpen or gameProcessed then return end
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            
+            local clickedGui = input.GuiObject
+            
+            -- Fecha se clicou fora do dropdown
+            if not clickedGui or not clickedGui:IsDescendantOf(box) then
+                toggleDropdown()
+            end
+        end
+    end)
+
+    -- =================================================================
+    -- API PÚBLICA
+    -- =================================================================
+    local publicApi = {
+        _instance = box,
+        _connections = connections
+    }
+
+    -- Método para destruir o componente
+    function publicApi:Destroy()
+        if self._instance then
+            for _, conn in pairs(self._connections) do
+                if conn and conn.Connected then
+                    conn:Disconnect()
+                end
+            end
+            self._instance:Destroy()
+            self._instance = nil
+        end
+    end
+
+    -- Método para obter valores selecionados
+    function publicApi:GetSelected()
+        return multiSelect and selectedValues or (selectedValues[1] or nil)
+    end
+
+    -- Método para definir valores programaticamente
+    function publicApi:SetSelected(values)
+        -- Limpa seleção anterior
+        for name, _ in pairs(itemElements) do
+            setItemSelected(name, false)
+        end
+        selectedValues = {}
+        
+        -- Define novos valores
+        local valuesToSet = type(values) == "table" and values or {values}
+        for _, value in ipairs(valuesToSet) do
+            if itemElements[value] then
+                table.insert(selectedValues, value)
+                setItemSelected(value, true)
+            end
+        end
+        
+        updateButtonText()
+    end
+
+    -- Método para abrir/fechar programaticamente
+    function publicApi:Toggle()
+        toggleDropdown()
+    end
+
+    -- Método para fechar
+    function publicApi:Close()
+        if isOpen then
+            toggleDropdown()
+        end
+    end
+
+    -- Adiciona à lista de componentes da tab
+    table.insert(tab.Components, publicApi)
+    
+    return publicApi
+end
 
 return Tekscripts
