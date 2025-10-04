@@ -41,7 +41,7 @@ local DESIGN = {
     MinimizeButtonColor = Color3.fromRGB(230, 80, 80),-- Vermelho vibrante para minimizar
     CloseButtonColor = Color3.fromRGB(255, 100, 100), -- Vermelho para fechar
     FloatButtonColor = Color3.fromRGB(40, 40, 45),    -- Botão flutuante discreto
-    
+  
     -- Cores de menu dropdown
     DropdownBackground = Color3.fromRGB(25, 25, 30),
     DropdownItemHover = Color3.fromRGB(60, 60, 70),
@@ -72,14 +72,16 @@ local DESIGN = {
     WindowSize = UDim2.new(0, 620, 0, 470),
     MinWindowSize = Vector2.new(500, 370),
     MaxWindowSize = Vector2.new(620, 470),
-    TitleHeight = 48,
+    TitleHeight = 42,
+    TitlePadding = 10,  -- Novo: Espaço para o ícone e o título
 
     -- Componentes
     ComponentHeight = 44,
-    ComponentPadding = 14,
-    ContainerPadding = 12,
+    ComponentPadding = 10,
+    ContainerPadding = 2,
     CornerRadius = 8,                                 -- Cantos mais suaves
     ButtonIconSize = 24,
+    IconSize = 28,  -- Novo: Tamanho do ícone no cabeçalho
 
     -- Abas (Tabs)
     TabButtonWidth = 140,
@@ -106,8 +108,8 @@ local DESIGN = {
     -- =================================================================
     -- EFEITOS
     -- =================================================================
-    BlurEffectSize = 12,                              -- Blur mais intenso
-    AnimationSpeed = 0.15,                            -- Animações mais rápidas
+    BlurEffectSize = 8,                              -- Blur mais intenso
+    AnimationSpeed = 0.30,                            -- Animações mais rápidas
 }
 
 ---
@@ -231,7 +233,7 @@ end
 ---
 -- Construtor da GUI
 ---
-function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: string?, startTab: string? })
+function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: string?, startTab: string?, iconId: string? })
     options = options or {}
     local self = setmetatable({} :: {
         ScreenGui: ScreenGui,
@@ -252,7 +254,10 @@ function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: 
         Blocked: boolean,
         startTab: string?,
         DropdownMenu: Frame?,
-        NoTabsLabel: TextLabel?
+        NoTabsLabel: TextLabel?,
+        Title: TextLabel?,
+        TitleScrollTween: Tween?,
+        TitleScrollConnection: any?
     }, Tekscripts)
 
     self.ScreenGui = Instance.new("ScreenGui")
@@ -295,43 +300,98 @@ function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: 
     self.TitleBar.BackgroundTransparency = 1
     self.TitleBar.Parent = self.Window
 
+    -- NOVO: Frame para a estrutura `<main>`
+    local mainHeader = Instance.new("Frame")
+    mainHeader.Size = UDim2.new(1, 0, 1, 0)
+    mainHeader.BackgroundTransparency = 1
+    mainHeader.LayoutOrder = 1
+    mainHeader.Parent = self.TitleBar
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.FillDirection = Enum.FillDirection.Horizontal
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    listLayout.Padding = UDim.new(0, 5) -- Espaçamento entre os elementos
+    listLayout.Parent = mainHeader
+
+    local padding = Instance.new("UIPadding")
+    padding.PaddingLeft = UDim.new(0, 10)
+    padding.PaddingRight = UDim.new(0, 10)
+    padding.Parent = mainHeader
+
+    -- NOVO: Criação do Frame para o ícone
+    local iconFrame = Instance.new("Frame")
+    iconFrame.Size = UDim2.new(0, DESIGN.IconSize, 0, DESIGN.IconSize)
+    iconFrame.BackgroundTransparency = 1
+    iconFrame.Parent = mainHeader
+
+    -- NOVO: `ImageLabel` para o ícone
+    local icon = Instance.new("ImageLabel")
+    icon.Image = options.iconId or "rbxassetid://6675147490" -- Ícone padrão
+    icon.Size = UDim2.new(1, 0, 1, 0)
+    icon.BackgroundTransparency = 1
+    icon.Parent = iconFrame
+    addRoundedCorners(icon, 5)
+
+    -- NOVO: Frame para o título com o ClipsDescendants
+    local titleFrame = Instance.new("Frame")
+    titleFrame.Size = UDim2.new(1, -(DESIGN.IconSize + 10 + DESIGN.TitleHeight * 2), 1, 0) -- Ajusta o tamanho
+    titleFrame.BackgroundTransparency = 1
+    titleFrame.ClipsDescendants = true
+    titleFrame.Parent = mainHeader
+
+    -- Título
     local title = Instance.new("TextLabel")
+    title.Name = "Title"
     title.Text = options.Name or "Tekscripts"
-    title.Size = UDim2.new(1, -(DESIGN.TitleHeight * 2), 1, 0)
-    title.Position = UDim2.new(0, 10, 0, 0)
+    title.Size = UDim2.new(1, 0, 1, 0)
+    title.Position = UDim2.new(0, 0, 0, 0)
     title.BackgroundTransparency = 1
     title.TextColor3 = DESIGN.TitleColor
     title.Font = Enum.Font.RobotoMono
     title.TextScaled = true
     title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Parent = self.TitleBar
+    title.Parent = titleFrame
+    self.Title = title
 
-    -- Botão de três pontos para o menu de controle
+    -- NOVO: Inicia o sistema de rolagem do título
+    self:SetupTitleScroll()
+
+    -- NOVO: Frame para os botões
+    local buttonFrame = Instance.new("Frame")
+    buttonFrame.Size = UDim2.new(0, DESIGN.TitleHeight * 2, 1, 0) -- Ajusta o tamanho
+    buttonFrame.BackgroundTransparency = 1
+    buttonFrame.Parent = mainHeader
+    
+    local buttonListLayout = Instance.new("UIListLayout")
+    buttonListLayout.FillDirection = Enum.FillDirection.Horizontal
+    buttonListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    buttonListLayout.Padding = UDim.new(0, 5)
+    buttonListLayout.Parent = buttonFrame
+
+    -- Botão de controle (agora à esquerda do minimizar)
     local controlBtn = Instance.new("TextButton")
     controlBtn.Text = "•••"
     controlBtn.Size = UDim2.new(0, DESIGN.TitleHeight, 0, DESIGN.TitleHeight)
-    controlBtn.Position = UDim2.new(1, -DESIGN.TitleHeight, 0, 0)
     controlBtn.BackgroundColor3 = DESIGN.ComponentBackground
     controlBtn.TextColor3 = DESIGN.ComponentTextColor
     controlBtn.Font = Enum.Font.Roboto
     controlBtn.TextScaled = true
     controlBtn.BorderSizePixel = 0
-    controlBtn.Parent = self.TitleBar
+    controlBtn.Parent = buttonFrame
 
     addRoundedCorners(controlBtn, DESIGN.CornerRadius)
     addHoverEffect(controlBtn, DESIGN.ComponentBackground, DESIGN.ComponentHoverColor)
 
-    -- Botão de minimizar ao lado do botão de controle
+    -- Botão de minimizar
     local minimizeBtn = Instance.new("TextButton")
     minimizeBtn.Text = "−"
     minimizeBtn.Size = UDim2.new(0, DESIGN.TitleHeight, 0, DESIGN.TitleHeight)
-    minimizeBtn.Position = UDim2.new(1, -(DESIGN.TitleHeight * 2), 0, 0)
     minimizeBtn.BackgroundColor3 = DESIGN.MinimizeButtonColor
     minimizeBtn.TextColor3 = DESIGN.ComponentTextColor
     minimizeBtn.Font = Enum.Font.Roboto
     minimizeBtn.TextScaled = true
     minimizeBtn.BorderSizePixel = 0
-    minimizeBtn.Parent = self.TitleBar
+    minimizeBtn.Parent = buttonFrame
 
     addRoundedCorners(minimizeBtn, DESIGN.CornerRadius)
     addHoverEffect(minimizeBtn, DESIGN.MinimizeButtonColor, DESIGN.ComponentHoverColor)
@@ -500,6 +560,9 @@ function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: 
 end
 
 function Tekscripts:Destroy()
+    if self.TitleScrollConnection then
+        self.TitleScrollConnection:Disconnect()
+    end
     if self.ScreenGui then
         self.ScreenGui:Destroy()
     end
@@ -509,6 +572,71 @@ function Tekscripts:Destroy()
         end
     end
     self.Connections = {}
+end
+
+---
+-- NOVO: Sistema de rolagem de título
+---
+function Tekscripts:SetupTitleScroll()
+    local title = self.Title
+    local parentFrame = title.Parent
+    local isScrolling = false
+
+    local function updateTitleScroll()
+        if not title or not parentFrame then return end
+        
+        local textBounds = title.TextBounds.X
+        local parentWidth = parentFrame.AbsoluteSize.X
+
+        if textBounds > parentWidth then
+            isScrolling = true
+            local scrollDistance = textBounds - parentWidth + 5 -- Adiciona um padding
+            local scrollSpeed = 50 -- pixels por segundo
+
+            local tweenInfo = TweenInfo.new(
+                scrollDistance / scrollSpeed,
+                Enum.EasingStyle.Linear,
+                Enum.EasingDirection.InOut,
+                0, -- repetições
+                false, -- não reverte
+                1 -- atraso
+            )
+
+            local tween = TweenService:Create(title, tweenInfo, { Position = UDim2.new(0, -scrollDistance, 0, 0) })
+
+            local function onTweenCompleted()
+                if not title then return end
+                title.Position = UDim2.new(0, parentWidth, 0, 0) -- Move para o final para reiniciar
+                local resetTween = TweenService:Create(title, TweenInfo.new(0, Enum.EasingStyle.Linear), { Position = UDim2.new(0, 0, 0, 0) })
+                resetTween:Play()
+                resetTween.Completed:Wait()
+                updateTitleScroll() -- Inicia o ciclo novamente
+            end
+            
+            self.TitleScrollTween = tween
+            tween.Completed:Connect(onTweenCompleted)
+            tween:Play()
+        else
+            isScrolling = false
+            title.Position = UDim2.new(0, 0, 0, 0)
+        end
+    end
+
+    -- NOVO: Conecta a verificação do scroll a cada frame
+    self.TitleScrollConnection = RunService.RenderStepped:Connect(function()
+        local textBounds = self.Title.TextBounds.X
+        local parentWidth = self.Title.Parent.AbsoluteSize.X
+        if textBounds > parentWidth and not isScrolling then
+            updateTitleScroll()
+        elseif textBounds <= parentWidth and isScrolling then
+            isScrolling = false
+            if self.TitleScrollTween then
+                self.TitleScrollTween:Cancel()
+                self.TitleScrollTween = nil
+            end
+            self.Title.Position = UDim2.new(0, 0, 0, 0)
+        end
+    end)
 end
 
 ---
@@ -2670,4 +2798,243 @@ function Tekscripts:CreateColorPicker(tab: any, options: {
     return publicApi
 end
 
+function Tekscripts:CreateLabel(tab, options)
+    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateLabel")
+    assert(type(options) == "table" and type(options.Title) == "string", "Invalid arguments for CreateLabel")
+
+    local UserInputService = game:GetService("UserInputService")
+    local TweenService = game:GetService("TweenService")
+
+    -- Valores padrão
+    local defaultOptions = {
+        Title = options.Title,
+        Desc = options.Desc,
+        Icon = options.Icon,
+        TitleColor = DESIGN.ComponentTextColor,
+        DescColor = Color3.fromRGB(200, 200, 200),
+        Align = Enum.TextXAlignment.Left,
+        Highlight = false
+    }
+
+    -- Box principal (com sombra sutil)
+    local outerBox = Instance.new("Frame")
+    outerBox.Size = UDim2.new(1, 0, 0, 0)
+    outerBox.BackgroundColor3 = DESIGN.ComponentBackground
+    outerBox.BorderSizePixel = 0
+    outerBox.ClipsDescendants = true
+    outerBox.Parent = tab.Container
+    addRoundedCorners(outerBox, DESIGN.CornerRadius)
+
+    -- Sombra sutil (opcional, mas elegante)
+    local shadow = Instance.new("Frame")
+    shadow.Size = UDim2.new(1, 0, 1, 0)
+    shadow.Position = UDim2.new(0, 0, 0, 2)
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BackgroundTransparency = 0.92
+    shadow.BorderSizePixel = 0
+    shadow.ZIndex = 0
+    addRoundedCorners(shadow, DESIGN.CornerRadius)
+    shadow.Parent = outerBox
+
+    -- Container interno
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, -DESIGN.ComponentPadding * 2, 1, -DESIGN.ComponentPadding * 2)
+    container.Position = UDim2.new(0, DESIGN.ComponentPadding, 0, DESIGN.ComponentPadding)
+    container.BackgroundTransparency = 1
+    container.AutomaticSize = Enum.AutomaticSize.Y
+    container.Parent = outerBox
+
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, 8)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.HorizontalAlignment = defaultOptions.Align == Enum.TextXAlignment.Center and Enum.HorizontalAlignment.Center or Enum.HorizontalAlignment.Left
+    listLayout.Parent = container
+
+    -- Ícone (opcional)
+    local iconLabel
+    if defaultOptions.Icon then
+        local iconContainer = Instance.new("Frame")
+        iconContainer.Size = UDim2.new(0, 24, 0, 24)
+        iconContainer.BackgroundTransparency = 1
+        iconContainer.Parent = container
+
+        iconLabel = Instance.new("ImageLabel")
+        iconLabel.Image = defaultOptions.Icon
+        iconLabel.Size = UDim2.new(1, 0, 1, 0)
+        iconLabel.BackgroundTransparency = 1
+        iconLabel.Parent = iconContainer
+    end
+
+    -- Título
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Text = defaultOptions.Title
+    titleLabel.Size = UDim2.new(1, 0, 0, 26)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.TextColor3 = defaultOptions.TitleColor
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.TextSize = 18
+    titleLabel.TextXAlignment = defaultOptions.Align
+    titleLabel.TextWrapped = true
+    titleLabel.Parent = container
+
+    -- Linha de destaque (opcional)
+    local highlightLine
+    if defaultOptions.Highlight then
+        highlightLine = Instance.new("Frame")
+        highlightLine.Size = UDim2.new(0, 40, 0, 2)
+        highlightLine.BackgroundColor3 = DESIGN.AccentColor or Color3.fromRGB(100, 180, 255)
+        highlightLine.Position = UDim2.new(0, 0, 1, 4)
+        highlightLine.Parent = titleLabel
+        addRoundedCorners(highlightLine, 1)
+    end
+
+    -- Descrição
+    local descLabel
+    if defaultOptions.Desc then
+        descLabel = Instance.new("TextLabel")
+        descLabel.Text = defaultOptions.Desc
+        descLabel.Size = UDim2.new(1, 0, 0, 0)
+        descLabel.AutomaticSize = Enum.AutomaticSize.Y
+        descLabel.BackgroundTransparency = 1
+        descLabel.TextColor3 = defaultOptions.DescColor
+        descLabel.Font = Enum.Font.GothamMedium
+        descLabel.TextSize = 15
+        descLabel.TextXAlignment = defaultOptions.Align
+        descLabel.TextWrapped = true
+        descLabel.LineHeight = 1.15
+        descLabel.Parent = container
+    end
+
+    -- Ajuste automático de altura
+    local layoutConnection = listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        local totalHeight = listLayout.AbsoluteContentSize.Y + DESIGN.ComponentPadding * 2
+        outerBox.Size = UDim2.new(1, 0, 0, totalHeight)
+        if shadow then
+            shadow.Size = UDim2.new(1, 0, 0, totalHeight)
+        end
+    end)
+
+    -- API pública
+    local publicApi = {
+        _instance = outerBox,
+        _connections = { layoutConnection },
+        _titleLabel = titleLabel,
+        _descLabel = descLabel,
+        _iconLabel = iconLabel
+    }
+
+    -- Atualiza título com transição suave
+    function publicApi.SetTitle(newTitle, color)
+        if not newTitle then return end
+        titleLabel.Text = newTitle
+        if color then
+            TweenService:Create(titleLabel, TweenInfo.new(0.2, Enum.EasingStyle.Quad), { TextColor3 = color }):Play()
+        end
+    end
+
+    -- Atualiza descrição
+    function publicApi.SetDesc(newDesc, color)
+        if newDesc == nil then
+            if descLabel then
+                descLabel:Destroy()
+                descLabel = nil
+            end
+            return
+        end
+
+        if not descLabel then
+            descLabel = Instance.new("TextLabel")
+            descLabel.Size = UDim2.new(1, 0, 0, 0)
+            descLabel.AutomaticSize = Enum.AutomaticSize.Y
+            descLabel.BackgroundTransparency = 1
+            descLabel.Font = Enum.Font.GothamMedium
+            descLabel.TextSize = 15
+            descLabel.TextXAlignment = defaultOptions.Align
+            descLabel.TextWrapped = true
+            descLabel.LineHeight = 1.15
+            descLabel.Parent = container
+        end
+
+        descLabel.Text = newDesc
+        if color then
+            descLabel.TextColor3 = color
+        end
+    end
+
+    -- Atualiza ícone
+    function publicApi.SetIcon(iconAsset)
+        if iconAsset then
+            if not iconLabel then
+                local iconContainer = Instance.new("Frame")
+                iconContainer.Size = UDim2.new(0, 24, 0, 24)
+                iconContainer.BackgroundTransparency = 1
+                iconContainer.Parent = container
+
+                -- Mantém o ícone no topo
+                table.insert(publicApi._connections, listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                    iconContainer.LayoutOrder = -1
+                end))
+
+                iconLabel = Instance.new("ImageLabel")
+                iconLabel.Image = iconAsset
+                iconLabel.Size = UDim2.new(1, 0, 1, 0)
+                iconLabel.BackgroundTransparency = 1
+                iconLabel.Parent = iconContainer
+                publicApi._iconLabel = iconLabel
+            else
+                iconLabel.Image = iconAsset
+            end
+        else
+            if iconLabel and iconLabel.Parent then
+                iconLabel.Parent:Destroy()
+                iconLabel = nil
+                publicApi._iconLabel = nil
+            end
+        end
+    end
+
+    -- Atualiza alinhamento
+    function publicApi.SetAlignment(align)
+        if not align then return end
+        titleLabel.TextXAlignment = align
+        if descLabel then
+            descLabel.TextXAlignment = align
+        end
+        listLayout.HorizontalAlignment = align == Enum.TextXAlignment.Center and Enum.HorizontalAlignment.Center or Enum.HorizontalAlignment.Left
+    end
+
+    -- Atualização em lote (compatível com antigo)
+    function publicApi.Update(newOptions)
+        if newOptions.Title ~= nil then
+            publicApi.SetTitle(newOptions.Title, newOptions.TitleColor)
+        end
+        if newOptions.Desc ~= nil then
+            publicApi.SetDesc(newOptions.Desc, newOptions.DescColor)
+        end
+        if newOptions.Icon ~= nil then
+            publicApi.SetIcon(newOptions.Icon)
+        end
+        if newOptions.Align then
+            publicApi.SetAlignment(newOptions.Align)
+        end
+    end
+
+    -- Destruição segura
+    function publicApi.Destroy()
+        if publicApi._instance then
+            for _, conn in pairs(publicApi._connections) do
+                if conn and conn.Connected then
+                    conn:Disconnect()
+                end
+            end
+            publicApi._instance:Destroy()
+            publicApi._instance = nil
+            publicApi._connections = nil
+        end
+        table.clear(publicApi)
+    end
+
+    table.insert(tab.Components, publicApi)
+    return publicApi
+end
 return Tekscripts
