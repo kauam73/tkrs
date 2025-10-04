@@ -1,3 +1,4 @@
+
 --!strict
 local Tekscripts = {}
 Tekscripts.__index = Tekscripts
@@ -1872,6 +1873,12 @@ function Tekscripts:CreateFloatingButton(options: {
     return publicApi
 end
 
+-- =================================================================
+-- Tekscripts:CreateDropdown
+-- =================================================================
+-- Cria um componente de dropdown interativo.
+-- Adicionado: APIs AddItem e RemoveItem para atualização em tempo real.
+-- =================================================================
 function Tekscripts:CreateDropdown(tab: any, options: {
     Title: string,
     Values: { { Name: string, Image: string? } },
@@ -1892,95 +1899,155 @@ function Tekscripts:CreateDropdown(tab: any, options: {
     local imageSize = itemHeight - (imagePadding * 2)
     
     -- =================================================================
-    -- BOX PRINCIPAL (Container)
-    -- =================================================================
-    local box = Instance.new("Frame")
-    box.AutomaticSize = Enum.AutomaticSize.Y
-    box.Size = UDim2.new(1, 0, 0, 0)
-    box.BackgroundColor3 = DESIGN.ComponentBackground
-    box.BorderSizePixel = 0
-    box.Parent = tab.Container
-    addRoundedCorners(box, DESIGN.CornerRadius)
-
-    local boxLayout = Instance.new("UIListLayout")
-    boxLayout.Padding = UDim.new(0, 0)
-    boxLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    boxLayout.Parent = box
-    
-    -- =================================================================
-    -- MAIN (Header com título e botão)
-    -- =================================================================
-    local main = Instance.new("Frame")
-    main.Size = UDim2.new(1, 0, 0, 50)
-    main.BackgroundTransparency = 1
-    main.LayoutOrder = 1
-    main.Parent = box
-
-    local mainPadding = Instance.new("UIPadding")
-    mainPadding.PaddingLeft = UDim.new(0, 12)
-    mainPadding.PaddingRight = UDim.new(0, 12)
-    mainPadding.PaddingTop = UDim.new(0, 12)
-    mainPadding.PaddingBottom = UDim.new(0, 12)
-    mainPadding.Parent = main
-
-    -- Title
-    local title = Instance.new("TextLabel")
-    title.Name = "Title"
-    title.Text = options.Title
-    title.Size = UDim2.new(1, -110, 1, 0)
-    title.Position = UDim2.new(0, 0, 0, 0)
-    title.BackgroundTransparency = 1
-    title.TextColor3 = DESIGN.ComponentTextColor
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 15
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.TextYAlignment = Enum.TextYAlignment.Center
-    title.TextTruncate = Enum.TextTruncate.AtEnd
-    title.Parent = main
-
-    -- Botão de ação
-    local botaoText = createButton("Selecionar ▼", UDim2.new(0, 100, 1, 0), main)
-    botaoText.Name = "BotaoText"
-    botaoText.Position = UDim2.new(1, -100, 0, 0)
-    botaoText.TextSize = 13
-    botaoText.Parent = main
-
-    -- =================================================================
-    -- LISTER (ScrollingFrame para os itens)
-    -- =================================================================
-    local lister = Instance.new("ScrollingFrame")
-    lister.Name = "Lister"
-    lister.Size = UDim2.new(1, 0, 0, 0) -- Começa fechado
-    lister.BackgroundTransparency = 1
-    lister.BorderSizePixel = 0
-    lister.ClipsDescendants = true
-    lister.ScrollBarImageColor3 = DESIGN.AccentColor
-    lister.ScrollBarThickness = 5
-    lister.ScrollingDirection = Enum.ScrollingDirection.Y
-    lister.CanvasSize = UDim2.new(0, 0, 0, 0)
-    lister.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    lister.LayoutOrder = 2
-    lister.Parent = box
-
-    local listerLayout = Instance.new("UIListLayout")
-    listerLayout.Padding = UDim.new(0, 4)
-    listerLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listerLayout.Parent = lister
-
-    local listerPadding = Instance.new("UIPadding")
-    listerPadding.PaddingLeft = UDim.new(0, 12)
-    listerPadding.PaddingRight = UDim.new(0, 12)
-    listerPadding.PaddingTop = UDim.new(0, 8)
-    listerPadding.PaddingBottom = UDim.new(0, 12)
-    listerPadding.Parent = lister
-
-    -- =================================================================
     -- ESTADO E LÓGICA
     -- =================================================================
     local isOpen = false
     local selectedValues = {}
     local connections = {}
     local itemElements = {}
+    
+    -- Função interna para recriar todos os itens da lista
+    local function createItems()
+        -- Limpa itens existentes e desconecta eventos
+        for _, conn in pairs(connections) do
+            if conn and conn.Connected then
+                conn:Disconnect()
+            end
+        end
+        connections.ButtonClick = nil
+        
+        for _, elementTable in pairs(itemElements) do
+            if elementTable.container and elementTable.container.Parent then
+                elementTable.container:Destroy()
+            end
+        end
+        itemElements = {}
+        
+        -- Garante que o Lister existe antes de criar os itens
+        if not lister then return end
+
+        for index, valueInfo in ipairs(options.Values) do
+            local hasImage = valueInfo.Image and valueInfo.Image ~= ""
+            
+            -- Container do item
+            local itemContainer = Instance.new("TextButton")
+            itemContainer.Name = "Item_" .. valueInfo.Name:gsub("[^a-zA-Z0-9_]", "_")
+            itemContainer.Size = UDim2.new(1, 0, 0, itemHeight)
+            itemContainer.BackgroundColor3 = DESIGN.ComponentBackground
+            itemContainer.BorderSizePixel = 0
+            itemContainer.Text = ""
+            itemContainer.AutoButtonColor = false
+            itemContainer.LayoutOrder = index
+            itemContainer.Parent = lister
+            addRoundedCorners(itemContainer, DESIGN.CornerRadius - 2)
+
+            -- Padding interno
+            local itemPadding = Instance.new("UIPadding")
+            itemPadding.PaddingLeft = UDim.new(0, 10)
+            itemPadding.PaddingRight = UDim.new(0, 10)
+            itemPadding.Parent = itemContainer
+
+            -- Frame para organizar conteúdo
+            local contentFrame = Instance.new("Frame")
+            contentFrame.Size = UDim2.new(1, 0, 1, 0)
+            contentFrame.BackgroundTransparency = 1
+            contentFrame.Parent = itemContainer
+
+            -- Indicador de seleção (círculo/checkbox)
+            local indicator
+            if multiSelect then
+                -- Checkbox para multi-select
+                indicator = Instance.new("Frame")
+                indicator.Size = UDim2.new(0, 18, 0, 18)
+                indicator.Position = UDim2.new(1, -18, 0.5, -9)
+                indicator.BackgroundColor3 = DESIGN.AccentColor
+                indicator.BorderSizePixel = 0
+                indicator.Visible = false
+                indicator.Parent = contentFrame
+                addRoundedCorners(indicator, UDim.new(0, 3))
+                
+                local checkIcon = Instance.new("TextLabel")
+                checkIcon.Size = UDim2.new(1, 0, 1, 0)
+                checkIcon.BackgroundTransparency = 1
+                checkIcon.Text = "✓"
+                checkIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+                checkIcon.Font = Enum.Font.GothamBold
+                checkIcon.TextSize = 14
+                checkIcon.Parent = indicator
+            else
+                -- Indicador circular para single-select
+                indicator = Instance.new("Frame")
+                indicator.Size = UDim2.new(0, 8, 0, 8)
+                indicator.Position = UDim2.new(1, -8, 0.5, -4)
+                indicator.BackgroundColor3 = DESIGN.AccentColor
+                indicator.BorderSizePixel = 0
+                indicator.Visible = false
+                indicator.Parent = contentFrame
+                addRoundedCorners(indicator, UDim.new(1, 0))
+            end
+
+            -- Foto (se existir)
+            local foto
+            if hasImage then
+                foto = Instance.new("ImageLabel")
+                foto.Name = "Foto"
+                foto.Size = UDim2.new(0, imageSize, 0, imageSize)
+                foto.Position = UDim2.new(0, 0, 0.5, -imageSize/2)
+                foto.BackgroundTransparency = 1
+                foto.Image = valueInfo.Image
+                foto.ScaleType = Enum.ScaleType.Fit
+                foto.Parent = contentFrame
+                addRoundedCorners(foto, UDim.new(0, 4))
+            end
+
+            -- Texto do item
+            local textXOffset = hasImage and (imageSize + 8) or 0
+            local textWidth = multiSelect and -30 or -12
+            
+            local itemText = Instance.new("TextLabel")
+            itemText.Name = "ConteudoText"
+            itemText.Size = UDim2.new(1, textWidth, 1, 0)
+            itemText.Position = UDim2.new(0, textXOffset, 0, 0)
+            itemText.BackgroundTransparency = 1
+            itemText.Text = valueInfo.Name
+            itemText.TextColor3 = DESIGN.ComponentTextColor
+            itemText.Font = Enum.Font.Gotham
+            itemText.TextSize = 14
+            itemText.TextXAlignment = Enum.TextXAlignment.Left
+            itemText.TextYAlignment = Enum.TextYAlignment.Center
+            itemText.TextTruncate = Enum.TextTruncate.AtEnd
+            itemText.Parent = contentFrame
+
+            -- Armazena referências
+            itemElements[valueInfo.Name] = {
+                container = itemContainer,
+                indicator = indicator,
+                text = itemText,
+                foto = foto
+            }
+
+            -- Eventos do item
+            itemContainer.MouseButton1Click:Connect(function()
+                toggleItemSelection(valueInfo.Name)
+            end)
+
+            itemContainer.MouseEnter:Connect(function()
+                if not table.find(selectedValues, valueInfo.Name) then
+                    TweenService:Create(itemContainer, TweenInfo.new(0.15), { 
+                        BackgroundColor3 = DESIGN.ItemHoverColor or Color3.fromRGB(45, 45, 50)
+                    }):Play()
+                end
+            end)
+
+            itemContainer.MouseLeave:Connect(function()
+                if not table.find(selectedValues, valueInfo.Name) then
+                    TweenService:Create(itemContainer, TweenInfo.new(0.15), { 
+                        BackgroundColor3 = DESIGN.ComponentBackground 
+                    }):Play()
+                end
+            end)
+        end
+    end
 
     -- Atualiza o texto do botão
     local function updateButtonText()
@@ -2075,173 +2142,90 @@ function Tekscripts:CreateDropdown(tab: any, options: {
     end
 
     -- =================================================================
-    -- CRIAÇÃO DOS ITENS
+    -- BOX PRINCIPAL (Container)
     -- =================================================================
-    for index, valueInfo in ipairs(options.Values) do
-        local hasImage = valueInfo.Image and valueInfo.Image ~= ""
-        
-        -- Container do item
-        local itemContainer = Instance.new("TextButton")
-        itemContainer.Name = "Item_" .. index
-        itemContainer.Size = UDim2.new(1, 0, 0, itemHeight)
-        itemContainer.BackgroundColor3 = DESIGN.ComponentBackground
-        itemContainer.BorderSizePixel = 0
-        itemContainer.Text = ""
-        itemContainer.AutoButtonColor = false
-        itemContainer.LayoutOrder = index
-        itemContainer.Parent = lister
-        addRoundedCorners(itemContainer, DESIGN.CornerRadius - 2)
+    local box = Instance.new("Frame")
+    box.AutomaticSize = Enum.AutomaticSize.Y
+    box.Size = UDim2.new(1, 0, 0, 0)
+    box.BackgroundColor3 = DESIGN.ComponentBackground
+    box.BorderSizePixel = 0
+    box.Parent = tab.Container
+    addRoundedCorners(box, DESIGN.CornerRadius)
 
-        -- Padding interno
-        local itemPadding = Instance.new("UIPadding")
-        itemPadding.PaddingLeft = UDim.new(0, 10)
-        itemPadding.PaddingRight = UDim.new(0, 10)
-        itemPadding.Parent = itemContainer
-
-        -- Frame para organizar conteúdo
-        local contentFrame = Instance.new("Frame")
-        contentFrame.Size = UDim2.new(1, 0, 1, 0)
-        contentFrame.BackgroundTransparency = 1
-        contentFrame.Parent = itemContainer
-
-        -- Indicador de seleção (círculo/checkbox)
-        local indicator
-        if multiSelect then
-            -- Checkbox para multi-select
-            indicator = Instance.new("Frame")
-            indicator.Size = UDim2.new(0, 18, 0, 18)
-            indicator.Position = UDim2.new(1, -18, 0.5, -9)
-            indicator.BackgroundColor3 = DESIGN.AccentColor
-            indicator.BorderSizePixel = 0
-            indicator.Visible = false
-            indicator.Parent = contentFrame
-            addRoundedCorners(indicator, UDim.new(0, 3))
-            
-            local checkIcon = Instance.new("TextLabel")
-            checkIcon.Size = UDim2.new(1, 0, 1, 0)
-            checkIcon.BackgroundTransparency = 1
-            checkIcon.Text = "✓"
-            checkIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
-            checkIcon.Font = Enum.Font.GothamBold
-            checkIcon.TextSize = 14
-            checkIcon.Parent = indicator
-        else
-            -- Indicador circular para single-select
-            indicator = Instance.new("Frame")
-            indicator.Size = UDim2.new(0, 8, 0, 8)
-            indicator.Position = UDim2.new(1, -8, 0.5, -4)
-            indicator.BackgroundColor3 = DESIGN.AccentColor
-            indicator.BorderSizePixel = 0
-            indicator.Visible = false
-            indicator.Parent = contentFrame
-            addRoundedCorners(indicator, UDim.new(1, 0))
-        end
-
-        -- Foto (se existir)
-        local foto
-        if hasImage then
-            foto = Instance.new("ImageLabel")
-            foto.Name = "Foto"
-            foto.Size = UDim2.new(0, imageSize, 0, imageSize)
-            foto.Position = UDim2.new(0, 0, 0.5, -imageSize/2)
-            foto.BackgroundTransparency = 1
-            foto.Image = valueInfo.Image
-            foto.ScaleType = Enum.ScaleType.Fit
-            foto.Parent = contentFrame
-            addRoundedCorners(foto, UDim.new(0, 4))
-        end
-
-        -- Texto do item
-        local textXOffset = hasImage and (imageSize + 8) or 0
-        local textWidth = multiSelect and -30 or -12
-        
-        local itemText = Instance.new("TextLabel")
-        itemText.Name = "ConteudoText"
-        itemText.Size = UDim2.new(1, textWidth, 1, 0)
-        itemText.Position = UDim2.new(0, textXOffset, 0, 0)
-        itemText.BackgroundTransparency = 1
-        itemText.Text = valueInfo.Name
-        itemText.TextColor3 = DESIGN.ComponentTextColor
-        itemText.Font = Enum.Font.Gotham
-        itemText.TextSize = 14
-        itemText.TextXAlignment = Enum.TextXAlignment.Left
-        itemText.TextYAlignment = Enum.TextYAlignment.Center
-        itemText.TextTruncate = Enum.TextTruncate.AtEnd
-        itemText.Parent = contentFrame
-
-        -- Armazena referências
-        itemElements[valueInfo.Name] = {
-            container = itemContainer,
-            indicator = indicator,
-            text = itemText,
-            foto = foto
-        }
-
-        -- =================================================================
-        -- EVENTOS DO ITEM
-        -- =================================================================
-        
-        -- Click/Touch
-        itemContainer.MouseButton1Click:Connect(function()
-            toggleItemSelection(valueInfo.Name)
-        end)
-
-        -- Hover (apenas desktop)
-        itemContainer.MouseEnter:Connect(function()
-            if not table.find(selectedValues, valueInfo.Name) then
-                TweenService:Create(itemContainer, TweenInfo.new(0.15), { 
-                    BackgroundColor3 = DESIGN.ItemHoverColor or Color3.fromRGB(45, 45, 50)
-                }):Play()
-            end
-        end)
-
-        itemContainer.MouseLeave:Connect(function()
-            if not table.find(selectedValues, valueInfo.Name) then
-                TweenService:Create(itemContainer, TweenInfo.new(0.15), { 
-                    BackgroundColor3 = DESIGN.ComponentBackground 
-                }):Play()
-            end
-        end)
-    end
-
-    -- =================================================================
-    -- INICIALIZAÇÃO COM VALORES
-    -- =================================================================
-    if options.InitialValues then
-        for _, valueToSelect in ipairs(options.InitialValues) do
-            if itemElements[valueToSelect] then
-                table.insert(selectedValues, valueToSelect)
-                setItemSelected(valueToSelect, true)
-            end
-        end
-        updateButtonText()
-    end
-
-    -- =================================================================
-    -- EVENTOS GLOBAIS
-    -- =================================================================
+    local boxLayout = Instance.new("UIListLayout")
+    boxLayout.Padding = UDim.new(0, 0)
+    boxLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    boxLayout.Parent = box
     
-    -- Click no botão principal
-    connections.ButtonClick = botaoText.MouseButton1Click:Connect(toggleDropdown)
+    -- =================================================================
+    -- MAIN (Header com título e botão)
+    -- =================================================================
+    local main = Instance.new("Frame")
+    main.Size = UDim2.new(1, 0, 0, 50)
+    main.BackgroundTransparency = 1
+    main.LayoutOrder = 1
+    main.Parent = box
 
-    -- Click fora para fechar (desktop e mobile)
-    connections.InputBegan = UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not isOpen or gameProcessed then return end
+    local mainPadding = Instance.new("UIPadding")
+    mainPadding.PaddingLeft = UDim.new(0, 12)
+    mainPadding.PaddingRight = UDim.new(0, 12)
+    mainPadding.PaddingTop = UDim.new(0, 12)
+    mainPadding.PaddingBottom = UDim.new(0, 12)
+    mainPadding.Parent = main
 
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
-           input.UserInputType == Enum.UserInputType.Touch then
-            
-            local clickedGui = input.GuiObject
-            
-            -- Fecha se clicou fora do dropdown
-            if not clickedGui or not clickedGui:IsDescendantOf(box) then
-                toggleDropdown()
-            end
-        end
-    end)
+    -- Title
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Text = options.Title
+    title.Size = UDim2.new(1, -110, 1, 0)
+    title.Position = UDim2.new(0, 0, 0, 0)
+    title.BackgroundTransparency = 1
+    title.TextColor3 = DESIGN.ComponentTextColor
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 15
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextYAlignment = Enum.TextYAlignment.Center
+    title.TextTruncate = Enum.TextTruncate.AtEnd
+    title.Parent = main
+
+    -- Botão de ação
+    local botaoText = createButton("Selecionar ▼", UDim2.new(0, 100, 1, 0), main)
+    botaoText.Name = "BotaoText"
+    botaoText.Position = UDim2.new(1, -100, 0, 0)
+    botaoText.TextSize = 13
+    botaoText.Parent = main
 
     -- =================================================================
-    -- API PÚBLICA
+    -- LISTER (ScrollingFrame para os itens)
+    -- =================================================================
+    local lister = Instance.new("ScrollingFrame")
+    lister.Name = "Lister"
+    lister.Size = UDim2.new(1, 0, 0, 0) -- Começa fechado
+    lister.BackgroundTransparency = 1
+    lister.BorderSizePixel = 0
+    lister.ClipsDescendants = true
+    lister.ScrollBarImageColor3 = DESIGN.AccentColor
+    lister.ScrollBarThickness = 5
+    lister.ScrollingDirection = Enum.ScrollingDirection.Y
+    lister.CanvasSize = UDim2.new(0, 0, 0, 0)
+    lister.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    lister.LayoutOrder = 2
+    lister.Parent = box
+
+    local listerLayout = Instance.new("UIListLayout")
+    listerLayout.Padding = UDim.new(0, 4)
+    listerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listerLayout.Parent = lister
+
+    local listerPadding = Instance.new("UIPadding")
+    listerPadding.PaddingLeft = UDim.new(0, 12)
+    listerPadding.PaddingRight = UDim.new(0, 12)
+    listerPadding.PaddingTop = UDim.new(0, 8)
+    listerPadding.PaddingBottom = UDim.new(0, 12)
+    listerPadding.Parent = lister
+
+    -- =================================================================
+    -- INICIALIZAÇÃO E API PÚBLICA
     -- =================================================================
     local publicApi = {
         _instance = box,
@@ -2297,12 +2281,112 @@ function Tekscripts:CreateDropdown(tab: any, options: {
             toggleDropdown()
         end
     end
+    
+    ---
+    -- NOVAS APIS PARA ADICIONAR/REMOVER ITENS
+    ---
+
+    -- Adiciona um novo item
+    function publicApi:AddItem(itemInfo: { Name: string, Image: string? })
+        if itemInfo and itemInfo.Name and not itemElements[itemInfo.Name] then
+            -- Adiciona o item à lista de opções
+            table.insert(options.Values, itemInfo)
+            
+            -- Recria a interface para refletir a mudança
+            createItems()
+            
+            -- Mantém a seleção atual
+            local newSelected = {}
+            for _, name in ipairs(selectedValues) do
+                if itemElements[name] then
+                    table.insert(newSelected, name)
+                end
+            end
+            self:SetSelected(newSelected)
+        end
+    end
+
+    -- Remove um item existente
+    function publicApi:RemoveItem(itemName: string)
+        local indexToRemove
+        for i, itemInfo in ipairs(options.Values) do
+            if itemInfo.Name == itemName then
+                indexToRemove = i
+                break
+            end
+        end
+
+        if indexToRemove then
+            -- Remove o item da lista de opções
+            table.remove(options.Values, indexToRemove)
+            
+            -- Recria a interface para refletir a mudança
+            createItems()
+            
+            -- Atualiza a seleção caso o item removido estivesse selecionado
+            local newSelected = {}
+            local wasSelected = false
+            for _, name in ipairs(selectedValues) do
+                if name ~= itemName then
+                    table.insert(newSelected, name)
+                else
+                    wasSelected = true
+                end
+            end
+            selectedValues = newSelected
+            
+            if wasSelected then
+                -- Se o item removido estava selecionado, chama o callback
+                if options.Callback then 
+                    options.Callback(multiSelect and selectedValues or (selectedValues[1] or nil)) 
+                end
+            end
+            
+            updateButtonText()
+        end
+    end
+
+    -- =================================================================
+    -- INICIALIZAÇÃO
+    -- =================================================================
+    -- Cria os elementos visuais
+    createItems()
+
+    -- Define os valores iniciais
+    if options.InitialValues then
+        for _, valueToSelect in ipairs(options.InitialValues) do
+            if itemElements[valueToSelect] then
+                table.insert(selectedValues, valueToSelect)
+                setItemSelected(valueToSelect, true)
+            end
+        end
+        updateButtonText()
+    end
+    
+    -- Eventos globais (fora do escopo de recriação de itens)
+    connections.ButtonClick = botaoText.MouseButton1Click:Connect(toggleDropdown)
+
+    connections.InputBegan = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not isOpen or gameProcessed then return end
+
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or 
+           input.UserInputType == Enum.UserInputType.Touch then
+            
+            local clickedGui = input.GuiObject
+            
+            -- Fecha se clicou fora do dropdown
+            if not clickedGui or not clickedGui:IsDescendantOf(box) then
+                toggleDropdown()
+            end
+        end
+    end)
 
     -- Adiciona à lista de componentes da tab
     table.insert(tab.Components, publicApi)
     
     return publicApi
 end
+
 
 function Tekscripts:CreateColorPicker(tab: any, options: {
     Title: string?,
@@ -3037,4 +3121,5 @@ function Tekscripts:CreateLabel(tab, options)
     table.insert(tab.Components, publicApi)
     return publicApi
 end
+
 return Tekscripts
