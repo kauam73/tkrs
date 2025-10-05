@@ -2620,162 +2620,128 @@ function Tekscripts:CreateDropdown(tab: any, options: {
 
     -- Configurações
     local multiSelect = options.MultiSelect or false
-    local maxVisibleItems = math.min(options.MaxVisibleItems or 5, 8)
-    local itemHeight = 44
+    local maxVisibleItems = math.min(options.MaxVisibleItems or 5, 8) -- Máximo de 8 itens visíveis para performance
+    local itemHeight = 44 -- Altura aumentada para melhor touch
     local imagePadding = 8
     local imageSize = itemHeight - (imagePadding * 2)
     
-    -- Estado e lógica
+    -- =================================================================
+    -- BOX PRINCIPAL (Container)
+    -- =================================================================
+    local box = Instance.new("Frame")
+    box.AutomaticSize = Enum.AutomaticSize.Y
+    box.Size = UDim2.new(1, 0, 0, 0)
+    box.BackgroundColor3 = DESIGN.ComponentBackground
+    box.BorderSizePixel = 0
+    box.Parent = tab.Container
+    addRoundedCorners(box, DESIGN.CornerRadius)
+
+    local boxLayout = Instance.new("UIListLayout")
+    boxLayout.Padding = UDim.new(0, 0)
+    boxLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    boxLayout.Parent = box
+    
+    -- =================================================================
+    -- MAIN (Header com título e botão)
+    -- =================================================================
+    local main = Instance.new("Frame")
+    main.Size = UDim2.new(1, 0, 0, 50)
+    main.BackgroundTransparency = 1
+    main.LayoutOrder = 1
+    main.Parent = box
+
+    local mainPadding = Instance.new("UIPadding")
+    mainPadding.PaddingLeft = UDim.new(0, 12)
+    mainPadding.PaddingRight = UDim.new(0, 12)
+    mainPadding.PaddingTop = UDim.new(0, 12)
+    mainPadding.PaddingBottom = UDim.new(0, 12)
+    mainPadding.Parent = main
+
+    -- Title
+    local title = Instance.new("TextLabel")
+    title.Name = "Title"
+    title.Text = options.Title
+    title.Size = UDim2.new(1, -110, 1, 0)
+    title.Position = UDim2.new(0, 0, 0, 0)
+    title.BackgroundTransparency = 1
+    title.TextColor3 = DESIGN.ComponentTextColor
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 15
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextYAlignment = Enum.TextYAlignment.Center
+    title.TextTruncate = Enum.TextTruncate.AtEnd
+    title.Parent = main
+
+    -- Botão de ação
+    local botaoText = createButton("Selecionar ▼", UDim2.new(0, 100, 1, 0), main)
+    botaoText.Name = "BotaoText"
+    botaoText.Position = UDim2.new(1, -100, 0, 0)
+    botaoText.TextSize = 13
+    botaoText.Parent = main
+
+    -- =================================================================
+    -- LISTER (ScrollingFrame para os itens)
+    -- =================================================================
+    local lister = Instance.new("ScrollingFrame")
+    lister.Name = "Lister"
+    lister.Size = UDim2.new(1, 0, 0, 0) -- Começa fechado
+    lister.BackgroundTransparency = 1
+    lister.BorderSizePixel = 0
+    lister.ClipsDescendants = true
+    lister.ScrollBarImageColor3 = DESIGN.AccentColor
+    lister.ScrollBarThickness = 5
+    lister.ScrollingDirection = Enum.ScrollingDirection.Y
+    lister.CanvasSize = UDim2.new(0, 0, 0, 0)
+    lister.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    lister.LayoutOrder = 2
+    lister.Parent = box
+
+    local listerLayout = Instance.new("UIListLayout")
+    listerLayout.Padding = UDim.new(0, 4)
+    listerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listerLayout.Parent = lister
+
+    local listerPadding = Instance.new("UIPadding")
+    listerPadding.PaddingLeft = UDim.new(0, 12)
+    listerPadding.PaddingRight = UDim.new(0, 12)
+    listerPadding.PaddingTop = UDim.new(0, 8)
+    listerPadding.PaddingBottom = UDim.new(0, 12)
+    listerPadding.Parent = lister
+
+    -- =================================================================
+    -- ESTADO E LÓGICA
+    -- =================================================================
     local isOpen = false
     local selectedValues = {}
     local connections = {}
     local itemElements = {}
-    
-    -- Função para recriar todos os itens da lista
-    local function createItems()
-        for _, conn in pairs(connections) do
-            if conn and conn.Connected then
-                conn:Disconnect()
+    local itemOrder = {}
+
+    -- Formata valores selecionados para exibição legível
+    local function formatSelectedValues(values)
+        if multiSelect then
+            if #values == 0 then
+                return "Nenhum item selecionado"
             end
-        end
-        connections.ButtonClick = nil
-        
-        for _, elementTable in pairs(itemElements) do
-            if elementTable.container and elementTable.container.Parent then
-                elementTable.container:Destroy()
-            end
-        end
-        itemElements = {}
-        
-        if not lister then return end
-
-        for index, valueInfo in ipairs(options.Values) do
-            local hasImage = valueInfo.Image and valueInfo.Image ~= ""
-            
-            local itemContainer = Instance.new("TextButton")
-            itemContainer.Name = "Item_" .. valueInfo.Name:gsub("[^a-zA-Z0-9_]", "_")
-            itemContainer.Size = UDim2.new(1, 0, 0, itemHeight)
-            itemContainer.BackgroundColor3 = DESIGN.ComponentBackground
-            itemContainer.BorderSizePixel = 0
-            itemContainer.Text = ""
-            itemContainer.AutoButtonColor = false
-            itemContainer.LayoutOrder = index
-            itemContainer.Parent = lister
-            addRoundedCorners(itemContainer, DESIGN.CornerRadius - 2)
-
-            local itemPadding = Instance.new("UIPadding")
-            itemPadding.PaddingLeft = UDim.new(0, 10)
-            itemPadding.PaddingRight = UDim.new(0, 10)
-            itemPadding.Parent = itemContainer
-
-            local contentFrame = Instance.new("Frame")
-            contentFrame.Size = UDim2.new(1, 0, 1, 0)
-            contentFrame.BackgroundTransparency = 1
-            contentFrame.Parent = itemContainer
-
-            local indicator
-            if multiSelect then
-                indicator = Instance.new("Frame")
-                indicator.Size = UDim2.new(0, 18, 0, 18)
-                indicator.Position = UDim2.new(1, -18, 0.5, -9)
-                indicator.BackgroundColor3 = DESIGN.AccentColor
-                indicator.BorderSizePixel = 0
-                indicator.Visible = false
-                indicator.Parent = contentFrame
-                addRoundedCorners(indicator, UDim.new(0, 3))
-                
-                local checkIcon = Instance.new("TextLabel")
-                checkIcon.Size = UDim2.new(1, 0, 1, 0)
-                checkIcon.BackgroundTransparency = 1
-                checkIcon.Text = "✓"
-                checkIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
-                checkIcon.Font = Enum.Font.GothamBold
-                checkIcon.TextSize = 14
-                checkIcon.Parent = indicator
-            else
-                indicator = Instance.new("Frame")
-                indicator.Size = UDim2.new(0, 8, 0, 8)
-                indicator.Position = UDim2.new(1, -8, 0.5, -4)
-                indicator.BackgroundColor3 = DESIGN.AccentColor
-                indicator.BorderSizePixel = 0
-                indicator.Visible = false
-                indicator.Parent = contentFrame
-                addRoundedCorners(indicator, UDim.new(1, 0))
-            end
-
-            local foto
-            if hasImage then
-                foto = Instance.new("ImageLabel")
-                foto.Name = "Foto"
-                foto.Size = UDim2.new(0, imageSize, 0, imageSize)
-                foto.Position = UDim2.new(0, 0, 0.5, -imageSize/2)
-                foto.BackgroundTransparency = 1
-                foto.Image = valueInfo.Image
-                foto.ScaleType = Enum.ScaleType.Fit
-                foto.Parent = contentFrame
-                addRoundedCorners(foto, UDim.new(0, 4))
-            end
-
-            local textXOffset = hasImage and (imageSize + 8) or 0
-            local textWidth = multiSelect and -30 or -12
-            
-            local itemText = Instance.new("TextLabel")
-            itemText.Name = "ConteudoText"
-            itemText.Size = UDim2.new(1, textWidth, 1, 0)
-            itemText.Position = UDim2.new(0, textXOffset, 0, 0)
-            itemText.BackgroundTransparency = 1
-            itemText.Text = valueInfo.Name
-            itemText.TextColor3 = DESIGN.ComponentTextColor
-            itemText.Font = Enum.Font.Gotham
-            itemText.TextSize = 14
-            itemText.TextXAlignment = Enum.TextXAlignment.Left
-            itemText.TextYAlignment = Enum.TextYAlignment.Center
-            itemText.TextTruncate = Enum.TextTruncate.AtEnd
-            itemText.Parent = contentFrame
-
-            itemElements[valueInfo.Name] = {
-                container = itemContainer,
-                indicator = indicator,
-                text = itemText,
-                foto = foto
-            }
-
-            itemContainer.MouseButton1Click:Connect(function()
-                toggleItemSelection(valueInfo.Name)
-            end)
-
-            itemContainer.MouseEnter:Connect(function()
-                if not table.find(selectedValues, valueInfo.Name) then
-                    TweenService:Create(itemContainer, TweenInfo.new(0.15), { 
-                        BackgroundColor3 = DESIGN.ItemHoverColor or Color3.fromRGB(45, 45, 50)
-                    }):Play()
-                end
-            end)
-
-            itemContainer.MouseLeave:Connect(function()
-                if not table.find(selectedValues, valueInfo.Name) then
-                    TweenService:Create(itemContainer, TweenInfo.new(0.15), { 
-                        BackgroundColor3 = DESIGN.ComponentBackground 
-                    }):Play()
-                end
-            end)
+            return table.concat(values, ", ")
+        else
+            return values or "Nenhum item selecionado"
         end
     end
 
     -- Atualiza o texto do botão
     local function updateButtonText()
         local arrow = isOpen and "▲" or "▼"
-        if not buttonTextLabel then return end -- Verifica se buttonTextLabel existe
         if #selectedValues == 0 then
-            buttonTextLabel.Text = "Selecionar " .. arrow
+            botaoText.Text = "Selecionar " .. arrow
         elseif #selectedValues == 1 then
             local displayText = selectedValues[1]
             if #displayText > 10 then
                 displayText = string.sub(displayText, 1, 10) .. "..."
             end
-            buttonTextLabel.Text = displayText .. " " .. arrow
+            botaoText.Text = displayText .. " " .. arrow
         else
-            buttonTextLabel.Text = string.format("%d itens %s", #selectedValues, arrow)
+            botaoText.Text = string.format("%d itens %s", #selectedValues, arrow)
         end
     end
 
@@ -2783,11 +2749,16 @@ function Tekscripts:CreateDropdown(tab: any, options: {
     local function toggleDropdown()
         isOpen = not isOpen
         
-        local numItems = #options.Values
+        -- Calcula altura necessária
+        local numItems = #itemOrder
         local totalItemHeight = (numItems * itemHeight) + ((numItems - 1) * listerLayout.Padding.Offset)
         local maxHeight = (maxVisibleItems * itemHeight) + ((maxVisibleItems - 1) * listerLayout.Padding.Offset)
         local targetHeight = isOpen and math.min(totalItemHeight + listerPadding.PaddingTop.Offset + listerPadding.PaddingBottom.Offset, maxHeight + listerPadding.PaddingTop.Offset + listerPadding.PaddingBottom.Offset) or 0
         
+        -- Atualiza CanvasSize antes da animação
+        lister.CanvasSize = UDim2.new(0, 0, 0, listerLayout.AbsoluteContentSize.Y)
+        
+        -- Animação suave
         local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
         TweenService:Create(lister, tweenInfo, { 
             Size = UDim2.new(1, 0, 0, targetHeight) 
@@ -2818,6 +2789,7 @@ function Tekscripts:CreateDropdown(tab: any, options: {
         local isCurrentlySelected = table.find(selectedValues, valueName)
         
         if multiSelect then
+            -- Multi-select: adiciona/remove da lista
             if isCurrentlySelected then
                 table.remove(selectedValues, isCurrentlySelected)
                 setItemSelected(valueName, false)
@@ -2826,6 +2798,7 @@ function Tekscripts:CreateDropdown(tab: any, options: {
                 setItemSelected(valueName, true)
             end
         else
+            -- Single-select: limpa tudo e seleciona apenas um
             for name, _ in pairs(itemElements) do 
                 setItemSelected(name, false) 
             end
@@ -2837,6 +2810,7 @@ function Tekscripts:CreateDropdown(tab: any, options: {
                 setItemSelected(valueName, true)
             end
             
+            -- Fecha automaticamente no single-select
             if isOpen and not isCurrentlySelected then 
                 task.delay(0.15, toggleDropdown)
             end
@@ -2844,204 +2818,156 @@ function Tekscripts:CreateDropdown(tab: any, options: {
         
         updateButtonText()
         
+        -- Callback
+        local selected = multiSelect and selectedValues or (selectedValues[1] or nil)
         if options.Callback then 
-            options.Callback(multiSelect and selectedValues or (selectedValues[1] or nil)) 
+            options.Callback(selected)
+        else
+            -- Log para depuração se nenhum callback for fornecido
+            print("Selecionado:", formatSelectedValues(selected))
         end
     end
 
-    -- Box principal (Container)
-    local box = Instance.new("Frame")
-    box.AutomaticSize = Enum.AutomaticSize.Y
-    box.Size = UDim2.new(1, 0, 0, 0)
-    box.BackgroundColor3 = DESIGN.ComponentBackground
-    box.BorderSizePixel = 0
-    box.Parent = tab.Container
-    addRoundedCorners(box, DESIGN.CornerRadius)
-
-    local boxLayout = Instance.new("UIListLayout")
-    boxLayout.Padding = UDim.new(0, 0)
-    boxLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    boxLayout.Parent = box
-    
-    -- Main (Header com título e botão)
-    local main = Instance.new("Frame")
-    main.Size = UDim2.new(1, 0, 0, 50)
-    main.BackgroundTransparency = 1
-    main.LayoutOrder = 1
-    main.Parent = box
-
-    local mainPadding = Instance.new("UIPadding")
-    mainPadding.PaddingLeft = UDim.new(0, 12)
-    mainPadding.PaddingRight = UDim.new(0, 12)
-    mainPadding.PaddingTop = UDim.new(0, 12)
-    mainPadding.PaddingBottom = UDim.new(0, 12)
-    mainPadding.Parent = main
-
-    -- Title
-    local title = Instance.new("TextLabel")
-    title.Name = "Title"
-    title.Text = options.Title
-    title.Size = UDim2.new(1, -110, 1, 0)
-    title.Position = UDim2.new(0, 0, 0, 0)
-    title.BackgroundTransparency = 1
-    title.TextColor3 = DESIGN.ComponentTextColor
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 15
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.TextYAlignment = Enum.TextYAlignment.Center
-    title.TextTruncate = Enum.TextTruncate.AtEnd
-    title.Parent = main
-
-    -- Botão de ação
-    local button = Instance.new("TextButton")
-    button.Name = "BotaoText"
-    button.Size = UDim2.new(0, 100, 1, 0)
-    button.Position = UDim2.new(1, -100, 0, 0)
-    button.BackgroundColor3 = DESIGN.ComponentBackground
-    button.BorderSizePixel = 0
-    button.Text = ""
-    button.AutoButtonColor = false
-    button.Parent = main
-    addRoundedCorners(button, DESIGN.CornerRadius)
-
-    local buttonTextLabel = Instance.new("TextLabel")
-    buttonTextLabel.Name = "TextLabel"
-    buttonTextLabel.Size = UDim2.new(1, 0, 1, 0)
-    buttonTextLabel.BackgroundTransparency = 1
-    buttonTextLabel.Text = "Selecionar ▼"
-    buttonTextLabel.TextColor3 = DESIGN.ComponentTextColor
-    buttonTextLabel.Font = Enum.Font.Gotham
-    buttonTextLabel.TextSize = 13
-    buttonTextLabel.TextXAlignment = Enum.TextXAlignment.Center
-    buttonTextLabel.TextYAlignment = Enum.TextYAlignment.Center
-    buttonTextLabel.Parent = button
-
-    -- Lister (ScrollingFrame para os itens)
-    local lister = Instance.new("ScrollingFrame")
-    lister.Name = "Lister"
-    lister.Size = UDim2.new(1, 0, 0, 0)
-    lister.BackgroundTransparency = 1
-    lister.BorderSizePixel = 0
-    lister.ClipsDescendants = true
-    lister.ScrollBarImageColor3 = DESIGN.AccentColor
-    lister.ScrollBarThickness = 5
-    lister.ScrollingDirection = Enum.ScrollingDirection.Y
-    lister.CanvasSize = UDim2.new(0, 0, 0, 0)
-    lister.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    lister.LayoutOrder = 2
-    lister.Parent = box
-
-    local listerLayout = Instance.new("UIListLayout")
-    listerLayout.Padding = UDim.new(0, 4)
-    listerLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listerLayout.Parent = lister
-
-    local listerPadding = Instance.new("UIPadding")
-    listerPadding.PaddingLeft = UDim.new(0, 12)
-    listerPadding.PaddingRight = UDim.new(0, 12)
-    listerPadding.PaddingTop = UDim.new(0, 8)
-    listerPadding.PaddingBottom = UDim.new(0, 12)
-    listerPadding.Parent = lister
-
-    -- API Pública
-    local publicApi = {
-        _instance = box,
-        _connections = connections
-    }
-
-    function publicApi:Destroy()
-        if self._instance then
-            for _, conn in pairs(self._connections) do
-                if conn and conn.Connected then
-                    conn:Disconnect()
-                end
-            end
-            self._instance:Destroy()
-            self._instance = nil
-        end
-    end
-
-    function publicApi:GetSelected()
-        return multiSelect and selectedValues or (selectedValues[1] or nil)
-    end
-
-    function publicApi:SetSelected(values)
-        for name, _ in pairs(itemElements) do
-            setItemSelected(name, false)
-        end
-        selectedValues = {}
+    -- Função interna para criar um item
+    local function createItem(valueInfo, index)
+        local hasImage = valueInfo.Image and valueInfo.Image ~= ""
         
-        local valuesToSet = type(values) == "table" and values or {values}
-        for _, value in ipairs(valuesToSet) do
-            if itemElements[value] then
-                table.insert(selectedValues, value)
-                setItemSelected(value, true)
-            end
+        -- Container do item
+        local itemContainer = Instance.new("TextButton")
+        itemContainer.Name = "Item_" .. index
+        itemContainer.Size = UDim2.new(1, 0, 0, itemHeight)
+        itemContainer.BackgroundColor3 = DESIGN.ComponentBackground
+        itemContainer.BorderSizePixel = 0
+        itemContainer.Text = ""
+        itemContainer.AutoButtonColor = false
+        itemContainer.LayoutOrder = index
+        itemContainer.Parent = lister
+        addRoundedCorners(itemContainer, DESIGN.CornerRadius - 2)
+
+        -- Padding interno
+        local itemPadding = Instance.new("UIPadding")
+        itemPadding.PaddingLeft = UDim.new(0, 10)
+        itemPadding.PaddingRight = UDim.new(0, 10)
+        itemPadding.Parent = itemContainer
+
+        -- Frame para organizar conteúdo
+        local contentFrame = Instance.new("Frame")
+        contentFrame.Size = UDim2.new(1, 0, 1, 0)
+        contentFrame.BackgroundTransparency = 1
+        contentFrame.Parent = itemContainer
+
+        -- Indicador de seleção (círculo/checkbox)
+        local indicator
+        if multiSelect then
+            -- Checkbox para multi-select
+            indicator = Instance.new("Frame")
+            indicator.Size = UDim2.new(0, 18, 0, 18)
+            indicator.Position = UDim2.new(1, -18, 0.5, -9)
+            indicator.BackgroundColor3 = DESIGN.AccentColor
+            indicator.BorderSizePixel = 0
+            indicator.Visible = false
+            indicator.Parent = contentFrame
+            addRoundedCorners(indicator, UDim.new(0, 3))
+            
+            local checkIcon = Instance.new("TextLabel")
+            checkIcon.Size = UDim2.new(1, 0, 1, 0)
+            checkIcon.BackgroundTransparency = 1
+            checkIcon.Text = "✓"
+            checkIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+            checkIcon.Font = Enum.Font.GothamBold
+            checkIcon.TextSize = 14
+            checkIcon.Parent = indicator
+        else
+            -- Indicador circular para single-select
+            indicator = Instance.new("Frame")
+            indicator.Size = UDim2.new(0, 8, 0, 8)
+            indicator.Position = UDim2.new(1, -8, 0.5, -4)
+            indicator.BackgroundColor3 = DESIGN.AccentColor
+            indicator.BorderSizePixel = 0
+            indicator.Visible = false
+            indicator.Parent = contentFrame
+            addRoundedCorners(indicator, UDim.new(1, 0))
         end
+
+        -- Foto (se existir)
+        local foto
+        if hasImage then
+            foto = Instance.new("ImageLabel")
+            foto.Name = "Foto"
+            foto.Size = UDim2.new(0, imageSize, 0, imageSize)
+            foto.Position = UDim2.new(0, 0, 0.5, -imageSize/2)
+            foto.BackgroundTransparency = 1
+            foto.Image = valueInfo.Image
+            foto.ScaleType = Enum.ScaleType.Fit
+            foto.Parent = contentFrame
+            addRoundedCorners(foto, UDim.new(0, 4))
+        end
+
+        -- Texto do item
+        local textXOffset = hasImage and (imageSize + 8) or 0
+        local textWidth = multiSelect and -30 or -12
         
-        updateButtonText()
-    end
+        local itemText = Instance.new("TextLabel")
+        itemText.Name = "ConteudoText"
+        itemText.Size = UDim2.new(1, textWidth, 1, 0)
+        itemText.Position = UDim2.new(0, textXOffset, 0, 0)
+        itemText.BackgroundTransparency = 1
+        itemText.Text = valueInfo.Name
+        itemText.TextColor3 = DESIGN.ComponentTextColor
+        itemText.Font = Enum.Font.Gotham
+        itemText.TextSize = 14
+        itemText.TextXAlignment = Enum.TextXAlignment.Left
+        itemText.TextYAlignment = Enum.TextYAlignment.Center
+        itemText.TextTruncate = Enum.TextTruncate.AtEnd
+        itemText.Parent = contentFrame
 
-    function publicApi:Toggle()
-        toggleDropdown()
-    end
+        -- Armazena referências
+        itemElements[valueInfo.Name] = {
+            container = itemContainer,
+            indicator = indicator,
+            text = itemText,
+            foto = foto,
+            connections = {}
+        }
 
-    function publicApi:Close()
-        if isOpen then
-            toggleDropdown()
-        end
-    end
+        -- =================================================================
+        -- EVENTOS DO ITEM
+        -- =================================================================
+        
+        -- Click/Touch
+        itemElements[valueInfo.Name].connections.MouseClick = itemContainer.MouseButton1Click:Connect(function()
+            toggleItemSelection(valueInfo.Name)
+        end)
 
-    function publicApi:AddItem(itemInfo: { Name: string, Image: string? })
-        if itemInfo and itemInfo.Name and not itemElements[itemInfo.Name] then
-            table.insert(options.Values, itemInfo)
-            createItems()
-            local newSelected = {}
-            for _, name in ipairs(selectedValues) do
-                if itemElements[name] then
-                    table.insert(newSelected, name)
-                end
+        -- Hover (apenas desktop)
+        itemElements[valueInfo.Name].connections.MouseEnter = itemContainer.MouseEnter:Connect(function()
+            if not table.find(selectedValues, valueInfo.Name) then
+                TweenService:Create(itemContainer, TweenInfo.new(0.15), { 
+                    BackgroundColor3 = DESIGN.ItemHoverColor or Color3.fromRGB(45, 45, 50)
+                }):Play()
             end
-            self:SetSelected(newSelected)
-        end
+        end)
+
+        itemElements[valueInfo.Name].connections.MouseLeave = itemContainer.MouseLeave:Connect(function()
+            if not table.find(selectedValues, valueInfo.Name) then
+                TweenService:Create(itemContainer, TweenInfo.new(0.15), { 
+                    BackgroundColor3 = DESIGN.ComponentBackground 
+                }):Play()
+            end
+        end)
     end
 
-    function publicApi:RemoveItem(itemName: string)
-        local indexToRemove
-        for i, itemInfo in ipairs(options.Values) do
-            if itemInfo.Name == itemName then
-                indexToRemove = i
-                break
-            end
-        end
-
-        if indexToRemove then
-            table.remove(options.Values, indexToRemove)
-            createItems()
-            local newSelected = {}
-            local wasSelected = false
-            for _, name in ipairs(selectedValues) do
-                if name ~= itemName then
-                    table.insert(newSelected, name)
-                else
-                    wasSelected = true
-                end
-            end
-            selectedValues = newSelected
-            
-            if wasSelected then
-                if options.Callback then 
-                    options.Callback(multiSelect and selectedValues or (selectedValues[1] or nil)) 
-                end
-            end
-            
-            updateButtonText()
-        end
+    -- =================================================================
+    -- CRIAÇÃO DOS ITENS INICIAIS
+    -- =================================================================
+    for index, valueInfo in ipairs(options.Values) do
+        table.insert(itemOrder, valueInfo.Name)
+        createItem(valueInfo, index)
     end
 
-    -- Inicialização
-    createItems()
-
+    -- =================================================================
+    -- INICIALIZAÇÃO COM VALORES
+    -- =================================================================
     if options.InitialValues then
         for _, valueToSelect in ipairs(options.InitialValues) do
             if itemElements[valueToSelect] then
@@ -3051,21 +2977,200 @@ function Tekscripts:CreateDropdown(tab: any, options: {
         end
         updateButtonText()
     end
-    
-    connections.ButtonClick = button.MouseButton1Click:Connect(toggleDropdown)
 
+    -- =================================================================
+    -- EVENTOS GLOBAIS
+    -- =================================================================
+    
+    -- Click no botão principal
+    connections.ButtonClick = botaoText.MouseButton1Click:Connect(toggleDropdown)
+
+    -- Click fora para fechar (desktop e mobile)
     connections.InputBegan = UserInputService.InputBegan:Connect(function(input, gameProcessed)
         if not isOpen or gameProcessed then return end
 
         if input.UserInputType == Enum.UserInputType.MouseButton1 or 
            input.UserInputType == Enum.UserInputType.Touch then
+            
             local clickedGui = input.GuiObject
+            
+            -- Fecha se clicou fora do dropdown
             if not clickedGui or not clickedGui:IsDescendantOf(box) then
                 toggleDropdown()
             end
         end
     end)
 
+    -- =================================================================
+    -- API PÚBLICA
+    -- =================================================================
+    local publicApi = {
+        _instance = box,
+        _connections = connections
+    }
+
+    -- Adiciona um novo item ao dropdown
+    -- @param valueInfo Table com Name (string) e Image (string, opcional)
+    -- @param position Posição onde o item será inserido (opcional, padrão é no final)
+    function publicApi:AddItem(valueInfo, position)
+        assert(type(valueInfo) == "table" and type(valueInfo.Name) == "string", "valueInfo inválido para AddItem")
+        assert(not itemElements[valueInfo.Name], "Item com nome '" .. valueInfo.Name .. "' já existe")
+        
+        position = position or (#itemOrder + 1)
+        position = math.clamp(position, 1, #itemOrder + 1)
+        
+        table.insert(itemOrder, position, valueInfo.Name)
+        createItem(valueInfo, position)
+        
+        -- Atualiza LayoutOrder de todos os itens
+        for i, name in ipairs(itemOrder) do
+            if itemElements[name] then
+                itemElements[name].container.LayoutOrder = i
+            end
+        end
+        
+        -- Atualiza altura se aberto
+        if isOpen then
+            toggleDropdown()
+            toggleDropdown()
+        end
+    end
+
+    -- Remove um item do dropdown
+    -- @param valueName Nome do item a ser removido
+    function publicApi:RemoveItem(valueName)
+        assert(type(valueName) == "string", "valueName deve ser string para RemoveItem")
+        if itemElements[valueName] then
+            local elements = itemElements[valueName]
+            
+            -- Desconecta eventos do item
+            for _, conn in pairs(elements.connections) do
+                if conn and conn.Connected then
+                    conn:Disconnect()
+                end
+            end
+            
+            elements.container:Destroy()
+            itemElements[valueName] = nil
+            
+            -- Remove da ordem
+            local idx = table.find(itemOrder, valueName)
+            if idx then
+                table.remove(itemOrder, idx)
+            end
+            
+            -- Remove da seleção se presente
+            idx = table.find(selectedValues, valueName)
+            if idx then
+                table.remove(selectedValues, idx)
+            end
+            
+            updateButtonText()
+            
+            -- Chama callback com novos selecionados
+            local selected = multiSelect and selectedValues or (selectedValues[1] or nil)
+            if options.Callback then 
+                options.Callback(selected)
+            else
+                print("Selecionado:", formatSelectedValues(selected))
+            end
+            
+            -- Atualiza altura se aberto
+            if isOpen then
+                toggleDropdown()
+                toggleDropdown()
+            end
+        end
+    end
+
+    -- Remove todos os itens do dropdown
+    function publicApi:ClearItems()
+        while #itemOrder > 0 do
+            self:RemoveItem(itemOrder[1])
+        end
+    end
+
+    -- Destrói o componente e limpa conexões
+    function publicApi:Destroy()
+        if self._instance then
+            -- Desconecta eventos globais
+            for _, conn in pairs(self._connections) do
+                if conn and conn.Connected then
+                    conn:Disconnect()
+                end
+            end
+            
+            -- Desconecta eventos de cada item
+            for _, elements in pairs(itemElements) do
+                for _, conn in pairs(elements.connections) do
+                    if conn and conn.Connected then
+                        conn:Disconnect()
+                    end
+                end
+            end
+            
+            self._instance:Destroy()
+            self._instance = nil
+            itemElements = {}
+            itemOrder = {}
+            selectedValues = {}
+        end
+    end
+
+    -- Obtém os valores selecionados
+    -- @return Table com valores selecionados (multi-select) ou string/nil (single-select)
+    function publicApi:GetSelected()
+        return multiSelect and selectedValues or (selectedValues[1] or nil)
+    end
+
+    -- Obtém os valores selecionados em formato de string legível
+    -- @return String com valores selecionados formatados
+    function publicApi:GetSelectedFormatted()
+        return formatSelectedValues(multiSelect and selectedValues or (selectedValues[1] or nil))
+    end
+
+    -- Define valores selecionados programaticamente
+    -- @param values String ou tabela de strings para selecionar
+    function publicApi:SetSelected(values)
+        -- Limpa seleção anterior
+        for name, _ in pairs(itemElements) do
+            setItemSelected(name, false)
+        end
+        selectedValues = {}
+        
+        -- Define novos valores
+        local valuesToSet = type(values) == "table" and values or {values}
+        for _, value in ipairs(valuesToSet) do
+            if itemElements[value] then
+                table.insert(selectedValues, value)
+                setItemSelected(value, true)
+            end
+        end
+        
+        updateButtonText()
+        
+        -- Chama callback com novos selecionados
+        local selected = multiSelect and selectedValues or (selectedValues[1] or nil)
+        if options.Callback then 
+            options.Callback(selected)
+        else
+            print("Selecionado:", formatSelectedValues(selected))
+        end
+    end
+
+    -- Abre/fecha o dropdown programaticamente
+    function publicApi:Toggle()
+        toggleDropdown()
+    end
+
+    -- Fecha o dropdown
+    function publicApi:Close()
+        if isOpen then
+            toggleDropdown()
+        end
+    end
+
+    -- Adiciona à lista de componentes da tab
     table.insert(tab.Components, publicApi)
     
     return publicApi
