@@ -35,7 +35,7 @@ local DESIGN = {
     ItemHoverColor = Color3.fromRGB(60, 60, 70),      -- Hover itens com contraste
     ComponentHoverColor = Color3.fromRGB(80, 80, 90), -- Hover geral mais visível
     
-    -- Cores de Botões e Controles
+    -- Cores de botões e Controles
     ActiveToggleColor = Color3.fromRGB(0, 170, 255),  -- Azul vibrante para toggles
     InactiveToggleColor = Color3.fromRGB(50, 50, 55), -- Cinza mais escuro
     MinimizeButtonColor = Color3.fromRGB(230, 80, 80),-- Vermelho vibrante para minimizar
@@ -71,7 +71,7 @@ local DESIGN = {
 
     WindowSize = UDim2.new(0, 620, 0, 470),
     MinWindowSize = Vector2.new(500, 370),
-    MaxWindowSize = Vector2.new(620, 470),
+    MaxWindowSize = Vector2.new(790, 570),
     TitleHeight = 42,
     TitlePadding = 10,  -- Novo: Espaço para o ícone e o título
 
@@ -178,20 +178,18 @@ Tab.__index = Tab
 function Tab.new(name: string, parent: Instance)
     local self = setmetatable({} :: {
         Name: string,
-        Container: ScrollingFrame,
+        Container: Frame,
         Components: {any},
         Button: TextButton?,
         EmptyLabel: TextLabel?
     }, Tab)
 
     self.Name = name
-    self.Container = Instance.new("ScrollingFrame")
+    self.Container = Instance.new("Frame")
     self.Container.Size = UDim2.new(1, 0, 1, 0)
     self.Container.Position = UDim2.new(0, 0, 0, 0)
     self.Container.BackgroundTransparency = 1
     self.Container.BorderSizePixel = 0
-    self.Container.ScrollBarThickness = 6
-    self.Container.ScrollBarImageColor3 = DESIGN.ComponentHoverColor
     self.Container.Parent = parent
 
     local padding = Instance.new("UIPadding")
@@ -219,17 +217,15 @@ function Tab.new(name: string, parent: Instance)
     self.EmptyLabel.Parent = self.Container
     self.EmptyLabel.Visible = true
 
-    -- Auto-resize do ScrollingFrame
+    self.Components = {}
+
+    -- Atualiza visibilidade da mensagem de vazio
     listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        self.Container.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + DESIGN.ContainerPadding * 2)
-        -- Atualiza visibilidade da mensagem de vazio
         self.EmptyLabel.Visible = #self.Components == 0
     end)
 
-    self.Components = {}
     return self
 end
-
 ---
 -- Construtor da GUI
 ---
@@ -324,9 +320,10 @@ function Tekscripts.new(options: { Name: string?, Parent: Instance?, FloatText: 
     iconFrame.BackgroundTransparency = 1
     iconFrame.Parent = mainHeader
 
-    -- NOVO: `ImageLabel` para o ícone
+    -- CORREÇÃO: `ImageLabel` para o ícone
     local icon = Instance.new("ImageLabel")
-    icon.Image = options.iconId or "rbxassetid://6675147490" -- Ícone padrão
+    -- Certifica que a propriedade Image é uma string e tem o formato correto.
+    icon.Image = options.iconId or "rbxassetid://6675147490"
     icon.Size = UDim2.new(1, 0, 1, 0)
     icon.BackgroundTransparency = 1
     icon.Parent = iconFrame
@@ -943,6 +940,8 @@ function Tekscripts:Block(state: boolean)
     end
 end
 
+
+
 ---
 -- Funções Públicas para criar componentes
 ---
@@ -990,144 +989,6 @@ function Tekscripts:CreateButton(tab: any, options: { Text: string, Callback: ()
             publicApi._instance:Destroy()
             publicApi._instance = nil
             publicApi._connections = nil
-        end
-    end
-
-    table.insert(tab.Components, publicApi)
-    return publicApi
-end
-
-function Tekscripts:CreateToggle(tab: any, options: { Text: string, Callback: (state: boolean) -> () })
-    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateToggle")
-    assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateToggle")
-
-    -- Box externo
-    local outerBox = Instance.new("Frame")
-    outerBox.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
-    outerBox.BackgroundColor3 = DESIGN.ComponentBackground
-    outerBox.BorderSizePixel = 0
-    outerBox.Parent = tab.Container
-    addRoundedCorners(outerBox, DESIGN.CornerRadius)
-
-    -- Container interno (padding)
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, -DESIGN.ComponentPadding*2, 1, 0)
-    container.Position = UDim2.new(0, DESIGN.ComponentPadding, 0, 0)
-    container.BackgroundTransparency = 1
-    container.Parent = outerBox
-
-    -- Label do toggle
-    local label = Instance.new("TextLabel")
-    label.Text = options.Text
-    label.Size = UDim2.new(0.8, -10, 1, 0) -- ocupa 80% menos um pequeno espaçamento
-    label.BackgroundTransparency = 1
-    label.TextColor3 = DESIGN.ComponentTextColor
-    label.Font = Enum.Font.Roboto
-    label.TextScaled = true
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = container
-
-    -- Botão do toggle
-    local switch = Instance.new("TextButton")
-    switch.Size = UDim2.new(0, 50, 0, 24)
-    switch.Position = UDim2.new(0.8, 10, 0.5, -12) -- 10 pixels de distância do label
-    switch.BackgroundColor3 = DESIGN.InactiveToggleColor
-    switch.Text = ""
-    switch.AutoButtonColor = false
-    switch.Parent = container
-    switch.ClipsDescendants = true
-    addRoundedCorners(switch, 100)
-
-    -- Knob do toggle
-    local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0, 20, 0, 20)
-    knob.Position = UDim2.new(0, 2, 0.5, -10)
-    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    knob.Parent = switch
-    addRoundedCorners(knob, 100)
-
-    local state = false
-    local connections = {}
-    local publicApi = {
-        _instance = outerBox,
-        _connections = connections
-    }
-
-    local function toggle(newState: boolean)
-        state = newState
-        TweenService:Create(switch, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
-            BackgroundColor3 = state and DESIGN.ActiveToggleColor or DESIGN.InactiveToggleColor
-        }):Play()
-        TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
-            Position = state and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
-        }):Play()
-        if options.Callback then options.Callback(state) end
-    end
-
-    connections.Click = switch.MouseButton1Click:Connect(function()
-        if self.Blocked then return end
-        toggle(not state)
-    end)
-
-    function publicApi.Update(newOptions: { Text: string?, State: boolean? })
-        if newOptions.Text then
-            label.Text = newOptions.Text
-        end
-        if newOptions.State ~= nil and newOptions.State ~= state then
-            toggle(newOptions.State)
-        end
-    end
-
-    function publicApi.Destroy()
-        if publicApi._instance then
-            for _, conn in pairs(publicApi._connections) do
-                if conn and conn.Connected then
-                    conn:Disconnect()
-                end
-            end
-            publicApi._instance:Destroy()
-            publicApi._instance = nil
-            publicApi._connections = nil
-        end
-    end
-
-    table.insert(tab.Components, publicApi)
-    return publicApi
-end
-
-function Tekscripts:CreateTag(tab: any, options: { Text: string, Color: Color3? })
-    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateTag")
-    assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateTag")
-
-    local tag = Instance.new("TextLabel")
-    tag.Text = options.Text
-    tag.Size = UDim2.new(0, DESIGN.TagWidth, 0, DESIGN.TagHeight)
-    tag.BackgroundColor3 = options.Color or DESIGN.TagBackground
-    tag.TextColor3 = DESIGN.ComponentTextColor
-    tag.Font = Enum.Font.Roboto
-    tag.TextScaled = true
-    tag.TextXAlignment = Enum.TextXAlignment.Center
-    tag.BorderSizePixel = 0
-    tag.Parent = tab.Container
-    addRoundedCorners(tag, DESIGN.CornerRadius / 2)
-
-    local publicApi = {
-        _instance = tag
-    }
-
-    function publicApi.Update(newOptions: { Text: string?, Color: Color3? })
-        if newOptions.Text then
-            tag.Text = newOptions.Text
-        end
-        if newOptions.Color then
-            tag.BackgroundColor3 = newOptions.Color
-        end
-    end
-
-    function publicApi.Destroy()
-        if publicApi._instance then
-            publicApi._instance:Destroy()
-            publicApi._instance = nil
         end
     end
 
@@ -1479,223 +1340,6 @@ function Tekscripts:Notify(options: {
             closeNotification()
         end)
     end
-end
-
-function Tekscripts:CreateSlider(tab: any, options: { 
-    Text: string?, 
-    Min: number?, 
-    Max: number?, 
-    Step: number?, 
-    Value: number?, 
-    Callback: ((number) -> ())? 
-})
-    assert(tab and tab.Container, "Invalid Tab object provided to CreateSlider")
-
-    options = options or {}
-    local title = options.Text or "Slider"
-    local minv = tonumber(options.Min) or 0
-    local maxv = tonumber(options.Max) or 100
-    local step = tonumber(options.Step) or 1
-    local value = tonumber(options.Value) or minv
-    local callback = options.Callback
-
-    local function clamp(n: number): number
-        return math.max(minv, math.min(maxv, n))
-    end
-
-    local function roundToStep(n: number): number
-        if step <= 0 then return n end
-        return math.floor(n / step + 0.5) * step
-    end
-
-    value = clamp(roundToStep(value))
-
-    -- Novo Box (Fundo do componente)
-    local box = Instance.new("Frame")
-    box.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
-    box.BackgroundColor3 = DESIGN.ComponentBackground
-    box.BorderSizePixel = 0
-    box.Parent = tab.Container
-
-    local boxCorner = Instance.new("UICorner")
-    boxCorner.CornerRadius = UDim.new(0, DESIGN.CornerRadius)
-    boxCorner.Parent = box
-
-    local padding = Instance.new("UIPadding")
-    padding.PaddingLeft = UDim.new(0, DESIGN.ComponentPadding)
-    padding.PaddingRight = UDim.new(0, DESIGN.ComponentPadding)
-    padding.Parent = box
-
-    -- Container interno para o layout
-    local container = Instance.new("Frame")
-    container.Size = UDim2.new(1, 0, 1, 0)
-    container.BackgroundTransparency = 1
-    container.Parent = box
-    
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.FillDirection = Enum.FillDirection.Vertical
-    listLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-    listLayout.Parent = container
-    
-    -- Wrapper para o Título e o valor
-    local headerFrame = Instance.new("Frame")
-    headerFrame.Size = UDim2.new(1, 0, 0, 20)
-    headerFrame.BackgroundTransparency = 1
-    headerFrame.Parent = container
-
-    -- Title label
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Size = UDim2.new(1, -70, 1, 0)
-    titleLabel.Position = UDim2.new(0, 0, 0, 0)
-    titleLabel.Font = Enum.Font.Roboto
-    titleLabel.TextSize = 15
-    titleLabel.TextColor3 = DESIGN.ComponentTextColor
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Text = title
-    titleLabel.Parent = headerFrame
-
-    -- Value label
-    local valueLabel = Instance.new("TextLabel")
-    valueLabel.BackgroundTransparency = 1
-    valueLabel.Size = UDim2.new(0, 60, 1, 0)
-    valueLabel.Position = UDim2.new(1, 0, 0, 0)
-    valueLabel.AnchorPoint = Vector2.new(1, 0)
-    valueLabel.Font = Enum.Font.Roboto
-    valueLabel.TextSize = 15
-    valueLabel.TextColor3 = DESIGN.ComponentTextColor
-    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
-    valueLabel.Text = tostring(value)
-    valueLabel.Parent = headerFrame
-    
-    -- Track frame
-    local track = Instance.new("Frame")
-    track.Size = UDim2.new(1, 0, 0, 8)
-    track.BackgroundColor3 = DESIGN.SliderTrackColor
-    track.BorderSizePixel = 0
-    track.Parent = container
-
-    local trackCorner = Instance.new("UICorner")
-    trackCorner.CornerRadius = UDim.new(1, 0)
-    trackCorner.Parent = track
-
-    -- Fill
-    local fill = Instance.new("Frame")
-    fill.Size = UDim2.new((value - minv) / math.max(1, (maxv - minv)), 0, 1, 0)
-    fill.BackgroundColor3 = DESIGN.SliderFillColor
-    fill.BorderSizePixel = 0
-    fill.Parent = track
-
-    local fillCorner = Instance.new("UICorner")
-    fillCorner.CornerRadius = UDim.new(1, 0)
-    fillCorner.Parent = fill
-
-    -- Thumb
-    local thumb = Instance.new("Frame")
-    thumb.Size = UDim2.new(0, 18, 0, 18)
-    thumb.AnchorPoint = Vector2.new(0.5, 0.5)
-    thumb.Position = UDim2.new(fill.Size.X.Scale, 0, 0.5, 0)
-    thumb.BackgroundColor3 = DESIGN.ThumbColor
-    thumb.BorderSizePixel = 1
-    thumb.BorderColor3 = DESIGN.ThumbOutlineColor
-    thumb.Parent = track
-    
-    local thumbCorner = Instance.new("UICorner")
-    thumbCorner.CornerRadius = UDim.new(1, 0)
-    thumbCorner.Parent = thumb
-
-    -- Logica de interacao (PC e Mobile)
-    local connections: { RBXScriptConnection } = {}
-
-    local function updateVisuals()
-        local frac = (value - minv) / math.max(1, (maxv - minv))
-        fill.Size = UDim2.new(frac, 0, 1, 0)
-        thumb.Position = UDim2.new(frac, 0, 0.5, 0)
-        valueLabel.Text = tostring(math.floor(value * 100) / 100) -- Arredonda para 2 casas decimais
-    end
-    
-    local dragging = false
-    local UIS = game:GetService("UserInputService")
-    
-    local function handleDrag(inputPos: Vector2)
-        local absPos = track.AbsolutePosition
-        local absSize = track.AbsoluteSize
-        local relativeX = math.clamp(inputPos.X - absPos.X, 0, absSize.X)
-        local newFrac = relativeX / absSize.X
-        local newVal = clamp(roundToStep(minv + newFrac * (maxv - minv)))
-        
-        if newVal ~= value then
-            value = newVal
-            updateVisuals()
-            if callback then pcall(callback, value) end
-        end
-    end
-    
-    local function handleInputBegan(input: InputObject)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            handleDrag(input.Position)
-        end
-    end
-    
-    local function handleInputChanged(input: InputObject)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            handleDrag(input.Position)
-        end
-    end
-    
-    local function handleInputEnded(input: InputObject)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end
-
-    table.insert(connections, track.InputBegan:Connect(handleInputBegan))
-    table.insert(connections, UIS.InputChanged:Connect(handleInputChanged))
-    table.insert(connections, UIS.InputEnded:Connect(handleInputEnded))
-
-    local publicApi = {
-        _instance = box, -- O PublicAPI agora aponta para o box, o container principal
-        _connections = connections
-    }
-
-    function publicApi.Set(v: number)
-        value = clamp(roundToStep(v))
-        updateVisuals()
-        if callback then pcall(callback, value) end
-    end
-
-    function publicApi.Get(): number
-        return value
-    end
-
-    function publicApi.Update(newOptions)
-        options = newOptions or options
-        title = options.Text or title
-        minv = tonumber(options.Min) or minv
-        maxv = tonumber(options.Max) or maxv
-        step = tonumber(options.Step) or step
-        value = tonumber(options.Value) or value
-        callback = options.Callback or callback
-        value = clamp(roundToStep(value))
-        titleLabel.Text = title
-        updateVisuals()
-    end
-
-    function publicApi.Destroy()
-        for _, c in ipairs(connections) do
-            if c and c.Connected then pcall(function() c:Disconnect() end) end
-        end
-        if publicApi._instance then
-            publicApi._instance:Destroy()
-            publicApi._instance = nil
-        end
-    end
-    
-    updateVisuals()
-    table.insert(tab.Components, publicApi)
-    return publicApi
 end
 
 function Tekscripts:CreateFloatingButton(options: {
@@ -3176,4 +2820,575 @@ function Tekscripts:CreateDropdown(tab: any, options: {
     return publicApi
 end
 
+function Tekscripts:CreateSlider(tab: any, options: { 
+    Text: string?, 
+    Min: number?, 
+    Max: number?, 
+    Step: number?, 
+    Value: number?, 
+    Callback: ((number) -> ())? 
+})
+    assert(tab and tab.Container, "Invalid Tab object provided to CreateSlider")
+
+    options = options or {}
+    local title = options.Text or "Slider"
+    local minv = tonumber(options.Min) or 0
+    local maxv = tonumber(options.Max) or 100
+    local step = tonumber(options.Step) or 1
+    local value = tonumber(options.Value) or minv
+    local callback = options.Callback
+
+    local function clamp(n)
+        return math.max(minv, math.min(maxv, n))
+    end
+
+    local function roundToStep(n)
+        if step <= 0 then return n end
+        return math.floor(n / step + 0.5) * step
+    end
+
+    value = clamp(roundToStep(value))
+
+    -- Serviços
+    local UIS = game:GetService("UserInputService")
+    local TweenService = game:GetService("TweenService")
+    
+    -- Configurações de animação
+    local ANIM = {
+        ThumbHover = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        ThumbPress = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+        ValueChange = TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+        FillChange = TweenInfo.new(0.2, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out)
+    }
+
+    -- Base visual com sombra sutil
+    local box = Instance.new("Frame")
+    box.Size = UDim2.new(1, 0, 0, DESIGN.ComponentHeight)
+    box.BackgroundColor3 = DESIGN.ComponentBackground
+    box.BorderSizePixel = 0
+    box.Parent = tab.Container
+
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, DESIGN.CornerRadius)
+    
+    -- Sombra sutil para profundidade
+    local shadow = Instance.new("ImageLabel")
+    shadow.Name = "Shadow"
+    shadow.BackgroundTransparency = 1
+    shadow.Size = UDim2.new(1, 6, 1, 6)
+    shadow.Position = UDim2.new(0, -3, 0, -3)
+    shadow.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+    shadow.ImageColor3 = Color3.new(0, 0, 0)
+    shadow.ImageTransparency = 0.92
+    shadow.ZIndex = 0
+    shadow.Parent = box
+    
+    local padding = Instance.new("UIPadding", box)
+    padding.PaddingLeft = UDim.new(0, DESIGN.ComponentPadding)
+    padding.PaddingRight = UDim.new(0, DESIGN.ComponentPadding)
+
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = box
+
+    local listLayout = Instance.new("UIListLayout", container)
+    listLayout.FillDirection = Enum.FillDirection.Vertical
+    listLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+    listLayout.Padding = UDim.new(0, 6)
+
+    -- Header com melhor espaçamento
+    local headerFrame = Instance.new("Frame")
+    headerFrame.Size = UDim2.new(1, 0, 0, 20)
+    headerFrame.BackgroundTransparency = 1
+    headerFrame.Parent = container
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Size = UDim2.new(1, -70, 1, 0)
+    titleLabel.Font = Enum.Font.GothamMedium
+    titleLabel.TextSize = 14
+    titleLabel.TextColor3 = DESIGN.ComponentTextColor
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Text = title
+    titleLabel.Parent = headerFrame
+
+    -- Badge para o valor com fundo
+    local valueBadge = Instance.new("Frame")
+    valueBadge.Size = UDim2.new(0, 65, 0, 22)
+    valueBadge.AnchorPoint = Vector2.new(1, 0)
+    valueBadge.Position = UDim2.new(1, 0, 0, -1)
+    valueBadge.BackgroundColor3 = DESIGN.SliderFillColor or Color3.fromRGB(88, 101, 242)
+    valueBadge.BorderSizePixel = 0
+    valueBadge.Parent = headerFrame
+    Instance.new("UICorner", valueBadge).CornerRadius = UDim.new(0, 6)
+
+    local valueLabel = Instance.new("TextBox")
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Size = UDim2.new(1, -8, 1, 0)
+    valueLabel.Position = UDim2.new(0, 4, 0, 0)
+    valueLabel.Font = Enum.Font.GothamBold
+    valueLabel.TextSize = 13
+    valueLabel.TextColor3 = Color3.new(1, 1, 1)
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Center
+    valueLabel.Text = tostring(value)
+    valueLabel.ClearTextOnFocus = false
+    valueLabel.TextEditable = true
+    valueLabel.Parent = valueBadge
+
+    -- Track com altura maior e melhor aparência
+    local trackContainer = Instance.new("Frame")
+    trackContainer.Size = UDim2.new(1, 0, 0, 12)
+    trackContainer.BackgroundTransparency = 1
+    trackContainer.Parent = container
+
+    local track = Instance.new("Frame")
+    track.Size = UDim2.new(1, 0, 0, 6)
+    track.AnchorPoint = Vector2.new(0, 0.5)
+    track.Position = UDim2.new(0, 0, 0.5, 0)
+    track.BackgroundColor3 = DESIGN.SliderTrackColor or Color3.fromRGB(40, 40, 45)
+    track.BorderSizePixel = 0
+    track.Parent = trackContainer
+    Instance.new("UICorner", track).CornerRadius = UDim.new(1, 0)
+
+    -- Fill com gradiente sutil
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new((value - minv) / math.max(1, (maxv - minv)), 0, 1, 0)
+    fill.BackgroundColor3 = DESIGN.SliderFillColor or Color3.fromRGB(88, 101, 242)
+    fill.BorderSizePixel = 0
+    fill.ZIndex = 2
+    fill.Parent = track
+    Instance.new("UICorner", fill).CornerRadius = UDim.new(1, 0)
+
+    -- Gradiente no fill para dar profundidade
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0.9, 0.9, 0.95))
+    }
+    gradient.Rotation = 90
+    gradient.Parent = fill
+
+    -- Thumb moderno com sombra
+    local thumb = Instance.new("Frame")
+    thumb.Size = UDim2.new(0, 20, 0, 20)
+    thumb.AnchorPoint = Vector2.new(0.5, 0.5)
+    thumb.Position = UDim2.new(fill.Size.X.Scale, 0, 0.5, 0)
+    thumb.BackgroundColor3 = Color3.new(1, 1, 1)
+    thumb.BorderSizePixel = 0
+    thumb.ZIndex = 3
+    thumb.Parent = trackContainer
+    Instance.new("UICorner", thumb).CornerRadius = UDim.new(1, 0)
+
+    -- Anel interno do thumb para destaque
+    local thumbRing = Instance.new("Frame")
+    thumbRing.Size = UDim2.new(0.5, 0, 0.5, 0)
+    thumbRing.AnchorPoint = Vector2.new(0.5, 0.5)
+    thumbRing.Position = UDim2.new(0.5, 0, 0.5, 0)
+    thumbRing.BackgroundColor3 = DESIGN.SliderFillColor or Color3.fromRGB(88, 101, 242)
+    thumbRing.BorderSizePixel = 0
+    thumbRing.ZIndex = 4
+    thumbRing.Parent = thumb
+    Instance.new("UICorner", thumbRing).CornerRadius = UDim.new(1, 0)
+
+    -- Lógica
+    local connections = {}
+    local dragging = false
+    local hovering = false
+
+    local publicApi = {
+        _instance = nil,
+        _connections = nil,
+        _onChanged = {},
+        _locked = false,
+    }
+
+    local function updateVisuals(animate)
+        local denom = math.max(1, (maxv - minv))
+        local frac = (value - minv) / denom
+        frac = math.clamp(frac, 0, 1)
+        
+        if animate then
+            TweenService:Create(fill, ANIM.FillChange, {
+                Size = UDim2.new(frac, 0, 1, 0)
+            }):Play()
+            TweenService:Create(thumb, ANIM.FillChange, {
+                Position = UDim2.new(frac, 0, 0.5, 0)
+            }):Play()
+        else
+            fill.Size = UDim2.new(frac, 0, 1, 0)
+            thumb.Position = UDim2.new(frac, 0, 0.5, 0)
+        end
+        
+        -- Animação do valor com bounce
+        local formattedValue = tostring(math.floor((value or 0) * 100) / 100)
+        valueLabel.Text = formattedValue
+        
+        if animate then
+            valueBadge.Size = UDim2.new(0, 70, 0, 22)
+            TweenService:Create(valueBadge, ANIM.ValueChange, {
+                Size = UDim2.new(0, 65, 0, 22)
+            }):Play()
+        end
+    end
+
+    local function safeCall(fn, ...)
+        if type(fn) == "function" then
+            pcall(fn, ...)
+        end
+    end
+
+    local function handleDrag(inputPos)
+        local absPos = track.AbsolutePosition or Vector2.new(0, 0)
+        local absSize = track.AbsoluteSize or Vector2.new(1, 1)
+        local absSizeX = math.max(1, absSize.X)
+        local relativeX = math.clamp(inputPos.X - absPos.X, 0, absSizeX)
+        local newFrac = relativeX / absSizeX
+        newFrac = math.clamp(newFrac, 0, 1)
+        local newVal = clamp(roundToStep(minv + newFrac * (maxv - minv)))
+        
+        if newVal ~= value then
+            value = newVal
+            updateVisuals(false)
+            safeCall(callback, value)
+            for _, fn in ipairs(publicApi._onChanged) do
+                safeCall(fn, value)
+            end
+        end
+    end
+
+    local function handleInputBegan(input)
+        if publicApi._locked then return end
+        if input and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            dragging = true
+            -- Animação de pressão
+            TweenService:Create(thumb, ANIM.ThumbPress, {
+                Size = UDim2.new(0, 24, 0, 24)
+            }):Play()
+            
+            pcall(function() handleDrag(input.Position) end)
+        end
+    end
+
+    local function handleInputChanged(input)
+        if dragging and input and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            pcall(function() handleDrag(input.Position) end)
+        end
+    end
+
+    local function handleInputEnded(input)
+        if input and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            dragging = false
+            -- Animação de soltura
+            local targetSize = hovering and UDim2.new(0, 22, 0, 22) or UDim2.new(0, 20, 0, 20)
+            TweenService:Create(thumb, ANIM.ThumbHover, {
+                Size = targetSize
+            }):Play()
+        end
+    end
+
+    -- Efeito hover no thumb
+    table.insert(connections, thumb.MouseEnter:Connect(function()
+        if publicApi._locked then return end
+        hovering = true
+        if not dragging then
+            TweenService:Create(thumb, ANIM.ThumbHover, {
+                Size = UDim2.new(0, 22, 0, 22)
+            }):Play()
+        end
+    end))
+
+    table.insert(connections, thumb.MouseLeave:Connect(function()
+        hovering = false
+        if not dragging then
+            TweenService:Create(thumb, ANIM.ThumbHover, {
+                Size = UDim2.new(0, 20, 0, 20)
+            }):Play()
+        end
+    end))
+
+    table.insert(connections, track.InputBegan:Connect(handleInputBegan))
+    table.insert(connections, UIS.InputChanged:Connect(handleInputChanged))
+    table.insert(connections, UIS.InputEnded:Connect(handleInputEnded))
+
+    -- Input filter for numbers only
+    table.insert(connections, valueLabel:GetPropertyChangedSignal("Text"):Connect(function()
+        local text = valueLabel.Text
+        local filtered = text:gsub("[^%d%.%-]", "")
+        if filtered ~= text then
+            valueLabel.Text = filtered
+        end
+    end))
+
+    -- Update on focus lost
+    table.insert(connections, valueLabel.FocusLost:Connect(function()
+        if publicApi._locked then
+            valueLabel.Text = tostring(math.floor((value or 0) * 100) / 100)
+            return
+        end
+        local newVal = tonumber(valueLabel.Text)
+        if newVal then
+            newVal = clamp(roundToStep(newVal))
+            value = newVal
+            updateVisuals(true)
+            safeCall(callback, value)
+            for _, fn in ipairs(publicApi._onChanged) do
+                safeCall(fn, value)
+            end
+        else
+            valueLabel.Text = tostring(math.floor((value or 0) * 100) / 100)
+        end
+    end))
+
+    publicApi._instance = box
+    publicApi._connections = connections
+
+    -- API pública
+    function publicApi.Set(v)
+        value = clamp(roundToStep(tonumber(v) or value))
+        updateVisuals(true)
+        safeCall(callback, value)
+        for _, fn in ipairs(publicApi._onChanged) do
+            safeCall(fn, value)
+        end
+    end
+
+    function publicApi.Get()
+        return value
+    end
+
+    function publicApi.GetPercent()
+        if maxv == minv then return 0 end
+        return (value - minv) / (maxv - minv)
+    end
+
+    function publicApi.SetRange(min, max, s)
+        minv = tonumber(min) or minv
+        maxv = tonumber(max) or maxv
+        if s ~= nil then step = tonumber(s) or step end
+        value = clamp(roundToStep(value))
+        updateVisuals(true)
+    end
+
+    function publicApi.AnimateTo(targetValue, duration)
+        local newVal = clamp(roundToStep(tonumber(targetValue) or value))
+        local denom = math.max(1, (maxv - minv))
+        local frac = (newVal - minv) / denom
+        frac = math.clamp(frac, 0, 1)
+        local dur = tonumber(duration) or 0.3
+        
+        pcall(function()
+            TweenService:Create(fill, TweenInfo.new(dur, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
+                Size = UDim2.new(frac, 0, 1, 0)
+            }):Play()
+            TweenService:Create(thumb, TweenInfo.new(dur, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out), {
+                Position = UDim2.new(frac, 0, 0.5, 0)
+            }):Play()
+        end)
+        
+        value = newVal
+        valueLabel.Text = tostring(math.floor(value * 100) / 100)
+        safeCall(callback, value)
+        for _, fn in ipairs(publicApi._onChanged) do
+            safeCall(fn, value)
+        end
+    end
+
+    function publicApi.OnChanged(fn)
+        if type(fn) == "function" then
+            table.insert(publicApi._onChanged, fn)
+        end
+    end
+
+    function publicApi.Lock(state)
+        publicApi._locked = state and true or false
+        valueLabel.TextEditable = not publicApi._locked
+        local targetAlpha = publicApi._locked and 0.4 or 1
+        
+        TweenService:Create(thumb, ANIM.ThumbHover, {
+            BackgroundTransparency = publicApi._locked and 0.5 or 0
+        }):Play()
+        TweenService:Create(thumbRing, ANIM.ThumbHover, {
+            BackgroundTransparency = publicApi._locked and 0.7 or 0
+        }):Play()
+        TweenService:Create(fill, ANIM.ThumbHover, {
+            BackgroundTransparency = publicApi._locked and 0.6 or 0
+        }):Play()
+        TweenService:Create(track, ANIM.ThumbHover, {
+            BackgroundTransparency = publicApi._locked and 0.7 or 0
+        }):Play()
+        TweenService:Create(valueBadge, ANIM.ThumbHover, {
+            BackgroundTransparency = publicApi._locked and 0.6 or 0
+        }):Play()
+        TweenService:Create(valueLabel, ANIM.ThumbHover, {
+            TextTransparency = publicApi._locked and 0.5 or 0
+        }):Play()
+    end
+
+    function publicApi.Update(newOptions)
+        options = newOptions or options
+        title = options.Text or title
+        minv = tonumber(options.Min) or minv
+        maxv = tonumber(options.Max) or maxv
+        step = tonumber(options.Step) or step
+        value = tonumber(options.Value) or value
+        callback = options.Callback or callback
+        value = clamp(roundToStep(value))
+        titleLabel.Text = title
+        updateVisuals(true)
+    end
+
+    function publicApi.Destroy()
+        dragging = false
+        hovering = false
+        for _, c in ipairs(connections) do
+            if c then
+                pcall(function() c:Disconnect() end)
+            end
+        end
+        if publicApi._instance and publicApi._instance.Parent then
+            pcall(function() publicApi._instance:Destroy() end)
+        end
+        publicApi._instance = nil
+        publicApi._connections = nil
+        publicApi._onChanged = nil
+    end
+
+    updateVisuals(false)
+    table.insert(tab.Components, publicApi)
+    return publicApi
+end
+
+function Tekscripts:CreateToggle(tab: any, options: { Text: string, Desc: string?, Callback: (state: boolean) -> () })
+    assert(type(tab) == "table" and tab.Container, "Invalid Tab object provided to CreateToggle")
+    assert(type(options) == "table" and type(options.Text) == "string", "Invalid arguments for CreateToggle")
+
+    local descHeight = options.Desc and 16 or 0
+    local padding = 6
+    local totalHeight = DESIGN.ComponentHeight + descHeight + padding
+
+    -- Box externo
+    local outerBox = Instance.new("Frame")
+    outerBox.Size = UDim2.new(1, 0, 0, totalHeight)
+    outerBox.BackgroundColor3 = DESIGN.ComponentBackground
+    outerBox.BorderSizePixel = 0
+    outerBox.Parent = tab.Container
+    addRoundedCorners(outerBox, DESIGN.CornerRadius)
+
+    -- Container interno
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, -DESIGN.ComponentPadding*2, 1, 0)
+    container.Position = UDim2.new(0, DESIGN.ComponentPadding, 0, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = outerBox
+
+    -- Label principal
+    local label = Instance.new("TextLabel")
+    label.Text = options.Text
+    label.Size = UDim2.new(0.7, -10, 0, DESIGN.ComponentHeight)
+    label.Position = UDim2.new(0, 0, 0, 0)
+    label.BackgroundTransparency = 1
+    label.TextColor3 = DESIGN.ComponentTextColor
+    label.Font = Enum.Font.Roboto
+    label.TextScaled = false
+    label.TextSize = 16
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = container
+
+    -- Label de descrição
+    local descLabel
+    if options.Desc then
+        descLabel = Instance.new("TextLabel")
+        descLabel.Text = options.Desc
+        descLabel.Size = UDim2.new(0.7, -10, 0, descHeight)
+        descLabel.Position = UDim2.new(0, 0, 0, DESIGN.ComponentHeight)
+        descLabel.BackgroundTransparency = 1
+        descLabel.TextColor3 = Color3.fromRGB(160, 160, 160)
+        descLabel.Font = Enum.Font.Roboto
+        descLabel.TextScaled = false
+        descLabel.TextSize = 14
+        descLabel.TextXAlignment = Enum.TextXAlignment.Left
+        descLabel.Parent = container
+    end
+
+    -- Switch
+    local switch = Instance.new("TextButton")
+    switch.Size = UDim2.new(0, 50, 0, 24)
+    switch.Position = UDim2.new(0.85, 0, 0, (totalHeight - 24)/2) -- movido mais para a direita
+    switch.BackgroundColor3 = DESIGN.InactiveToggleColor
+    switch.Text = ""
+    switch.AutoButtonColor = false
+    switch.ClipsDescendants = true
+    switch.Parent = container
+    addRoundedCorners(switch, 100)
+
+    -- Knob
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 20, 0, 20)
+    knob.Position = UDim2.new(0, 2, 0, 2) -- centralizado dentro do switch
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.Parent = switch
+    addRoundedCorners(knob, 100)
+
+    -- Estado interno
+    local state = false
+    local locked = false
+    local connections = {}
+    local publicApi = { _instance = outerBox, _connections = connections }
+
+    local function animateToggle(newState: boolean)
+        TweenService:Create(switch, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+            BackgroundColor3 = newState and DESIGN.ActiveToggleColor or DESIGN.InactiveToggleColor
+        }):Play()
+        TweenService:Create(knob, TweenInfo.new(0.25, Enum.EasingStyle.Quad), {
+            Position = newState and UDim2.new(1, -22, 0, 2) or UDim2.new(0, 2, 0, 2)
+        }):Play()
+    end
+
+    local function toggle(newState: boolean, skipCallback: boolean?)
+        if locked then return end
+        state = newState
+        animateToggle(state)
+        if not skipCallback and options.Callback then
+            options.Callback(state)
+        end
+    end
+
+    connections.Click = switch.MouseButton1Click:Connect(function()
+        if locked then return end
+        toggle(not state)
+    end)
+
+    -- Public API
+    function publicApi.SetState(newState: boolean) toggle(newState, true) end
+    function publicApi.GetState(): boolean return state end
+    function publicApi.Toggle() toggle(not state) end
+    function publicApi.SetText(newText: string) label.Text = newText end
+    function publicApi.SetDesc(newDesc: string) if descLabel then descLabel.Text = newDesc end end
+    function publicApi.SetCallback(newCallback) options.Callback = newCallback end
+    function publicApi.SetLocked(isLocked: boolean)
+        locked = isLocked
+        switch.AutoButtonColor = not locked
+        local color = locked and (DESIGN.LockedColor or Color3.fromRGB(90,90,90))
+            or (state and DESIGN.ActiveToggleColor or DESIGN.InactiveToggleColor)
+        switch.BackgroundColor3 = color
+    end
+    function publicApi.Update(newOptions: { Text: string?, Desc: string?, State: boolean? })
+        if newOptions.Text then label.Text = newOptions.Text end
+        if newOptions.Desc and descLabel then descLabel.Text = newOptions.Desc end
+        if newOptions.State ~= nil and newOptions.State ~= state then toggle(newOptions.State) end
+    end
+    function publicApi.Destroy()
+        if publicApi._instance then
+            for _, conn in pairs(publicApi._connections) do
+                if conn and conn.Connected then conn:Disconnect() end
+            end
+            publicApi._instance:Destroy()
+            publicApi._instance = nil
+            publicApi._connections = nil
+        end
+    end
+
+    table.insert(tab.Components, publicApi)
+    return publicApi
+end
 return Tekscripts
