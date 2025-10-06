@@ -178,18 +178,21 @@ Tab.__index = Tab
 function Tab.new(name: string, parent: Instance)
     local self = setmetatable({} :: {
         Name: string,
-        Container: Frame,
+        Container: ScrollingFrame,
         Components: {any},
         Button: TextButton?,
         EmptyLabel: TextLabel?
     }, Tab)
 
     self.Name = name
-    self.Container = Instance.new("Frame")
+    self.Container = Instance.new("ScrollingFrame")
     self.Container.Size = UDim2.new(1, 0, 1, 0)
     self.Container.Position = UDim2.new(0, 0, 0, 0)
     self.Container.BackgroundTransparency = 1
     self.Container.BorderSizePixel = 0
+    self.Container.ScrollBarThickness = 6
+    self.Container.ScrollBarImageColor3 = DESIGN.ComponentHoverColor
+    self.Container.AutomaticCanvasSize = Enum.AutomaticSize.Y  -- Faz o Canvas crescer automaticamente
     self.Container.Parent = parent
 
     local padding = Instance.new("UIPadding")
@@ -219,9 +222,15 @@ function Tab.new(name: string, parent: Instance)
 
     self.Components = {}
 
-    -- Atualiza visibilidade da mensagem de vazio
+    -- Atualiza visibilidade da mensagem de vazio e da barra de scroll
     listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         self.EmptyLabel.Visible = #self.Components == 0
+        -- Se o conteúdo for menor que a altura do container, esconde scroll
+        if listLayout.AbsoluteContentSize.Y + DESIGN.ContainerPadding * 2 <= self.Container.AbsoluteSize.Y then
+            self.Container.ScrollBarImageTransparency = 1
+        else
+            self.Container.ScrollBarImageTransparency = 0
+        end
     end)
 
     return self
