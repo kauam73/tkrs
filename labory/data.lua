@@ -176,13 +176,7 @@ local Tab = {}
 Tab.__index = Tab
 
 function Tab.new(name: string, parent: Instance)
-    local self = setmetatable({} :: {
-        Name: string,
-        Container: ScrollingFrame,
-        Components: {any},
-        Button: TextButton?,
-        EmptyLabel: TextLabel?
-    }, Tab)
+    local self = setmetatable({}, Tab)
 
     self.Name = name
     self.Container = Instance.new("ScrollingFrame")
@@ -193,8 +187,8 @@ function Tab.new(name: string, parent: Instance)
     self.Container.ScrollBarThickness = 6
     self.Container.ScrollBarImageColor3 = DESIGN.ComponentHoverColor
     self.Container.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    self.Container.CanvasSize = UDim2.new(1, 0, 0, 0)  -- Correção 1: Fixa largura do canvas
-    self.Container.HorizontalScrollBarInset = 1     -- Correção 2: Remove scroll horizontal
+    self.Container.CanvasSize = UDim2.new(0, 0, 0, 0) -- eixo X travado, só cresce em Y
+    self.Container.ScrollingDirection = Enum.ScrollingDirection.Y -- 🔒 só vertical
     self.Container.Parent = parent
 
     local padding = Instance.new("UIPadding")
@@ -209,11 +203,10 @@ function Tab.new(name: string, parent: Instance)
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Parent = self.Container
 
-    -- Mensagem de aba sem componentes
     self.EmptyLabel = Instance.new("TextLabel")
     self.EmptyLabel.Size = UDim2.new(1, 0, 1, 0)
     self.EmptyLabel.BackgroundTransparency = 1
-    self.EmptyLabel.Text = "Desculpe não tem nada aqui :("
+    self.EmptyLabel.Text = "Desculpe, não tem nada aqui :("
     self.EmptyLabel.TextColor3 = DESIGN.EmptyStateTextColor
     self.EmptyLabel.Font = Enum.Font.Roboto
     self.EmptyLabel.TextScaled = true
@@ -224,24 +217,17 @@ function Tab.new(name: string, parent: Instance)
 
     self.Components = {}
 
-    -- Atualiza visibilidade da mensagem de vazio e da barra de scroll
     listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         self.EmptyLabel.Visible = #self.Components == 0
-        
-        -- Correção 3: Sistema inteligente de scroll vertical
+
         local totalContentHeight = listLayout.AbsoluteContentSize.Y + (DESIGN.ContainerPadding * 2)
         local containerHeight = self.Container.AbsoluteSize.Y
-        
-        if totalContentHeight > containerHeight then
-            self.Container.ScrollBarImageTransparency = 0
-        else
-            self.Container.ScrollBarImageTransparency = 1
-        end
+
+        self.Container.ScrollBarImageTransparency = totalContentHeight > containerHeight and 0 or 1
     end)
 
     return self
 end
-
 ---
 -- Construtor da GUI
 ---
