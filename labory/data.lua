@@ -192,7 +192,9 @@ function Tab.new(name: string, parent: Instance)
     self.Container.BorderSizePixel = 0
     self.Container.ScrollBarThickness = 6
     self.Container.ScrollBarImageColor3 = DESIGN.ComponentHoverColor
-    self.Container.AutomaticCanvasSize = Enum.AutomaticSize.Y  -- Faz o Canvas crescer automaticamente
+    self.Container.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    self.Container.CanvasSize = UDim2.new(1, 0, 0, 0)  -- Correção 1: Fixa largura do canvas
+    self.Container.HorizontalScrollBarInset = 1     -- Correção 2: Remove scroll horizontal
     self.Container.Parent = parent
 
     local padding = Instance.new("UIPadding")
@@ -225,16 +227,21 @@ function Tab.new(name: string, parent: Instance)
     -- Atualiza visibilidade da mensagem de vazio e da barra de scroll
     listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         self.EmptyLabel.Visible = #self.Components == 0
-        -- Se o conteúdo for menor que a altura do container, esconde scroll
-        if listLayout.AbsoluteContentSize.Y + DESIGN.ContainerPadding * 2 <= self.Container.AbsoluteSize.Y then
-            self.Container.ScrollBarImageTransparency = 1
-        else
+        
+        -- Correção 3: Sistema inteligente de scroll vertical
+        local totalContentHeight = listLayout.AbsoluteContentSize.Y + (DESIGN.ContainerPadding * 2)
+        local containerHeight = self.Container.AbsoluteSize.Y
+        
+        if totalContentHeight > containerHeight then
             self.Container.ScrollBarImageTransparency = 0
+        else
+            self.Container.ScrollBarImageTransparency = 1
         end
     end)
 
     return self
 end
+
 ---
 -- Construtor da GUI
 ---
@@ -948,8 +955,6 @@ function Tekscripts:Block(state: boolean)
         TweenService:Create(self.BlurEffect, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {Size = 0}):Play()
     end
 end
-
-
 
 ---
 -- Funções Públicas para criar componentes
